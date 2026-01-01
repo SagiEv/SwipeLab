@@ -11,6 +11,8 @@ import com.swipelab.repository.ClassificationRepository;
 import com.swipelab.repository.ImageRepository;
 import com.swipelab.repository.LabelRepository;
 import com.swipelab.repository.UserRepository;
+import com.swipelab.service.gamification.BadgeService;
+import com.swipelab.service.gamification.PointsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +25,8 @@ public class ClassificationService {
     private final ImageRepository imageRepository;
     private final LabelRepository labelRepository;
     private final UserRepository userRepository;
+    private final BadgeService badgeService;
+    private final PointsService pointsService;
 
     @Transactional
     public ClassificationResponse submitClassification(String username, ClassificationRequest request) {
@@ -48,12 +52,23 @@ public class ClassificationService {
 
         Classification saved = classificationRepository.save(classification);
 
+        // Update User Stats
+        user.setTotalClassifications(user.getTotalClassifications() + 1);
+
+        // Gamification: Award 10 points per swipe
+        pointsService.addPoints(user, 10);
+
         // Determine correctness if it's a gold standard image
         Boolean isCorrect = null;
         if (Boolean.TRUE.equals(image.getIsGoldStandard()) && image.getCorrectLabel() != null) {
             isCorrect = image.getCorrectLabel().getId().equals(label.getId());
-            // TODO: Update user credibility score based on isCorrect
+            if (Boolean.TRUE.equals(isCorrect)) {
+                 pointsService.addPoints(user, 50); // Bonus for correct gold standard
+            }
         }
+        
+        // Check for badges
+        badgeService.checkForBadges(user);
 
         return mapToResponse(saved, isCorrect);
     }
