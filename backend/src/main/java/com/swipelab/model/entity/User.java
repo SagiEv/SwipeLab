@@ -16,8 +16,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "username"),
-        @UniqueConstraint(columnNames = "email")
+                @UniqueConstraint(columnNames = "username"),
+                @UniqueConstraint(columnNames = "email")
 })
 @Data
 @NoArgsConstructor
@@ -98,7 +98,8 @@ public class User {
         private Double credibilityScore = 0.0;
 
         /**
-         * Cohen's Kappa score showing agreement with expert (RESEARCHER) classifications
+         * Cohen's Kappa score showing agreement with expert (RESEARCHER)
+         * classifications
          * Range: -1 to 1, where 1 is perfect agreement
          */
         @Column(name = "agreement_with_experts")
@@ -135,6 +136,15 @@ public class User {
         @Column(name = "total_gold_classifications")
         @Builder.Default
         private Integer totalGoldClassifications = 0;
+
+        @Column(name = "points", nullable = false)
+        @Builder.Default
+        private Long points = 0L;
+
+        @ManyToMany(fetch = FetchType.EAGER)
+        @JoinTable(name = "user_badges", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "badge_id"))
+        @Builder.Default
+        private java.util.Set<Badge> badges = new java.util.HashSet<>();
 
         // ========================================
 

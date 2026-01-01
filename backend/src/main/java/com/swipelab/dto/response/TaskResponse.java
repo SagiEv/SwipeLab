@@ -1,23 +1,22 @@
-package com.swipelab.dto.request;
+package com.swipelab.dto.response;
 
 import com.swipelab.model.enums.TaskStatus;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class TaskCreateRequest {
-
-    @NotBlank(message = "Title is required")
+public class TaskResponse {
+    private Long id;
     private String title;
-
     private String description;
-
-    @Builder.Default
-    private TaskStatus status = TaskStatus.ACTIVE;
+    private TaskStatus status;
+    private String createdBy; // username
+    private LocalDateTime createdAt;
 }
