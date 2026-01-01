@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class ClassificationResponse {
     private Long id;
-    private Long userId;
+    private String userId;
     private Long imageId;
     private Long labelId;
     private Boolean isCorrect; // For Gold Standard feedback

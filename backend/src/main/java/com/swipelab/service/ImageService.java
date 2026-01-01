@@ -3,7 +3,7 @@ package com.swipelab.service;
 import com.swipelab.dto.request.ImageUploadRequest;
 import com.swipelab.dto.response.ImageBatchResponse;
 import com.swipelab.dto.response.ImageResponse;
-import com.swipelab.exception.EntityNotFoundException;
+import com.swipelab.exception.ResourceNotFoundException;
 import com.swipelab.model.entity.Image;
 import com.swipelab.model.entity.Label;
 import com.swipelab.model.entity.Task;
@@ -22,71 +22,74 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ImageService {
 
-    private final ImageRepository imageRepository;
-    private final TaskRepository taskRepository;
-    private final LabelRepository labelRepository;
+        private final ImageRepository imageRepository;
+        private final TaskRepository taskRepository;
+        private final LabelRepository labelRepository;
 
-    @Transactional
-    public ImageResponse uploadImage(ImageUploadRequest request) {
-        Task task = taskRepository.findById(request.getTaskId())
-                .orElseThrow(() -> new EntityNotFoundException("Task not found with id: " + request.getTaskId()));
+        @Transactional
+        public ImageResponse uploadImage(ImageUploadRequest request) {
+                Task task = taskRepository.findById(request.getTaskId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Task not found with id: " + request.getTaskId()));
 
-        Label correctLabel = null;
-        if (Boolean.TRUE.equals(request.getIsGoldStandard())) {
-            if (request.getCorrectLabelId() == null) {
-                throw new IllegalArgumentException("Correct Label ID is required for Gold Standard images");
-            }
-            correctLabel = labelRepository.findById(request.getCorrectLabelId())
-                    .orElseThrow(() -> new EntityNotFoundException(
-                            "Label not found with id: " + request.getCorrectLabelId()));
+                Label correctLabel = null;
+                if (Boolean.TRUE.equals(request.getIsGoldStandard())) {
+                        if (request.getCorrectLabelId() == null) {
+                                throw new IllegalArgumentException(
+                                                "Correct Label ID is required for Gold Standard images");
+                        }
+                        correctLabel = labelRepository.findById(request.getCorrectLabelId())
+                                        .orElseThrow(() -> new ResourceNotFoundException(
+                                                        "Label not found with id: " + request.getCorrectLabelId()));
+
+                }
+
+                Image image = Image.builder()
+                                .imageUrl(request.getImageUrl())
+                                .caption(request.getCaption())
+                                .task(task)
+                                .priority(request.getPriority())
+                                .isGoldStandard(request.getIsGoldStandard())
+                                .correctLabel(correctLabel)
+                                .build();
+
+                Image savedImage = imageRepository.save(image);
+                return mapToResponse(savedImage);
         }
 
-        Image image = Image.builder()
-                .imageUrl(request.getImageUrl())
-                .caption(request.getCaption())
-                .task(task)
-                .priority(request.getPriority())
-                .isGoldStandard(request.getIsGoldStandard())
-                .correctLabel(correctLabel)
-                .build();
+        public ImageBatchResponse getImageBatch(Long taskId) {
+                // Simple implementation: Get all images for the task and shuffle
+                // TODO: Implement advanced batch selection algorithm (e.g., exclude already
+                // labeled images)
+                List<Image> images = imageRepository.findByTaskId(taskId);
+                Collections.shuffle(images);
 
-        Image savedImage = imageRepository.save(image);
-        return mapToResponse(savedImage);
-    }
+                // Limit to reasonable batch size, e.g., 20
+                List<ImageResponse> batch = images.stream()
+                                .limit(20)
+                                .map(this::mapToResponse)
+                                .collect(Collectors.toList());
 
-    public ImageBatchResponse getImageBatch(Long taskId) {
-        // Simple implementation: Get all images for the task and shuffle
-        // TODO: Implement advanced batch selection algorithm (e.g., exclude already
-        // labeled images)
-        List<Image> images = imageRepository.findByTaskId(taskId);
-        Collections.shuffle(images);
+                return ImageBatchResponse.builder()
+                                .images(batch)
+                                .build();
+        }
 
-        // Limit to reasonable batch size, e.g., 20
-        List<ImageResponse> batch = images.stream()
-                .limit(20)
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        public ImageResponse getImageById(Long id) {
+                Image image = imageRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException("Image not found with id: " + id));
+                return mapToResponse(image);
+        }
 
-        return ImageBatchResponse.builder()
-                .images(batch)
-                .build();
-    }
-
-    public ImageResponse getImageById(Long id) {
-        Image image = imageRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Image not found with id: " + id));
-        return mapToResponse(image);
-    }
-
-    private ImageResponse mapToResponse(Image image) {
-        return ImageResponse.builder()
-                .id(image.getId())
-                .imageUrl(image.getImageUrl())
-                .thumbnailUrl(image.getThumbnailUrl())
-                .caption(image.getCaption())
-                .taskId(image.getTask().getId())
-                .priority(image.getPriority())
-                .isGoldStandard(image.getIsGoldStandard())
-                .build();
-    }
+        private ImageResponse mapToResponse(Image image) {
+                return ImageResponse.builder()
+                                .id(image.getId())
+                                .imageUrl(image.getImageUrl())
+                                .thumbnailUrl(image.getThumbnailUrl())
+                                .caption(image.getCaption())
+                                .taskId(image.getTask().getId())
+                                .priority(image.getPriority())
+                                .isGoldStandard(image.getIsGoldStandard())
+                                .build();
+        }
 }

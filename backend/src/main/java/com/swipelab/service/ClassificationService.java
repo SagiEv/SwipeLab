@@ -2,7 +2,7 @@ package com.swipelab.service;
 
 import com.swipelab.dto.request.ClassificationRequest;
 import com.swipelab.dto.response.ClassificationResponse;
-import com.swipelab.exception.EntityNotFoundException;
+import com.swipelab.exception.ResourceNotFoundException;
 import com.swipelab.model.entity.Classification;
 import com.swipelab.model.entity.Image;
 import com.swipelab.model.entity.Label;
@@ -27,13 +27,13 @@ public class ClassificationService {
     @Transactional
     public ClassificationResponse submitClassification(String username, ClassificationRequest request) {
         User user = userRepository.findByEmail(username) // Assuming username is email
-                .orElseThrow(() -> new EntityNotFoundException("User not found: " + username));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
 
         Image image = imageRepository.findById(request.getImageId())
-                .orElseThrow(() -> new EntityNotFoundException("Image not found with id: " + request.getImageId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Image not found with id: " + request.getImageId()));
 
         Label label = labelRepository.findById(request.getLabelId())
-                .orElseThrow(() -> new EntityNotFoundException("Label not found with id: " + request.getLabelId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Label not found with id: " + request.getLabelId()));
 
         // Check if already classified
         if (classificationRepository.existsByUser_UsernameAndImage_Id(username, request.getImageId())) {
@@ -61,7 +61,7 @@ public class ClassificationService {
     private ClassificationResponse mapToResponse(Classification classification, Boolean isCorrect) {
         return ClassificationResponse.builder()
                 .id(classification.getId())
-                .userId(classification.getUser().getId())
+                .userId(classification.getUser().getUsername())
                 .imageId(classification.getImage().getId())
                 .labelId(classification.getLabel().getId())
                 .isCorrect(isCorrect)
