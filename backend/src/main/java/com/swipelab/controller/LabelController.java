@@ -2,6 +2,7 @@ package com.swipelab.controller;
 
 import com.swipelab.model.entity.Label;
 import com.swipelab.repository.LabelRepository;
+import com.swipelab.service.LabelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,10 +16,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LabelController {
 
-    private final LabelRepository labelRepository;
+    private final LabelService labelService;
 
     @GetMapping
     public ResponseEntity<List<Label>> getAllLabels() {
-        return ResponseEntity.ok(labelRepository.findAll());
+        return ResponseEntity.ok(labelService.getAllLabels());
     }
 }
