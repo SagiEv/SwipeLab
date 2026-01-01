@@ -1,5 +1,6 @@
 package com.swipelab.service;
 
+// Service for handling image classifications
 import com.swipelab.dto.request.ClassificationRequest;
 import com.swipelab.dto.response.ClassificationResponse;
 import com.swipelab.exception.ResourceNotFoundException;
