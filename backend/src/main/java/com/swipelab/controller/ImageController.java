@@ -8,6 +8,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,9 +25,12 @@ public class ImageController {
     }
 
     @GetMapping("/batch")
-    public ResponseEntity<ImageBatchResponse> getImageBatch(@RequestParam Long taskId) {
-        // TODO: Add user context to filter already labeled images
-        return ResponseEntity.ok(imageService.getImageBatch(taskId));
+    public ResponseEntity<ImageBatchResponse> getImageBatch(
+            @RequestParam Long taskId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        // Extract username from authenticated user to filter already classified images
+        String username = userDetails != null ? userDetails.getUsername() : null;
+        return ResponseEntity.ok(imageService.getImageBatch(taskId, username));
     }
 
     @GetMapping("/{id}")

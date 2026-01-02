@@ -10,6 +10,7 @@ import com.swipelab.model.entity.Task;
 import com.swipelab.repository.ImageRepository;
 import com.swipelab.repository.LabelRepository;
 import com.swipelab.repository.TaskRepository;
+import com.swipelab.repository.ClassificationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,7 @@ public class ImageService {
         private final ImageRepository imageRepository;
         private final TaskRepository taskRepository;
         private final LabelRepository labelRepository;
+        private final ClassificationRepository classificationRepository;
 
         @Transactional
         public ImageResponse uploadImage(ImageUploadRequest request) {
@@ -57,15 +59,31 @@ public class ImageService {
                 return mapToResponse(savedImage);
         }
 
-        public ImageBatchResponse getImageBatch(Long taskId) {
-                // Simple implementation: Get all images for the task and shuffle
-                // TODO: Implement advanced batch selection algorithm (e.g., exclude already
-                // labeled images)
-                List<Image> images = imageRepository.findByTaskId(taskId);
-                Collections.shuffle(images);
+        @Transactional(readOnly = true)
+        public ImageBatchResponse getImageBatch(Long taskId, String username) {
+                if (taskId == null) {
+                        throw new IllegalArgumentException("Task ID cannot be null");
+                }
+
+                // Get all images for the task
+                List<Image> allImages = imageRepository.findByTaskId(taskId);
+
+                // Filter out images already classified by this user (if username provided)
+                List<Image> unclassifiedImages;
+                if (username != null && !username.isEmpty()) {
+                        unclassifiedImages = allImages.stream()
+                                        .filter(image -> !classificationRepository
+                                                        .existsByUser_UsernameAndImage_Id(username, image.getId()))
+                                        .collect(Collectors.toList());
+                } else {
+                        unclassifiedImages = allImages;
+                }
+
+                // Shuffle to randomize order
+                Collections.shuffle(unclassifiedImages);
 
                 // Limit to reasonable batch size, e.g., 20
-                List<ImageResponse> batch = images.stream()
+                List<ImageResponse> batch = unclassifiedImages.stream()
                                 .limit(20)
                                 .map(this::mapToResponse)
                                 .collect(Collectors.toList());
