@@ -31,7 +31,7 @@ public class ClassificationService {
 
     @Transactional
     public ClassificationResponse submitClassification(String username, ClassificationRequest request) {
-        User user = userRepository.findByEmail(username) // Assuming username is email
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
 
         Image image = imageRepository.findById(request.getImageId())
@@ -64,12 +64,15 @@ public class ClassificationService {
         if (Boolean.TRUE.equals(image.getIsGoldStandard()) && image.getCorrectLabel() != null) {
             isCorrect = image.getCorrectLabel().getId().equals(label.getId());
             if (Boolean.TRUE.equals(isCorrect)) {
-                 pointsService.addPoints(user, 50); // Bonus for correct gold standard
+                pointsService.addPoints(user, 50); // Bonus for correct gold standard
             }
         }
-        
+
         // Check for badges
         badgeService.checkForBadges(user);
+
+        // Save user with updated stats (critical fix!)
+        userRepository.save(user);
 
         return mapToResponse(saved, isCorrect);
     }

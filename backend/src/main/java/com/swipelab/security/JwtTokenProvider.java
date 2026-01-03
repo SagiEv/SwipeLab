@@ -25,8 +25,7 @@ public class JwtTokenProvider {
             String username,
             String role,
             TokenType tokenType,
-            Duration expiration
-    ) {
+            Duration expiration) {
         Instant now = Instant.now();
 
         return Jwts.builder()
@@ -83,6 +82,9 @@ public class JwtTokenProvider {
      */
     public TokenType extractTokenType(String token) {
         String type = parseClaims(token).get("type", String.class);
+        if (type == null) {
+            throw new IllegalArgumentException("Token type is missing from JWT claims");
+        }
         return TokenType.valueOf(type);
     }
 }
