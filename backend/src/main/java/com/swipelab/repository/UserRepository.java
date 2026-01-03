@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
+import java.util.Collection;
+import java.util.Set;
 
 public interface UserRepository extends JpaRepository<User, String> {
 
@@ -19,4 +21,6 @@ public interface UserRepository extends JpaRepository<User, String> {
     Optional<User> findByEmailVerificationToken(String token);
 
     Optional<User> findByResetPasswordToken(String token);
+
+    Set<User> findByUsernameIn(Collection<String> usernames);
 }
