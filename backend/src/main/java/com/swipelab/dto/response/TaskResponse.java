@@ -1,22 +1,20 @@
 package com.swipelab.dto.response;
 
-import com.swipelab.model.enums.TaskStatus;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.List;
 
 @Data
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
 public class TaskResponse {
-    private Long id;
-    private String title;
+    private Long taskId;
+    private String status;
+    private String name;
     private String description;
-    private TaskStatus status;
-    private String createdBy; // username
-    private LocalDateTime createdAt;
+    private List<TargetSpeciesResponse> targetSpecies;
+    private List<Long> experiments;
+    private List<Long> recipientGroups;
+    private TaskProgressResponse progress;
+
 }

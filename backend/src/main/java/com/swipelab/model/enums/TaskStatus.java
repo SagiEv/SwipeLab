@@ -1,8 +1,9 @@
 package com.swipelab.model.enums;
 
 public enum TaskStatus {
+    DRAFT,
     ACTIVE,
-    PENDING,
+    PAUSED,
     COMPLETED,
     ARCHIVED
 }
