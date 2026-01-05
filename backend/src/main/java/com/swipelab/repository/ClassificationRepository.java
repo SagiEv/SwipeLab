@@ -42,7 +42,8 @@ public interface ClassificationRepository extends JpaRepository<Classification, 
 
     /**
      * Find all non-expert (regular user) classifications for a specific image
-     * Used when an expert classifies and we need to update all regular users who classified this image
+     * Used when an expert classifies and we need to update all regular users who
+     * classified this image
      */
     @Query("SELECT c FROM Classification c WHERE c.image.id = :imageId AND c.user.role != 'RESEARCHER'")
     List<Classification> findNonExpertClassificationsByImageId(@Param("imageId") Long imageId);
@@ -60,4 +61,9 @@ public interface ClassificationRepository extends JpaRepository<Classification, 
     @Query("SELECT c FROM Classification c WHERE c.user.username = :username " +
             "AND EXISTS (SELECT ec FROM Classification ec WHERE ec.image.id = c.image.id AND ec.user.role = 'RESEARCHER')")
     List<Classification> findUserClassificationsWithExpertOverlap(@Param("username") String username);
+
+    /**
+     * Count total classifications for a specific image
+     */
+    long countByImage_Id(Long imageId);
 }
