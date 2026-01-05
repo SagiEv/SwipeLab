@@ -200,4 +200,14 @@ public class CredibilityCalculator {
 
         return (double) maxVotes / classifications.size();
     }
+
+    public double calculateWeightedCohenKappa(List<Classification> userClassifications, List<Classification> expertClassifications) {
+        // Take only the last 50 classifications to create a "moving" effect
+        List<Classification> recentClassifications = userClassifications.stream()
+                .sorted(Comparator.comparing(Classification::getCreatedAt).reversed())
+                .limit(50)
+                .toList();
+
+        return calculateCohenKappa(recentClassifications, expertClassifications);
+    }
 }

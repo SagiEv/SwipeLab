@@ -171,4 +171,6 @@ public class User {
         @Column(name = "is_flagged", nullable = false)
         @Builder.Default
         private Boolean isFlagged = false;
+
+
 }
