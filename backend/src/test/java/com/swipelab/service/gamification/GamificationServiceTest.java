@@ -107,4 +107,33 @@ class GamificationServiceTest {
         assertEquals(1, user.getBadges().size());
         assertEquals("3 Day Streak", user.getBadges().iterator().next().getName());
     }
+
+    @Test
+    void testCalculatePointsWithMultiplier() {
+        PointsService pointsServiceWithRealMethod = new PointsService(userRepository);
+
+        // < 7 days: 1.0x
+        user.setCurrentStreak(5);
+        user.setPoints(0L);
+        pointsServiceWithRealMethod.calculateAndAddPoints(user, 10);
+        assertEquals(10, user.getPoints(), "Streak 5: Should be 10 points (1.0x)");
+
+        // 7 days: 1.1x
+        user.setCurrentStreak(7);
+        user.setPoints(0L);
+        pointsServiceWithRealMethod.calculateAndAddPoints(user, 10);
+        assertEquals(11, user.getPoints(), "Streak 7: Should be 11 points (1.1x)");
+
+        // 14 days: 1.25x
+        user.setCurrentStreak(14);
+        user.setPoints(0L);
+        pointsServiceWithRealMethod.calculateAndAddPoints(user, 10);
+        assertEquals(13, user.getPoints(), "Streak 14: Should be 12.5 -> 13 points (1.25x rounded)");
+
+        // 30 days: 1.5x
+        user.setCurrentStreak(30);
+        user.setPoints(0L);
+        pointsServiceWithRealMethod.calculateAndAddPoints(user, 10);
+        assertEquals(15, user.getPoints(), "Streak 30: Should be 15 points (1.5x)");
+    }
 }

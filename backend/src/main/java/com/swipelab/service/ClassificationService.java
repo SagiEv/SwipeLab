@@ -69,7 +69,7 @@ public class ClassificationService {
         if (Boolean.TRUE.equals(image.getIsGoldStandard()) && image.getCorrectLabel() != null) {
             isCorrect = image.getCorrectLabel().getId().equals(label.getId());
             if (Boolean.TRUE.equals(isCorrect)) {
-                pointsService.addPoints(user, 50); // Bonus for correct gold standard
+                pointsService.calculateAndAddPoints(user, 50); // Bonus for correct gold standard
             }
         }
 

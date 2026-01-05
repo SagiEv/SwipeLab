@@ -24,11 +24,11 @@ public class PointsService {
         double multiplier = 1.0;
 
         if (streak >= 30) {
-            multiplier = 1.5; // +50%
+            multiplier = 1.5; // +50% for 30+ days
         } else if (streak >= 14) {
-            multiplier = 1.25; // +25%
+            multiplier = 1.25; // +25% for 14+ days
         } else if (streak >= 7) {
-            multiplier = 1.1; // +10%
+            multiplier = 1.1; // +10% for 7+ days
         }
 
         int finalPoints = (int) Math.round(basePoints * multiplier);
