@@ -87,11 +87,6 @@ class GamificationServiceTest {
         streakService.updateStreak(user);
 
         assertEquals(5, user.getCurrentStreak());
-        // Verify save is NOT called if no update needed (optimization check)
-        // Adjust based on your implementation: currently implementations saves anyway
-        // if we want updates timestamp?
-        // Actually my implementation checks: if (today.equals(lastUpdateDate)) return;
-        // So save should NOT be called.
         verify(userRepository, never()).save(user);
     }
 
