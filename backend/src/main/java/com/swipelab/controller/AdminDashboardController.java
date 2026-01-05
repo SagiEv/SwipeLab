@@ -5,13 +5,14 @@ import com.swipelab.dto.request.CreateTaskRequest;
 import com.swipelab.dto.request.UpdateRecipientGroupRequest;
 import com.swipelab.dto.request.UpdateTaskRequest;
 import com.swipelab.dto.response.*;
-import com.swipelab.service.AdminDashboardService; // Rename service too if you like
+import com.swipelab.service.AdminDashboardService;
+import com.swipelab.service.analytics.AnalyticsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import java.util.List;
-import java.util.Map;
+
 @RestController
 @RequestMapping("/api/v1/dashboard")
 @RequiredArgsConstructor
@@ -19,6 +20,7 @@ import java.util.Map;
 public class AdminDashboardController {
 
     private final AdminDashboardService adminDashboardService;
+    private final AnalyticsService analyticsService;
 
     // ===== TASKS =====
 
@@ -40,8 +42,7 @@ public class AdminDashboardController {
     @PutMapping("/tasks/{taskId}")
     public TaskResponse updateTask(
             @PathVariable Long taskId,
-            @RequestBody UpdateTaskRequest request
-    ) {
+            @RequestBody UpdateTaskRequest request) {
         return adminDashboardService.updateTask(taskId, request);
     }
 
@@ -55,12 +56,22 @@ public class AdminDashboardController {
         return adminDashboardService.pauseTask(taskId);
     }
 
+    // ===== ANALYTICS =====
+
     @GetMapping("/tasks/{taskId}/analytics")
     public TaskAnalyticsResponse taskAnalytics(@PathVariable Long taskId) {
-//        return adminDashboardService.getTaskAnalytics(taskId);
-        throw new UnsupportedOperationException("Not implemented yet");
+        return analyticsService.getTaskAnalytics(taskId);
     }
 
+    @GetMapping("/analytics/users")
+    public List<UserPerformanceResponse> getUserPerformance(@RequestParam(required = false) Long taskId) {
+        return analyticsService.getUserPerformanceMetrics(taskId);
+    }
+
+    @GetMapping("/analytics/top-performers")
+    public List<UserPerformanceResponse> getTopPerformers(@RequestParam(defaultValue = "10") int limit) {
+        return analyticsService.getTopPerformers(limit);
+    }
 
     // ===== RECIPIENTS =====
 
@@ -71,8 +82,7 @@ public class AdminDashboardController {
 
     @PostMapping("/recipients/create")
     public RecipientGroupResponse createRecipients(
-            @RequestBody CreateRecipientGroupRequest request
-    ) {
+            @RequestBody CreateRecipientGroupRequest request) {
         return adminDashboardService.createRecipientGroup(request);
     }
 
@@ -84,16 +94,7 @@ public class AdminDashboardController {
     @PutMapping("/recipients/{groupId}/update")
     public RecipientGroupResponse updateRecipients(
             @PathVariable Long groupId,
-            @RequestBody UpdateRecipientGroupRequest request
-    ) {
+            @RequestBody UpdateRecipientGroupRequest request) {
         return adminDashboardService.updateRecipientGroup(groupId, request);
     }
-
-    // ===== TAXONOMY =====
-
-//    @GetMapping("/taxonomy")
-//    public TaxonomyResponse getTaxonomy() {
-//        throw new UnsupportedOperationException("Not implemented yet");
-////        return adminDashboardService.getTaxonomy();
-//    }
 }
