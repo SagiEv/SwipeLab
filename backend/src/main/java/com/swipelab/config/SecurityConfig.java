@@ -53,18 +53,11 @@ public class SecurityConfig {
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(auth -> auth
-                                                // Public endpoints
+                                                // Public endpoints - Static Resources
                                                 .requestMatchers(
                                                                 "/",
                                                                 "/error",
-                                                                "/favicon.ico",
-                                                                "/**/*.png",
-                                                                "/**/*.gif",
-                                                                "/**/*.svg",
-                                                                "/**/*.jpg",
-                                                                "/**/*.html",
-                                                                "/**/*.css",
-                                                                "/**/*.js")
+                                                                "/favicon.ico")
                                                 .permitAll()
                                                 .requestMatchers(
                                                                 "/api/v1/auth/**",
@@ -86,7 +79,7 @@ public class SecurityConfig {
                                                 .authorizationEndpoint(authorization -> authorization
                                                                 .baseUri("/oauth2/authorize"))
                                                 .redirectionEndpoint(redirection -> redirection
-                                                                .baseUri("/oauth2/callback/*"))
+                                                                .baseUri("/oauth2/callback/**"))
                                                 .successHandler(oAuth2AuthenticationSuccessHandler)
                                                 .failureHandler(oAuth2AuthenticationFailureHandler))
                                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
