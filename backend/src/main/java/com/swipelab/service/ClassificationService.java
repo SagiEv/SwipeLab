@@ -14,6 +14,7 @@ import com.swipelab.repository.LabelRepository;
 import com.swipelab.repository.UserRepository;
 import com.swipelab.service.gamification.BadgeService;
 import com.swipelab.service.gamification.PointsService;
+import com.swipelab.service.gamification.StreakService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +29,7 @@ public class ClassificationService {
     private final UserRepository userRepository;
     private final BadgeService badgeService;
     private final PointsService pointsService;
+    private final StreakService streakService;
 
     @Transactional
     public ClassificationResponse submitClassification(String username, ClassificationRequest request) {
@@ -56,8 +58,11 @@ public class ClassificationService {
         // Update User Stats
         user.setTotalClassifications(user.getTotalClassifications() + 1);
 
-        // Gamification: Award 10 points per swipe
-        pointsService.addPoints(user, 10);
+        // Gamification: Update Streak
+        streakService.updateStreak(user);
+
+        // Gamification: Award points with multiplier (must be after streak update)
+        pointsService.calculateAndAddPoints(user, 10);
 
         // Determine correctness if it's a gold standard image
         Boolean isCorrect = null;

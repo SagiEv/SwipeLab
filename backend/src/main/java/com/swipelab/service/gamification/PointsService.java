@@ -17,4 +17,21 @@ public class PointsService {
         user.setPoints(user.getPoints() + amount);
         userRepository.save(user);
     }
+
+    @Transactional
+    public void calculateAndAddPoints(User user, int basePoints) {
+        int streak = user.getCurrentStreak();
+        double multiplier = 1.0;
+
+        if (streak >= 30) {
+            multiplier = 1.5; // +50%
+        } else if (streak >= 14) {
+            multiplier = 1.25; // +25%
+        } else if (streak >= 7) {
+            multiplier = 1.1; // +10%
+        }
+
+        int finalPoints = (int) Math.round(basePoints * multiplier);
+        addPoints(user, finalPoints);
+    }
 }
