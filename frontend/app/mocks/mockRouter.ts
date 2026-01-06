@@ -4,6 +4,7 @@ import { dashboardAdminMock } from './data/dashboard.admin.mock'
 import { dashboardUserMock } from './data/dashboard.user.mock'
 import { leaderboardMock } from './data/leaderboard.mock'
 import { statisticsMock } from './data/statistics.mock'
+import { refinedChallengesMock } from './data/challenges.mock'
 
 type Method = 'GET' | 'POST' | 'PUT' | 'DELETE'
 
@@ -151,7 +152,7 @@ export async function mockRouter(
     }
 
     return jsonResponse(taskDetails)
-}
+  }
 
 
   // ---------- CLASSIFICATION ----------
@@ -191,6 +192,11 @@ export async function mockRouter(
 
   if (method === 'GET' && url.endsWith('/timeseries')) {
     return jsonResponse(statisticsMock.timeseries)
+  }
+
+  // CHALLENGES
+  if (method === 'GET' && url.endsWith('/api/v1/challenges')) {
+    return jsonResponse(refinedChallengesMock)
   }
 
   // ---------- FALLBACK ----------
