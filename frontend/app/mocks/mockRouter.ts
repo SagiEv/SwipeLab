@@ -4,11 +4,16 @@ import { dashboardAdminMock } from './data/dashboard.admin.mock'
 import { dashboardUserMock } from './data/dashboard.user.mock'
 
 import { leaderboardMock } from './data/leaderboard.mock'
-import { statisticsMock } from './data/statistics.mock'
 import { refinedChallengesMock } from './data/challenges.mock'
 import { statisticsMock, setUserAccuracy } from './data/statistics.mock'
-import { getLeaderboardData, setUserScore } from './data/leaderboard.mock'
 
+import { getLeaderboardData, setUserScore } from './data/leaderboard.mock'
+import {
+  addRecipientGroup,
+  addUserToGroup,
+  removeUserFromGroup,
+  getRecipientGroups
+} from './data/recipients.mock'
 
 type Method = 'GET' | 'POST' | 'PUT' | 'DELETE'
 
@@ -113,6 +118,19 @@ export async function mockRouter(
     })
   }
 
+  if (url.endsWith('/api/v1/auth/profile') && method === 'GET') {
+    return jsonResponse(authMock.profile)
+  }
+
+  if (url.endsWith('/api/v1/auth/password/change') && method === 'POST') {
+    // Validate that newPassword exists in body
+    if (!body.newPassword) {
+      return jsonResponse({ message: 'New password is required' }, 400);
+    }
+    return jsonResponse({ message: 'Password has been reset successfully' });
+  }
+
+
   // ---------- DASHBOARD (USER) ----------
   if (method === 'GET' && url.endsWith('/api/v1/dashboard/my-tasks')) {
     return jsonResponse(dashboardUserMock.tasks)
@@ -211,6 +229,8 @@ export async function mockRouter(
   // CHALLENGES
   if (method === 'GET' && url.endsWith('/api/v1/challenges')) {
     return jsonResponse(refinedChallengesMock)
+  }
+
   if (method === 'POST' && url.endsWith('/api/v1/statistics/update-accuracy')) {
     const { accuracy } = body;
     if (typeof accuracy === 'number') {
@@ -218,6 +238,69 @@ export async function mockRouter(
       return jsonResponse({ message: 'Accuracy updated', newStats: statisticsMock.summary });
     }
     return jsonResponse({ message: 'Invalid accuracy' }, 400);
+  }
+
+  // ---------- MANAGER / RECIPIENTS ----------
+  if (method === 'GET' && url.endsWith('/api/v1/manager/recipient-groups')) {
+    return jsonResponse(getRecipientGroups())
+  }
+
+  // Create Group
+  if (method === 'POST' && url.endsWith('/api/v1/manager/recipient-groups')) {
+    const { name } = body as { name: string };
+    const newGroup = addRecipientGroup(name);
+    return jsonResponse(newGroup, 201);
+  }
+
+  // Add User(s) to Group
+  if (method === 'POST' && url.match(/\/api\/v1\/manager\/recipient-groups\/\d+\/users$/)) {
+    const groupId = parseInt(url.split('/recipient-groups/')[1].split('/')[0]);
+
+    // Support batch { userIds: [] } or single { userId }
+    const userIds = body.userIds || (body.userId ? [body.userId] : []);
+
+    let updatedGroup;
+    userIds.forEach((uid: number) => {
+      updatedGroup = addUserToGroup(groupId, uid);
+    });
+
+    if (!updatedGroup && userIds.length > 0) return jsonResponse({ message: 'Group or User not found' }, 404);
+
+    // Return the latest state of the group
+    return jsonResponse(getRecipientGroups().find(g => g.id === groupId));
+  }
+
+  // Remove User from Group
+  if (method === 'DELETE' && url.match(/\/api\/v1\/manager\/recipient-groups\/\d+\/users\/\d+$/)) {
+    const parts = url.split('/');
+    const groupId = parseInt(parts[parts.indexOf('recipient-groups') + 1]);
+    const userId = parseInt(parts[parts.indexOf('users') + 1]);
+
+    const updatedGroup = removeUserFromGroup(groupId, userId);
+    if (!updatedGroup) return jsonResponse({ message: 'Group not found' }, 404);
+    return jsonResponse(updatedGroup);
+  }
+
+  // ---------- USERS MANAGEMENT ----------
+  if (method === 'GET' && url.endsWith('/api/v1/manager/users')) {
+    const mockUsers = authMock.users.map((u, i) => ({
+      id: (i + 1).toString(),
+      username: u.username,
+      email: u.email,
+      role: u.role,
+      score: Math.floor(Math.random() * 100) / 100 // Random score 0.00 - 0.99
+    }));
+    // Add some extra dummy users for UI demonstration
+    for (let i = 0; i < 10; i++) {
+      mockUsers.push({
+        id: (mockUsers.length + 1).toString(),
+        username: `User${Math.floor(Math.random() * 1000)}`,
+        email: `user${i}@example.com`,
+        role: 'USER',
+        score: Math.floor(Math.random() * 100) / 100
+      });
+    }
+    return jsonResponse(mockUsers);
   }
 
   // ---------- FALLBACK ----------

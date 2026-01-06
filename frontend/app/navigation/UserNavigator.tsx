@@ -3,10 +3,13 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 import SettingsScreen from "../screens/shared/SettingsScreen";
 import LeaderboardScreen from "../screens/user/LeaderboardScreen";
+import UserMyTasksScreen from "../screens/user/UserMyTasksScreen";
 import SwipeScreen from "../screens/user/SwipeScreen";
 import ChallengesScreen from "../screens/user/ChallengesScreen";
 import StatsScreen from "../screens/user/StatsScreen";
+import ProfileScreen from "../screens/shared/ProfileScreen";
 import BottomBar from "./components/BottomBar";
+import TaskDetailsScreen from "../screens/user/TaskDetailsScreen";
 import TopBar from "./components/TopBar";
 
 const Stack = createNativeStackNavigator();
@@ -14,18 +17,20 @@ const Stack = createNativeStackNavigator();
 export default function UserNavigator() {
   return (
     <View style={styles.container}>
-      {/* Top Bar */}
+      {/* Global TopBar for all user screens */}
       <TopBar />
 
       {/* Middle Navigator */}
       <View style={styles.content}>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="SwipeLab" component={SwipeScreen} />
+          <Stack.Screen name="Tasks" component={UserMyTasksScreen} />
+          <Stack.Screen name="TaskDetails" component={TaskDetailsScreen} />
           <Stack.Screen name="Challenges" component={ChallengesScreen} />
           <Stack.Screen name="UserSettings" component={SettingsScreen} />
           <Stack.Screen name="Stats" component={StatsScreen} />
           <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
-          {/* other screens */}
+          <Stack.Screen name="Profile" component={ProfileScreen} />
         </Stack.Navigator>
       </View>
 
@@ -45,9 +50,9 @@ export default function UserNavigator() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, // Fill entire screen
+    flex: 1,
   },
   content: {
-    flex: 1, // Take remaining space between top and bottom
+    flex: 1,
   },
 });
