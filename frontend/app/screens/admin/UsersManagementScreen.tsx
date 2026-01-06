@@ -1,56 +1,140 @@
 import React from 'react';
-import { StyleSheet, Text, View, Image } from 'react-native';
+import { StyleSheet, Text, View, FlatList, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { AdminStackParamList } from "../../navigation/adminStack.types";
+import ScreenHeaderLayout from "../../components/layout/ScreenHeaderLayout/ScreenHeaderLayout";
+import { apiFetch } from "../../api/apiFetch";
+
+// Images
+import usersImg from "../../../assets/images/users.png";
+import addTaskImg from "../../../assets/images/add_task.png";
+import profileImg from "../../../assets/images/profile.png";
+
+type UsersManagementScreenNavigationProp = NativeStackNavigationProp<AdminStackParamList, 'UsersManagement'>;
+
+interface User {
+    id: string;
+    username: string;
+    score: number;
+}
 
 export default function UsersManagementScreen() {
-    return (
-        <View style={styles.container}>
-            <View style={styles.content}>
-                <Image
-                    source={require('../../../assets/images/users.png')}
-                    style={styles.icon}
-                />
-                <Text style={styles.title}>Users Management</Text>
-                <Text style={styles.subtitle}>Coming Soon</Text>
-                <Text style={styles.description}>
-                    This section will allow you to manage individual user accounts, permissions, and roles.
-                </Text>
+    const navigation = useNavigation<UsersManagementScreenNavigationProp>();
+    const [users, setUsers] = React.useState<User[]>([]);
+    const [loading, setLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        loadUsers();
+    }, []);
+
+    const loadUsers = async () => {
+        try {
+            setLoading(true);
+            const res = await apiFetch('/api/v1/manager/users');
+            if (res.ok) {
+                const data = await res.json();
+                setUsers(data);
+            } else {
+                console.error("Failed to load users", res.status);
+            }
+        } catch (e) {
+            console.error("Error loading users", e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const renderItem = ({ item }: { item: User }) => (
+        <TouchableOpacity style={styles.card}>
+            <View style={styles.avatarContainer}>
+                <Image source={profileImg} style={styles.avatar} />
             </View>
-        </View>
+            <Text style={styles.username}>{item.username}</Text>
+            <Text style={styles.score}>{item.score}</Text>
+        </TouchableOpacity>
+    );
+
+    return (
+        <ScreenHeaderLayout
+            leftIcon={usersImg}
+            leftTitle="Users"
+            rightIcon={addTaskImg}
+            rightTitle="Add User"
+            onRightPress={() => console.log("Add User Pressed")}
+        >
+            <View style={styles.container}>
+                {loading ? (
+                    <Text style={{ textAlign: 'center', marginTop: 20 }}>Loading...</Text>
+                ) : (
+                    <FlatList
+                        data={users}
+                        renderItem={renderItem}
+                        keyExtractor={item => item.id}
+                        numColumns={3}
+                        contentContainerStyle={styles.listContent}
+                        columnWrapperStyle={styles.columnWrapper}
+                    />
+                )}
+            </View>
+        </ScreenHeaderLayout>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        paddingHorizontal: 16,
+    },
+    listContent: {
+        paddingTop: 16,
+        paddingBottom: 32,
+    },
+    columnWrapper: {
+        justifyContent: 'space-between',
+        marginBottom: 16,
+    },
+    card: {
+        backgroundColor: 'white',
+        borderRadius: 12,
+        padding: 12,
+        alignItems: 'center',
+        width: '30%', // Approx 1/3 minus spacing
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 3.84,
+        elevation: 3,
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
+    },
+    avatarContainer: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: '#D8BFD8', // Light purple background placeholder
         justifyContent: 'center',
         alignItems: 'center',
+        marginBottom: 8,
     },
-    content: {
-        alignItems: 'center',
-        padding: 30,
+    avatar: {
+        width: 30,
+        height: 30,
+        tintColor: 'white',
     },
-    icon: {
-        width: 80,
-        height: 80,
-        marginBottom: 20,
-        tintColor: '#ccc'
+    username: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#555',
+        marginBottom: 4,
+        textAlign: 'center',
     },
-    title: {
-        fontSize: 24,
+    score: {
+        fontSize: 14,
         fontWeight: 'bold',
         color: '#333',
-        marginBottom: 10,
     },
-    subtitle: {
-        fontSize: 18,
-        color: '#4B7BE5',
-        marginBottom: 20,
-        fontWeight: '600'
-    },
-    description: {
-        textAlign: 'center',
-        color: '#666',
-        lineHeight: 22,
-    }
 });
