@@ -70,6 +70,9 @@ export default function AdminNavigator() {
             name="AddGoldImage"
             component={AddGoldImageScreen}
             options={{ title: "Add Gold Image" }}
+          />
+
+          <Stack.Screen
             name="RecipientsList"
             component={RecipientsListScreen}
             options={{ title: "Recipients List" }}
