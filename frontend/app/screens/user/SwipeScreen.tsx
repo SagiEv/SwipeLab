@@ -5,6 +5,7 @@ import SwipeButtons from '../../components/user/SwipeButtons';
 import SwipeCard, { SwipeCardHandle } from '../../components/user/SwipeCard';
 import useResponsive from '../../hooks/useResponsive';
 import { SwipeDirection } from '../../types';
+import UserTopBar from '../../components/user/UserTopBar';
 
 export default function SwipeScreen() {
   const [showReference, setShowReference] = useState(false);
@@ -50,6 +51,9 @@ export default function SwipeScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={{ width: '100%', marginBottom: 10 }}>
+        <UserTopBar />
+      </View>
       <View style={[styles.cardSection, { maxWidth: size }]}>
         <SwipeCard
           ref={cardRef}
@@ -63,10 +67,10 @@ export default function SwipeScreen() {
         {showReference ? (
           <ReferenceGallery
             images={['https://snworksceo.imgix.net/ids/673119a2-05dd-4329-a9cc-9cc0f4496267.sized-1000x1000.png?w=1000',
-    'https://snworksceo.imgix.net/ids/673119a2-05dd-4329-a9cc-9cc0f4496267.sized-1000x1000.png?w=1000',
-    'https://snworksceo.imgix.net/ids/673119a2-05dd-4329-a9cc-9cc0f4496267.sized-1000x1000.png?w=1000',
-    'https://snworksceo.imgix.net/ids/673119a2-05dd-4329-a9cc-9cc0f4496267.sized-1000x1000.png?w=1000',
- 
+              'https://snworksceo.imgix.net/ids/673119a2-05dd-4329-a9cc-9cc0f4496267.sized-1000x1000.png?w=1000',
+              'https://snworksceo.imgix.net/ids/673119a2-05dd-4329-a9cc-9cc0f4496267.sized-1000x1000.png?w=1000',
+              'https://snworksceo.imgix.net/ids/673119a2-05dd-4329-a9cc-9cc0f4496267.sized-1000x1000.png?w=1000',
+
 
             ]}
             onClose={() => setShowReference(false)}
@@ -90,16 +94,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#daddffff',
-    paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 0,
     alignItems: 'center',
   },
   cardSection: {
     width: '100%',
+    paddingHorizontal: 16,
     marginBottom: 16,
   },
   buttonSection: {
     width: '100%',
+    paddingHorizontal: 16,
     maxWidth: 300,
   },
 });
