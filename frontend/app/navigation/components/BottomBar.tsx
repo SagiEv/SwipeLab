@@ -1,3 +1,4 @@
+import { useThemeColor } from '@/app/hooks/use-theme-color';
 import { useNavigation } from "@react-navigation/native";
 import React from "react";
 import { Image, ImageSourcePropType, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -14,7 +15,9 @@ interface Props {
 
 export default function BottomBar({ items }: Props) {
   const navigation = useNavigation<any>();
-
+  const backgroundColor = useThemeColor({}, 'background');
+  const textColor = useThemeColor({}, 'text');
+  const borderColor = useThemeColor({}, 'icon');
   return (
     
     <View style={styles.container}>
