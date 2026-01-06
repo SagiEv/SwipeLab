@@ -102,6 +102,7 @@ export default function AdminNavigator() {
             options={{ title: "My Profile" }}
           />
 
+          <Stack.Screen
             name="Taxonomy"
             component={TaxonomyScreen}
             options={{ title: "Taxonomy" }}
