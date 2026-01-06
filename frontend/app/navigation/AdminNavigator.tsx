@@ -13,6 +13,7 @@ import TasksManagementScreen from "../screens/admin/TasksManagementScreen";
 import RecipientsListScreen from "../screens/admin/RecipientsListScreen";
 import RecipientGroupDetailsScreen from "../screens/admin/RecipientGroupDetailsScreen";
 import UsersManagementScreen from "../screens/admin/UsersManagementScreen";
+import TaxonomyScreen from "../screens/admin/TaxonomyScreen";
 import SettingsScreen from "../screens/shared/SettingsScreen";
 
 import { AdminStackParamList } from "./adminStack.types";
@@ -79,6 +80,11 @@ export default function AdminNavigator() {
             name="UserSettings"
             component={SettingsScreen}
             options={{ title: "Settings" }}
+          />
+          <Stack.Screen
+            name="Taxonomy"
+            component={TaxonomyScreen}
+            options={{ title: "Taxonomy" }}
           />
         </Stack.Navigator>
 
