@@ -8,6 +8,8 @@ import com.swipelab.exception.PasswordResetException;
 import com.swipelab.model.entity.User;
 import com.swipelab.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthenticationService {
 
     private final UserRepository userRepository;
@@ -26,6 +29,9 @@ public class AuthenticationService {
     private final EmailService emailService;
     private final com.swipelab.mapper.AuthMapper authMapper;
     private final JwtService jwtService;
+
+    @Value("${app.auto-verify-emails:false}")
+    private boolean autoVerifyEmails;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -48,11 +54,21 @@ public class AuthenticationService {
         user.setEmailVerificationToken(verificationToken);
         user.setVerificationTokenExpiry(LocalDateTime.now().plusHours(24)); // 24-hour expiry
 
+        // Auto-verify emails in development environment
+        if (autoVerifyEmails) {
+            user.setEmailVerified(true);
+            log.info("✅ Auto-verified email for user: {} (development mode)", user.getEmail());
+        } else {
+            user.setEmailVerified(false);
+        }
+
         // Save user
         User savedUser = userRepository.save(user);
 
-        // Send verification email asynchronously
-        emailService.sendVerificationEmail(savedUser.getEmail(), verificationToken);
+        // Send verification email asynchronously (only if not auto-verified)
+        if (!autoVerifyEmails) {
+            emailService.sendVerificationEmail(savedUser.getEmail(), verificationToken);
+        }
 
         // Generate tokens
         String accessToken = jwtService.generateAccessToken(savedUser);

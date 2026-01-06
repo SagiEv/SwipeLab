@@ -121,6 +121,7 @@ export default function AdminNavigator() {
       {/* Bottom Bar */}
       <BottomBar
         items={[
+          { label: "Home", route: "AdminDashboard", icon: require("../../assets/images/home.png") },
           { label: "Users", route: "UsersManagement", icon: require("../../assets/images/users.png") },
           { label: "Leaderboard", route: "Leaderboard", icon: require("../../assets/images/leaderboard.png") },
           { label: "Analytics", route: "Analytics", icon: require("../../assets/images/stats.png") },

@@ -308,6 +308,28 @@ export async function mockRouter(
     return jsonResponse(updatedGroup);
   }
 
+  // ---------- USERS MANAGEMENT ----------
+  if (method === 'GET' && url.endsWith('/api/v1/manager/users')) {
+    const mockUsers = authMock.users.map((u, i) => ({
+      id: (i + 1).toString(),
+      username: u.username,
+      email: u.email,
+      role: u.role,
+      score: Math.floor(Math.random() * 100) / 100 // Random score 0.00 - 0.99
+    }));
+    // Add some extra dummy users for UI demonstration
+    for (let i = 0; i < 10; i++) {
+      mockUsers.push({
+        id: (mockUsers.length + 1).toString(),
+        username: `User${Math.floor(Math.random() * 1000)}`,
+        email: `user${i}@example.com`,
+        role: 'USER',
+        score: Math.floor(Math.random() * 100) / 100
+      });
+    }
+    return jsonResponse(mockUsers);
+  }
+
   // ---------- FALLBACK ----------
   return jsonResponse({ message: 'Mock route not found' }, 404)
 }

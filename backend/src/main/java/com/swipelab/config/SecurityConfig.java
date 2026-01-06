@@ -4,6 +4,7 @@ import com.swipelab.security.CustomOAuth2UserService;
 import com.swipelab.security.JwtAuthenticationFilter;
 import com.swipelab.security.OAuth2AuthenticationFailureHandler;
 import com.swipelab.security.OAuth2AuthenticationSuccessHandler;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -12,8 +13,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -43,42 +42,35 @@ public class SecurityConfig {
         @Value("${cors.allowed-origins}")
         private String allowedOrigins;
 
-        // ADD THIS BEAN
-
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
                                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                                 .csrf(csrf -> csrf.disable())
+                                .exceptionHandling(exception -> exception
+                                                .authenticationEntryPoint((request, response, authException) -> {
+                                                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                                        response.setContentType("application/json");
+                                                        response.getWriter().write(
+                                                                        "{\"error\": \"Unauthorized\", \"message\": \""
+                                                                                        + authException.getMessage()
+                                                                                        + "\"}");
+                                                }))
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(auth -> auth
-                                                // Public endpoints
                                                 .requestMatchers(
                                                                 "/",
                                                                 "/error",
                                                                 "/favicon.ico",
-                                                                "/**/*.png",
-                                                                "/**/*.gif",
-                                                                "/**/*.svg",
-                                                                "/**/*.jpg",
-                                                                "/**/*.html",
-                                                                "/**/*.css",
-                                                                "/**/*.js")
-                                                .permitAll()
-                                                .requestMatchers(
                                                                 "/api/v1/auth/**",
                                                                 "/auth/**",
                                                                 "/oauth2/**",
-                                                                "/login/**")
-                                                .permitAll()
-                                                .requestMatchers(
+                                                                "/login/**",
                                                                 "/v3/api-docs/**",
                                                                 "/swagger-ui/**",
                                                                 "/swagger-ui.html")
                                                 .permitAll()
-
-                                                // All other requests require authentication
                                                 .anyRequest().authenticated())
                                 .oauth2Login(oauth2 -> oauth2
                                                 .userInfoEndpoint(userInfo -> userInfo
@@ -86,7 +78,7 @@ public class SecurityConfig {
                                                 .authorizationEndpoint(authorization -> authorization
                                                                 .baseUri("/oauth2/authorize"))
                                                 .redirectionEndpoint(redirection -> redirection
-                                                                .baseUri("/oauth2/callback/*"))
+                                                                .baseUri("/oauth2/callback/**"))
                                                 .successHandler(oAuth2AuthenticationSuccessHandler)
                                                 .failureHandler(oAuth2AuthenticationFailureHandler))
                                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -97,7 +89,12 @@ public class SecurityConfig {
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
-                configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+                // Handle potential null/empty allowedOrigins
+                if (allowedOrigins != null && !allowedOrigins.isEmpty()) {
+                        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+                } else {
+                        configuration.setAllowedOrigins(List.of("*")); // Fallback
+                }
                 configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                 configuration.setAllowedHeaders(List.of("*"));
                 configuration.setAllowCredentials(true);

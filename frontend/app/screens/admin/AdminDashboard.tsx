@@ -23,9 +23,9 @@ const buttons = [
   { title: "Tasks", image: tasksImg, screen: "TasksManagement" },
   { title: "Add Task", image: addTaskImg, screen: "AddTask" },
   { title: "Taxonomy", image: taxonomyImg, screen: "Taxonomy" },
-  { title: "Recipients List", image: recipientsImg, screen: "RecipientsList" },
   { title: "Gold Images", image: goldImagesImg, screen: "GoldImagesManagement" },
   { title: "Add Gold Image", image: addGoldImg, screen: "AddGoldImage" },
+  { title: "Recipients List", image: recipientsImg, screen: "RecipientsList" },
 ];
 
 export default function AdminDashboard({ navigation }: any) {
