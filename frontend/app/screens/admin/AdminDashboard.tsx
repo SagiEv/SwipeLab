@@ -22,7 +22,7 @@ const buttons = [
   { title: "Tasks", image: tasksImg, screen: "TasksManagement" },
   { title: "Add Task", image: addTaskImg, screen: "AddTask" },
   { title: "Taxonomy", image: taxonomyImg },
-  { title: "Recipients List", image: recipientsImg },
+  { title: "Recipients List", image: recipientsImg, screen: "RecipientsList" },
   { title: "Gold Images", image: goldImagesImg },
   { title: "Add Gold Image", image: addGoldImg },
 ];
@@ -40,17 +40,17 @@ export default function AdminDashboard({ navigation }: any) {
     <View style={[styles.container, isWeb && styles.webContainer]}>
       {buttons.map((btn, index) => (
         <TouchableOpacity
-  key={index}
-  style={[
-    styles.tile,
-    { width: tileSize, height: tileSize },
-  ]}
-  onPress={() => {
-    if (btn.screen) {
-      navigation.navigate(btn.screen);
-    }
-  }}
->
+          key={index}
+          style={[
+            styles.tile,
+            { width: tileSize, height: tileSize },
+          ]}
+          onPress={() => {
+            if (btn.screen) {
+              navigation.navigate(btn.screen);
+            }
+          }}
+        >
 
           <Image
             source={btn.image}
