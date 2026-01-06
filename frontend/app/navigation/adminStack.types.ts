@@ -8,6 +8,7 @@ export type AdminStackParamList = {
   AddGoldImage: undefined;
   RecipientsList: undefined;
   RecipientGroupDetails: { group: any };
+  Analytics: undefined;
   UsersManagement: undefined;
   Taxonomy: undefined;
   UserSettings: undefined;

@@ -6,6 +6,7 @@ import { dashboardUserMock } from './data/dashboard.user.mock'
 import { leaderboardMock } from './data/leaderboard.mock'
 import { refinedChallengesMock } from './data/challenges.mock'
 import { statisticsMock, setUserAccuracy } from './data/statistics.mock'
+import { analyticsMock, getTaskAnalytics, getUserPerformance } from './data/analytics.mock'
 
 import { getLeaderboardData, setUserScore } from './data/leaderboard.mock'
 import {
@@ -238,6 +239,32 @@ export async function mockRouter(
       return jsonResponse({ message: 'Accuracy updated', newStats: statisticsMock.summary });
     }
     return jsonResponse({ message: 'Invalid accuracy' }, 400);
+  }
+
+  // ---------- ANALYTICS ----------
+  // Task Analytics
+  if (method === 'GET' && url.match(/\/api\/v1\/dashboard\/tasks\/\d+\/analytics$/)) {
+    const idMatch = url.match(/\/api\/v1\/dashboard\/tasks\/(\d+)\/analytics$/);
+    const taskId = idMatch ? parseInt(idMatch[1], 10) : null;
+
+    if (!taskId) return jsonResponse({ message: 'Invalid task ID' }, 400);
+
+    return jsonResponse(getTaskAnalytics(taskId));
+  }
+
+  // User Performance Analytics
+  if (method === 'GET' && url.includes('/api/v1/dashboard/analytics/users')) {
+    // Extract taskId from query params if present
+    const urlObj = new URL(url, 'http://localhost');
+    const taskIdParam = urlObj.searchParams.get('taskId');
+    const taskId = taskIdParam ? parseInt(taskIdParam, 10) : undefined;
+
+    return jsonResponse(getUserPerformance(taskId));
+  }
+
+  // CHALLENGES
+  if (method === 'GET' && url.endsWith('/api/v1/challenges')) {
+    return jsonResponse(refinedChallengesMock)
   }
 
   // ---------- MANAGER / RECIPIENTS ----------
