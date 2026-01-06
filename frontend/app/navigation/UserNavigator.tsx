@@ -4,6 +4,7 @@ import { StyleSheet, View } from "react-native";
 import SettingsScreen from "../screens/shared/SettingsScreen";
 import LeaderboardScreen from "../screens/user/LeaderboardScreen";
 import SwipeScreen from "../screens/user/SwipeScreen";
+import ChallengesScreen from "../screens/user/ChallengesScreen";
 import StatsScreen from "../screens/user/StatsScreen";
 import BottomBar from "./components/BottomBar";
 import TopBar from "./components/TopBar";
@@ -20,6 +21,7 @@ export default function UserNavigator() {
       <View style={styles.content}>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="SwipeLab" component={SwipeScreen} />
+          <Stack.Screen name="Challenges" component={ChallengesScreen} />
           <Stack.Screen name="UserSettings" component={SettingsScreen} />
           <Stack.Screen name="Stats" component={StatsScreen} />
           <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
@@ -30,8 +32,9 @@ export default function UserNavigator() {
       {/* Bottom Bar */}
       <BottomBar
         items={[
+          { label: "Home", route: "SwipeLab", icon: require("../../assets/images/home.png") },
           { label: "My Tasks", route: "Tasks", icon: require("../../assets/images/tasks.png") },
-          { label: "Leaderboard", route: "Leaderboard", icon: require("../../assets/images/leaderboard.png") },
+          { label: "Challenges", route: "Challenges", icon: require("../../assets/images/leaderboard.png") },
           { label: "Stats", route: "Stats", icon: require("../../assets/images/stats.png") },
           { label: "Settings", route: "UserSettings", icon: require("../../assets/images/settings.png") },
         ]}
