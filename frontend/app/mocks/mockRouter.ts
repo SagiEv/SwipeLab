@@ -2,7 +2,7 @@ import { authMock } from './data/auth.mock'
 import { classificationMock } from './data/classification.mock'
 import { dashboardAdminMock } from './data/dashboard.admin.mock'
 import { dashboardUserMock } from './data/dashboard.user.mock'
-import { leaderboardMock } from './data/leaderboard.mock'
+import { getLeaderboardData, setUserScore } from './data/leaderboard.mock'
 import { statisticsMock } from './data/statistics.mock'
 
 type Method = 'GET' | 'POST' | 'PUT' | 'DELETE'
@@ -151,7 +151,7 @@ export async function mockRouter(
     }
 
     return jsonResponse(taskDetails)
-}
+  }
 
 
   // ---------- CLASSIFICATION ----------
@@ -169,7 +169,17 @@ export async function mockRouter(
 
   // ---------- LEADERBOARD ----------
   if (method === 'GET' && url.includes('/api/v1/leaderboard/')) {
-    return jsonResponse(leaderboardMock)
+    return jsonResponse(getLeaderboardData())
+  }
+
+  // Update user score (for testing dynamic ranking)
+  if (method === 'POST' && url.endsWith('/api/v1/leaderboard/update-score')) {
+    const { score } = body as { score: number }
+    if (typeof score === 'number') {
+      setUserScore(score)
+      return jsonResponse({ success: true, newRank: getLeaderboardData().currentUser.rank })
+    }
+    return jsonResponse({ message: 'Invalid score' }, 400)
   }
 
   // ---------- STATISTICS ----------
