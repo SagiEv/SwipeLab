@@ -15,6 +15,7 @@ import addGoldImg from "../../../assets/images/add_gold_image.png";
 import addTaskImg from "../../../assets/images/add_task.png";
 import goldImagesImg from "../../../assets/images/gold_images.png";
 import recipientsImg from "../../../assets/images/recipients_lists.png";
+import statsImg from "../../../assets/images/stats.png";
 import tasksImg from "../../../assets/images/tasks_mgmt.png";
 import taxonomyImg from "../../../assets/images/taxonomy.png";
 
@@ -22,13 +23,9 @@ const buttons = [
   { title: "Tasks", image: tasksImg, screen: "TasksManagement" },
   { title: "Add Task", image: addTaskImg, screen: "AddTask" },
   { title: "Taxonomy", image: taxonomyImg, screen: "Taxonomy" },
-  { title: "Taxonomy", image: taxonomyImg },
-  { title: "Recipients List", image: recipientsImg },
+  { title: "Recipients List", image: recipientsImg, screen: "RecipientsList" },
   { title: "Gold Images", image: goldImagesImg, screen: "GoldImagesManagement" },
   { title: "Add Gold Image", image: addGoldImg, screen: "AddGoldImage" },
-  { title: "Recipients List", image: recipientsImg, screen: "RecipientsList" },
-  { title: "Gold Images", image: goldImagesImg },
-  { title: "Add Gold Image", image: addGoldImg },
 ];
 
 export default function AdminDashboard({ navigation }: any) {
