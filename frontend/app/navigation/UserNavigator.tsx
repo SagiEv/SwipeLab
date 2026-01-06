@@ -3,6 +3,7 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 import LeaderboardScreen from "../screens/user/LeaderboardScreen";
 import SwipeScreen from "../screens/user/SwipeScreen";
+import StatsScreen from "../screens/user/StatsScreen";
 import BottomBar from "./components/BottomBar";
 import TopBar from "./components/TopBar";
 
@@ -18,6 +19,7 @@ export default function UserNavigator() {
       <View style={styles.content}>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="SwipeLab" component={SwipeScreen} />
+          <Stack.Screen name="Stats" component={StatsScreen} />
           <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
           {/* other screens */}
         </Stack.Navigator>

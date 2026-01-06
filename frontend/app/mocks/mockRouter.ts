@@ -2,8 +2,11 @@ import { authMock } from './data/auth.mock'
 import { classificationMock } from './data/classification.mock'
 import { dashboardAdminMock } from './data/dashboard.admin.mock'
 import { dashboardUserMock } from './data/dashboard.user.mock'
+
+import { leaderboardMock } from './data/leaderboard.mock'
+import { statisticsMock, setUserAccuracy } from './data/statistics.mock'
 import { getLeaderboardData, setUserScore } from './data/leaderboard.mock'
-import { statisticsMock } from './data/statistics.mock'
+
 
 type Method = 'GET' | 'POST' | 'PUT' | 'DELETE'
 
@@ -201,6 +204,15 @@ export async function mockRouter(
 
   if (method === 'GET' && url.endsWith('/timeseries')) {
     return jsonResponse(statisticsMock.timeseries)
+  }
+
+  if (method === 'POST' && url.endsWith('/api/v1/statistics/update-accuracy')) {
+    const { accuracy } = body;
+    if (typeof accuracy === 'number') {
+      setUserAccuracy(accuracy);
+      return jsonResponse({ message: 'Accuracy updated', newStats: statisticsMock.summary });
+    }
+    return jsonResponse({ message: 'Invalid accuracy' }, 400);
   }
 
   // ---------- FALLBACK ----------
