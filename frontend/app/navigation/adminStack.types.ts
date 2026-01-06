@@ -11,4 +11,5 @@ export type AdminStackParamList = {
   UsersManagement: undefined;
   Taxonomy: undefined;
   UserSettings: undefined;
+  Profile: undefined;
 };
