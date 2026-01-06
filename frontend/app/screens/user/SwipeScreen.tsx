@@ -5,7 +5,6 @@ import SwipeButtons from '../../components/user/SwipeButtons';
 import SwipeCard, { SwipeCardHandle } from '../../components/user/SwipeCard';
 import useResponsive from '../../hooks/useResponsive';
 import { SwipeDirection } from '../../types';
-import UserTopBar from '../../components/user/UserTopBar';
 
 export default function SwipeScreen() {
   const [showReference, setShowReference] = useState(false);
@@ -51,9 +50,6 @@ export default function SwipeScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={{ width: '100%', marginBottom: 10 }}>
-        <UserTopBar />
-      </View>
       <View style={[styles.cardSection, { maxWidth: size }]}>
         <SwipeCard
           ref={cardRef}

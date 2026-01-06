@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
-import UserTopBar from '../../components/user/UserTopBar';
 import TaskCard from '../../components/user/TaskCard';
 
 // Mocks
@@ -77,15 +75,6 @@ export default function UserMyTasksScreen() {
 
     return (
         <View style={styles.container}>
-            {/* Header */}
-            <UserTopBar
-                username={stats.username}
-                score={stats.score}
-                rank={`Expert`} // Mapping logic could go here based on Global Rank
-                streak={stats.currentStreakDays}
-                onLogout={handleLogout}
-            />
-
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
                 refreshControl={

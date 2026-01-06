@@ -1,8 +1,11 @@
-import React from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuthStore } from "../../stores/authStore";
-import { useModeStore } from "../../stores/modeStore"; // Import mode store
+import { useModeStore } from "../../stores/modeStore";
+import { useThemeStore } from "../../stores/themeStore";
 import { Ionicons } from '@expo/vector-icons';
+import { statisticsMock } from '../../mocks/data/statistics.mock';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 
 interface UserTopBarProps {
   username?: string;
@@ -14,58 +17,75 @@ interface UserTopBarProps {
 
 export default function UserTopBar({
   username: propUsername,
-  score = 520,
-  rank = "#12",
-  streak = 36,
+  score: propScore,
+  rank: propRank,
+  streak: propStreak,
   onLogout
 }: UserTopBarProps) {
-  const { logout, role } = useAuthStore(); // Get role
-  const { setMode } = useModeStore(); // Get setMode
-  const storeUsername = "Player";
+  const { logout, role, username: authUsername } = useAuthStore();
+  const { setMode } = useModeStore();
+  const { theme } = useThemeStore();
+  const navigation = useNavigation<any>();
 
-  const displayUsername = propUsername || storeUsername;
+  const isDarkMode = theme === 'dark';
+
+  const [stats, setStats] = useState(statisticsMock.summary);
+
+  useEffect(() => {
+    setStats(statisticsMock.summary);
+  }, []);
+
+  const displayUsername = propUsername || authUsername || stats.username || "Player";
+  const displayScore = propScore !== undefined ? propScore : stats.score;
+  const displayRank = propRank || `#${stats.rankGlobal}`;
+  const displayStreak = propStreak !== undefined ? propStreak : stats.currentStreakDays;
   const handleLogout = onLogout || logout;
-
-  // Format score if it's a number
-  const displayScore = typeof score === 'number' ? score.toLocaleString() : score;
-  const displayStreak = streak;
+  const formattedScore = typeof displayScore === 'number' ? displayScore.toLocaleString() : displayScore;
 
   const handleSwitchToManager = () => {
     setMode("ADMIN");
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'AdminDashboard' }],
+      })
+    );
+  };
+
+  // Dynamic styles for dark mode
+  const dynamicStyles = {
+    container: { backgroundColor: isDarkMode ? '#1f1f2e' : '#fff' },
+    username: { color: isDarkMode ? '#9ca3af' : '#666' },
+    actionText: { color: isDarkMode ? '#9ca3af' : '#888' },
   };
 
   return (
-    <View style={styles.container}>
-      {/* User Profile */}
+    <View style={[styles.container, dynamicStyles.container]}>
       <View style={styles.profileSection}>
         <View style={styles.avatarContainer}>
-          <Image
-            source={require("../../../assets/images/profile.png")}
-            style={styles.avatar}
-          />
-          <Text style={styles.username}>{displayUsername}</Text>
+          <View style={[styles.avatar, { backgroundColor: isDarkMode ? '#374151' : '#e8f0fe' }]}>
+            <Ionicons name="person" size={24} color={isDarkMode ? '#9ca3af' : '#666'} />
+          </View>
+          <Text style={[styles.username, dynamicStyles.username]}>{displayUsername}</Text>
         </View>
       </View>
 
-      {/* Stats Block (Center) - Blue Card style */}
       <View style={styles.statsBlock}>
-        <Text style={styles.statsText}>Score: {displayScore}</Text>
-        <Text style={styles.statsText}>Rank: {rank}</Text>
+        <Text style={styles.statsText}>Score: {formattedScore}</Text>
+        <Text style={styles.statsText}>Rank: {displayRank}</Text>
         <Text style={styles.statsText}>{displayStreak} days streak</Text>
       </View>
 
-      {/* Right Section: Switch Mode or Logout */}
       <View style={styles.rightSection}>
         {role === 'ADMIN' && (
           <TouchableOpacity onPress={handleSwitchToManager} style={styles.switchBtn}>
             <Ionicons name="briefcase-outline" size={20} color="#0EA5E9" />
-            <Text style={styles.logoutText}>Manager</Text>
+            <Text style={[styles.actionText, dynamicStyles.actionText]}>Manager</Text>
           </TouchableOpacity>
         )}
-
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutSection}>
-          <Ionicons name="log-out-outline" size={24} color="#EF4444" style={{ marginBottom: 2 }} />
-          <Text style={styles.logoutText}>Logout</Text>
+        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={24} color="#EF4444" />
+          <Text style={[styles.actionText, dynamicStyles.actionText]}>Logout</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -79,58 +99,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  profileSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarContainer: {
-    alignItems: 'center',
-  },
+  profileSection: { alignItems: 'center', justifyContent: 'center' },
+  avatarContainer: { alignItems: 'center' },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#ddd',
-    marginBottom: 4,
+    width: 40, height: 40, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 4,
   },
-  username: {
-    fontSize: 12,
-    color: '#888',
-    fontWeight: '600',
-  },
+  username: { fontSize: 12, fontWeight: '600' },
   statsBlock: {
-    backgroundColor: '#0EA5E9', // Light blue
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 70, // Fixed height for consistency
+    backgroundColor: '#4B7BE5',
+    paddingHorizontal: 20, paddingVertical: 8,
+    borderRadius: 12, alignItems: 'center', justifyContent: 'center', height: 70,
   },
-  statsText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  rightSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  switchBtn: {
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  logoutSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoutText: {
-    fontSize: 10,
-    color: '#888',
-  },
+  statsText: { color: '#fff', fontSize: 12, fontWeight: '600', lineHeight: 18 },
+  rightSection: { flexDirection: 'row', alignItems: 'center' },
+  switchBtn: { alignItems: 'center', marginRight: 16 },
+  logoutBtn: { alignItems: 'center' },
+  actionText: { fontSize: 10, marginTop: 2 },
 });
