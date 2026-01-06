@@ -1,6 +1,7 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
 import { StyleSheet, View } from "react-native";
+import SettingsScreen from "../screens/shared/SettingsScreen";
 import SwipeScreen from "../screens/user/SwipeScreen";
 import BottomBar from "./components/BottomBar";
 import TopBar from "./components/TopBar";
@@ -17,6 +18,7 @@ export default function UserNavigator() {
       <View style={styles.content}>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="SwipeLab" component={SwipeScreen} />
+          <Stack.Screen name="UserSettings" component={SettingsScreen} />
           {/* other screens */}
         </Stack.Navigator>
       </View>
