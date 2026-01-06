@@ -4,7 +4,6 @@ import { dashboardAdminMock } from './data/dashboard.admin.mock'
 import { dashboardUserMock } from './data/dashboard.user.mock'
 
 import { leaderboardMock } from './data/leaderboard.mock'
-import { statisticsMock } from './data/statistics.mock'
 import { refinedChallengesMock } from './data/challenges.mock'
 import { statisticsMock, setUserAccuracy } from './data/statistics.mock'
 import { getLeaderboardData, setUserScore } from './data/leaderboard.mock'
@@ -211,6 +210,7 @@ export async function mockRouter(
   // CHALLENGES
   if (method === 'GET' && url.endsWith('/api/v1/challenges')) {
     return jsonResponse(refinedChallengesMock)
+  }
   if (method === 'POST' && url.endsWith('/api/v1/statistics/update-accuracy')) {
     const { accuracy } = body;
     if (typeof accuracy === 'number') {
