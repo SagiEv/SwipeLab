@@ -10,6 +10,8 @@ import AdminDashboard from "../screens/admin/AdminDashboard";
 import EditTaskScreen from "../screens/admin/EditTaskScreen";
 import TaskDetailsScreen from "../screens/admin/TaskDetailsScreen";
 import TasksManagementScreen from "../screens/admin/TasksManagementScreen";
+import GoldImagesManagementScreen from "../screens/admin/GoldImagesManagementScreen";
+import AddGoldImageScreen from "../screens/admin/AddGoldImageScreen";
 import RecipientsListScreen from "../screens/admin/RecipientsListScreen";
 import RecipientGroupDetailsScreen from "../screens/admin/RecipientGroupDetailsScreen";
 import UsersManagementScreen from "../screens/admin/UsersManagementScreen";
@@ -58,6 +60,15 @@ export default function AdminNavigator() {
           />
 
           <Stack.Screen
+            name="GoldImagesManagement"
+            component={GoldImagesManagementScreen}
+            options={{ title: "Gold Images Management" }}
+          />
+
+          <Stack.Screen
+            name="AddGoldImage"
+            component={AddGoldImageScreen}
+            options={{ title: "Add Gold Image" }}
             name="RecipientsList"
             component={RecipientsListScreen}
             options={{ title: "Recipients List" }}
@@ -87,6 +98,9 @@ export default function AdminNavigator() {
       {/* Bottom Bar */}
       <BottomBar
         items={[
+          { label: "Users", route: "Users", icon: require("../../assets/images/users.png") },
+          { label: "Leaderboard", route: "Leaderboard", icon: require("../../assets/images/leaderboard.png") },
+          { label: "Analytics", route: "Analytics", icon: require("../../assets/images/stats.png") },
           { label: "Home", route: "AdminDashboard", icon: require("../../assets/images/home.png") },
           { label: "Users", route: "UsersManagement", icon: require("../../assets/images/users.png") },
           { label: "Leaderboard", route: "Leaderboard", icon: require("../../assets/images/leaderboard.png") },
