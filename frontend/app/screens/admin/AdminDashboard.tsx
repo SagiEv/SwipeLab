@@ -21,6 +21,7 @@ import taxonomyImg from "../../../assets/images/taxonomy.png";
 const buttons = [
   { title: "Tasks", image: tasksImg, screen: "TasksManagement" },
   { title: "Add Task", image: addTaskImg, screen: "AddTask" },
+  { title: "Taxonomy", image: taxonomyImg, screen: "Taxonomy" },
   { title: "Taxonomy", image: taxonomyImg },
   { title: "Recipients List", image: recipientsImg },
   { title: "Gold Images", image: goldImagesImg, screen: "GoldImagesManagement" },
