@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View, RefreshControl } from 'react-native';
 import { apiFetch } from '../../api/apiFetch';
-import UserTopBar from '../../components/user/UserTopBar';
 
 const DEBUG_MODE = false; // Set to true for testing controls
 
@@ -133,7 +132,6 @@ export default function StatsScreen() {
             contentContainerStyle={styles.content}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >
-            <UserTopBar />
             <Text style={styles.headerTitle}>Your Performance</Text>
 
             {/* User Profile Summary */}

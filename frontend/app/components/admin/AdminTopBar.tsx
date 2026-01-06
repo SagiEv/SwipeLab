@@ -3,45 +3,56 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import profileImg from "../../../assets/images/profile.png";
 import { useAuthStore } from "../../stores/authStore";
 import { useModeStore } from "../../stores/modeStore";
+import { useThemeStore } from "../../stores/themeStore";
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 
 export default function AdminTopBar() {
   const { logout, username } = useAuthStore();
   const { setMode } = useModeStore();
+  const { theme } = useThemeStore();
+  const navigation = useNavigation<any>();
+
+  const isDarkMode = theme === 'dark';
 
   const handleSwitchToPlayer = () => {
     setMode("USER");
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'SwipeLab' }],
+      })
+    );
+  };
+
+  const dynamicStyles = {
+    container: { backgroundColor: isDarkMode ? '#1f1f2e' : '#fff' },
+    username: { color: isDarkMode ? '#9ca3af' : '#888' },
+    actionText: { color: isDarkMode ? '#9ca3af' : '#888' },
   };
 
   return (
-    <View style={styles.container}>
-      {/* Profile */}
+    <View style={[styles.container, dynamicStyles.container]}>
       <View style={styles.profileSection}>
         <View style={styles.avatarContainer}>
-          <Image
-            source={profileImg}
-            style={styles.avatar}
-          />
-          <Text style={styles.username}>{username || "Admin"}</Text>
+          <Image source={profileImg} style={styles.avatar} />
+          <Text style={[styles.username, dynamicStyles.username]}>{username || "Admin"}</Text>
         </View>
       </View>
 
-      {/* Blue card - Statistics or Title */}
       <View style={styles.card}>
         <Text style={styles.text}>Manager Dashboard</Text>
         <Text style={styles.subText}>Overview</Text>
       </View>
 
-      {/* Right Section: Switch & Logout */}
       <View style={styles.rightSection}>
         <TouchableOpacity onPress={handleSwitchToPlayer} style={styles.switchBtn}>
           <Ionicons name="game-controller-outline" size={20} color="#0EA5E9" />
-          <Text style={styles.logoutText}>Play</Text>
+          <Text style={[styles.logoutText, dynamicStyles.actionText]}>Play</Text>
         </TouchableOpacity>
-
         <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
-          <Ionicons name="log-out-outline" size={24} color="#EF4444" style={{ marginBottom: 2 }} />
-          <Text style={styles.logoutText}>Logout</Text>
+          <Ionicons name="log-out-outline" size={24} color="#EF4444" />
+          <Text style={[styles.logoutText, dynamicStyles.actionText]}>Logout</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -50,56 +61,22 @@ export default function AdminTopBar() {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    flexDirection: "row", justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 12, alignItems: "center",
+    borderBottomWidth: 1, borderBottomColor: '#f0f0f0',
   },
-  profileSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarContainer: {
-    alignItems: 'center',
-  },
+  profileSection: { alignItems: 'center', justifyContent: 'center' },
+  avatarContainer: { alignItems: 'center' },
   avatar: { width: 40, height: 40, borderRadius: 20, marginBottom: 4, backgroundColor: '#ddd' },
-  username: {
-    fontSize: 12,
-    color: '#888',
-    fontWeight: '600',
-  },
-
+  username: { fontSize: 12, fontWeight: '600' },
   card: {
-    backgroundColor: "#0EA5E9",
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: 'center',
-    height: 70, // Fixed height for consistency
+    backgroundColor: "#0EA5E9", paddingHorizontal: 20, paddingVertical: 8,
+    borderRadius: 12, alignItems: "center", justifyContent: 'center', height: 70,
   },
   text: { color: "white", fontWeight: "700", fontSize: 13, lineHeight: 18 },
   subText: { color: "white", fontSize: 10, opacity: 0.9 },
-
-  rightSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  switchBtn: {
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  logoutBtn: {
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  logoutText: {
-    fontSize: 10,
-    color: "#888",
-    marginTop: 2
-  },
+  rightSection: { flexDirection: 'row', alignItems: 'center' },
+  switchBtn: { alignItems: 'center', marginRight: 16 },
+  logoutBtn: { alignItems: "center", justifyContent: "center" },
+  logoutText: { fontSize: 10, marginTop: 2 },
 });

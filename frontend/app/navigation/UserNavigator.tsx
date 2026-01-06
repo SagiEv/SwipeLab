@@ -16,26 +16,11 @@ const Stack = createNativeStackNavigator();
 export default function UserNavigator() {
   return (
     <View style={styles.container}>
-      {/* Top Bar removed from here as UserHeader is in the screen, or we keep it? 
-          The design shows a header inside the screen. 
-          Let's double check providing `headerShown: false` covers it. 
-          The current code has `<TopBar />` outside the navigator. 
-          For "My Tasks" screen, it has its own header.
-          We might want to conditionally hide TopBar or just leave it for other screens?
-          Actually, let's keep it simple. The UserMyTasksScreen has its own header.
-          If `TopBar` is the generic "SwipeLab" header, maybe we don't need it on the Home screen if it has a custom user header.
-          However, I'll focus on the Navigator changes first.
-      */}
-      {/* TopBar might conflict with UserHeader visually. 
-          For now, I'll leave TopBar but maybe the user wants it removed for this screen?
-          The instruction doesn't say. I'll stick to the plan.
-      */}
-
+      {/* Global TopBar for all user screens */}
+      <TopBar />
 
       {/* Middle Navigator */}
       <View style={styles.content}>
-
-
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="SwipeLab" component={SwipeScreen} />
           <Stack.Screen name="Tasks" component={UserMyTasksScreen} />
@@ -44,7 +29,6 @@ export default function UserNavigator() {
           <Stack.Screen name="UserSettings" component={SettingsScreen} />
           <Stack.Screen name="Stats" component={StatsScreen} />
           <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
-          {/* other screens */}
         </Stack.Navigator>
       </View>
 
@@ -64,9 +48,9 @@ export default function UserNavigator() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, // Fill entire screen
+    flex: 1,
   },
   content: {
-    flex: 1, // Take remaining space between top and bottom
+    flex: 1,
   },
 });

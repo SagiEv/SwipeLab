@@ -13,6 +13,7 @@ import TasksManagementScreen from "../screens/admin/TasksManagementScreen";
 import RecipientsListScreen from "../screens/admin/RecipientsListScreen";
 import RecipientGroupDetailsScreen from "../screens/admin/RecipientGroupDetailsScreen";
 import UsersManagementScreen from "../screens/admin/UsersManagementScreen";
+import SettingsScreen from "../screens/shared/SettingsScreen";
 
 import { AdminStackParamList } from "./adminStack.types";
 
@@ -73,6 +74,12 @@ export default function AdminNavigator() {
             component={UsersManagementScreen}
             options={{ title: "Users Management" }}
           />
+
+          <Stack.Screen
+            name="UserSettings"
+            component={SettingsScreen}
+            options={{ title: "Settings" }}
+          />
         </Stack.Navigator>
 
       </View>
@@ -81,10 +88,10 @@ export default function AdminNavigator() {
       <BottomBar
         items={[
           { label: "Home", route: "AdminDashboard", icon: require("../../assets/images/home.png") },
-          { label: "Settings", route: "UserSettings", icon: require("../../assets/images/settings.png") },
           { label: "Users", route: "UsersManagement", icon: require("../../assets/images/users.png") },
           { label: "Leaderboard", route: "Leaderboard", icon: require("../../assets/images/leaderboard.png") },
           { label: "Stats", route: "Analytics", icon: require("../../assets/images/stats.png") },
+          { label: "Settings", route: "UserSettings", icon: require("../../assets/images/settings.png") },
         ]}
       />
     </View>
