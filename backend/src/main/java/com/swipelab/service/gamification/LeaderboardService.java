@@ -19,4 +19,9 @@ public class LeaderboardService {
         return userRepository.findAll(
                 PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "points"))).getContent();
     }
+
+    public List<User> getStreakLeaderboard(int limit) {
+        return userRepository.findAll(
+                PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "currentStreak"))).getContent();
+    }
 }
