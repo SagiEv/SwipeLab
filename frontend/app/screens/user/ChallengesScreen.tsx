@@ -9,6 +9,7 @@ import {
     View,
 } from 'react-native';
 import { apiFetch } from '../../api/apiFetch';
+import UserTopBar from '../../components/user/UserTopBar';
 
 interface Challenge {
     id: number;
@@ -105,6 +106,8 @@ export default function ChallengesScreen() {
             contentContainerStyle={styles.content}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >
+            <UserTopBar />
+
             <View style={styles.header}>
                 {/* Simulated Header Icon */}
                 {/* Simulated Header Icon */}
