@@ -12,9 +12,11 @@ import com.swipelab.repository.ClassificationRepository;
 import com.swipelab.repository.ImageRepository;
 import com.swipelab.repository.LabelRepository;
 import com.swipelab.repository.UserRepository;
+import com.swipelab.service.classification.FraudDetectionService;
 import com.swipelab.service.gamification.BadgeService;
 import com.swipelab.service.gamification.PointsService;
 import com.swipelab.service.gamification.StreakService;
+import com.swipelab.service.user.CredibilityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +32,8 @@ public class ClassificationService {
     private final BadgeService badgeService;
     private final PointsService pointsService;
     private final StreakService streakService;
+    private final FraudDetectionService fraudDetectionService;
+    private final CredibilityService credibilityService;
 
     @Transactional
     public ClassificationResponse submitClassification(String username, ClassificationRequest request) {
@@ -55,6 +59,9 @@ public class ClassificationService {
 
         Classification saved = classificationRepository.save(classification);
 
+        fraudDetectionService.analyzeClassification(user, request.getResponseTimeMs());
+
+        credibilityService.updateUserCredibility(username, request.getImageId());
         // Update User Stats
         user.setTotalClassifications(user.getTotalClassifications() + 1);
 
