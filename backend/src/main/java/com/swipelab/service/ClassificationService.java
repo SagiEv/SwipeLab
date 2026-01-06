@@ -15,6 +15,8 @@ import com.swipelab.repository.UserRepository;
 import com.swipelab.service.classification.FraudDetectionService;
 import com.swipelab.service.gamification.BadgeService;
 import com.swipelab.service.gamification.PointsService;
+import com.swipelab.service.gamification.StreakService;
+import com.swipelab.service.user.CredibilityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +31,9 @@ public class ClassificationService {
     private final UserRepository userRepository;
     private final BadgeService badgeService;
     private final PointsService pointsService;
+    private final StreakService streakService;
     private final FraudDetectionService fraudDetectionService;
+    private final CredibilityService credibilityService;
 
     @Transactional
     public ClassificationResponse submitClassification(String username, ClassificationRequest request) {
@@ -57,18 +61,22 @@ public class ClassificationService {
 
         fraudDetectionService.analyzeClassification(user, request.getResponseTimeMs());
 
+        credibilityService.updateUserCredibility(username, request.getImageId());
         // Update User Stats
         user.setTotalClassifications(user.getTotalClassifications() + 1);
 
-        // Gamification: Award 10 points per swipe
-        pointsService.addPoints(user, 10);
+        // Gamification: Update Streak
+        streakService.updateStreak(user);
+
+        // Gamification: Award points with multiplier (must be after streak update)
+        pointsService.calculateAndAddPoints(user, 10);
 
         // Determine correctness if it's a gold standard image
         Boolean isCorrect = null;
         if (Boolean.TRUE.equals(image.getIsGoldStandard()) && image.getCorrectLabel() != null) {
             isCorrect = image.getCorrectLabel().getId().equals(label.getId());
             if (Boolean.TRUE.equals(isCorrect)) {
-                pointsService.addPoints(user, 50); // Bonus for correct gold standard
+                pointsService.calculateAndAddPoints(user, 50); // Bonus for correct gold standard
             }
         }
 

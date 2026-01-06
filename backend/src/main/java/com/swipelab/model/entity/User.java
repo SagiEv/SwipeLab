@@ -141,6 +141,13 @@ public class User {
         @Builder.Default
         private Long points = 0L;
 
+        @Column(name = "current_streak")
+        @Builder.Default
+        private Integer currentStreak = 0;
+
+        @Column(name = "last_streak_update")
+        private LocalDateTime lastStreakUpdate;
+
         @ManyToMany(fetch = FetchType.EAGER)
         @JoinTable(name = "user_badges", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "badge_id"))
         @Builder.Default
@@ -171,4 +178,6 @@ public class User {
         @Column(name = "is_flagged", nullable = false)
         @Builder.Default
         private Boolean isFlagged = false;
+
+
 }
