@@ -9,6 +9,8 @@ import {
   View,
 } from 'react-native';
 import { SwipeDirection } from '../../types';
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SWIPE_THRESHOLD = 120;
@@ -26,6 +28,8 @@ export interface SwipeCardHandle {
 const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
   ({ question, imageUrl, onSwipe }, ref) => {
     const position = useRef(new Animated.ValueXY()).current;
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
 
     const rotate = position.x.interpolate({
       inputRange: [-SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2],
@@ -80,6 +84,7 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
 
     const getCardStyle = () => ({
       ...styles.card,
+      backgroundColor: themeColors.card,
       transform: [
         { translateX: position.x },
         { translateY: position.y },
@@ -89,7 +94,7 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
 
     return (
       <View style={styles.container}>
-        <Text style={styles.question}>{question}</Text>
+        <Text style={[styles.question, { color: themeColors.text }]}>{question}</Text>
         <Animated.View style={getCardStyle()} {...panResponder.panHandlers}>
           <View style={styles.imageContainer}>
             {imageUrl ? (

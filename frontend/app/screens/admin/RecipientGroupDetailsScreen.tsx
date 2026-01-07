@@ -14,6 +14,8 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { apiFetch } from '../../api/apiFetch';
 import { RecipientGroup } from '../../mocks/data/recipients.mock';
 import { User, usersMock } from '../../mocks/data/users.mock';
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 
 // Utility for colors
 function getColorForType(type: string) {
@@ -30,6 +32,8 @@ export default function RecipientGroupDetailsScreen() {
     const navigation = useNavigation();
     const route = useRoute();
     const { group } = route.params as { group: RecipientGroup };
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
 
     const [currentGroup, setCurrentGroup] = useState<RecipientGroup>(group);
 
@@ -181,13 +185,13 @@ export default function RecipientGroupDetailsScreen() {
     const composition = getComposition();
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: themeColors.background }]}>
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                <Text style={styles.backButtonText}>← Back to Lists</Text>
+                <Text style={[styles.backButtonText, { color: '#4B7BE5' }]}>← Back to Lists</Text>
             </TouchableOpacity>
 
             <View style={styles.header}>
-                <Text style={styles.title}>{currentGroup.name}</Text>
+                <Text style={[styles.title, { color: themeColors.text }]}>{currentGroup.name}</Text>
                 <TouchableOpacity onPress={() => setAddMemberModalVisible(true)} style={styles.addBtn}>
                     <Image source={require('../../../assets/images/users.png')} style={{ width: 24, height: 24, tintColor: '#fff' }} />
                     <Text style={styles.addBtnText}>+</Text>
@@ -216,15 +220,15 @@ export default function RecipientGroupDetailsScreen() {
                 </View>
             )}
 
-            <ScrollView contentContainerStyle={styles.list}>
+            <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
                 {currentGroup.users.length === 0 ? (
-                    <Text style={styles.emptyText}>No users in this group.</Text>
+                    <Text style={[styles.emptyText, { color: themeColors.textSecondary }]}>No users in this group.</Text>
                 ) : (
                     currentGroup.users.map(user => (
-                        <View key={user.id} style={styles.userRow}>
+                        <View key={user.id} style={[styles.userRow, { backgroundColor: themeColors.card }]}>
                             <View>
-                                <Text style={styles.username}>{user.username}</Text>
-                                <Text style={styles.userDesc}>{user.description || 'User'}</Text>
+                                <Text style={[styles.username, { color: themeColors.text }]}>{user.username}</Text>
+                                <Text style={[styles.userDesc, { color: themeColors.textSecondary }]}>{user.description || 'User'}</Text>
                             </View>
                             <TouchableOpacity onPress={() => handleRemoveUser(user.id)} style={styles.deleteBtn}>
                                 <Text style={styles.deleteText}>🗑️</Text>
@@ -237,11 +241,11 @@ export default function RecipientGroupDetailsScreen() {
             {/* Advanced Add Member Modal */}
             <Modal visible={addMemberModalVisible} animationType="slide" transparent>
                 <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Add Members</Text>
+                    <View style={[styles.modalContent, { backgroundColor: themeColors.card }]}>
+                        <Text style={[styles.modalTitle, { color: themeColors.text }]}>Add Members</Text>
 
                         {/* Tabs */}
-                        <View style={styles.tabsContainer}>
+                        <View style={[styles.tabsContainer, { borderColor: themeColors.border }]}>
                             <TouchableOpacity
                                 style={[styles.tab, activeTab === 'USERS' && styles.activeTab]}
                                 onPress={() => setActiveTab('USERS')}
@@ -256,7 +260,7 @@ export default function RecipientGroupDetailsScreen() {
                             </TouchableOpacity>
                         </View>
 
-                        <ScrollView style={{ maxHeight: 300 }}>
+                        <ScrollView style={{ maxHeight: 300 }} showsVerticalScrollIndicator={false}>
                             {activeTab === 'USERS' ? (
                                 // Users List
                                 allUsers.map(u => {
@@ -264,9 +268,9 @@ export default function RecipientGroupDetailsScreen() {
                                     if (isAlreadyIn) return null;
                                     const isSelected = selectedUserIds.includes(u.id);
                                     return (
-                                        <TouchableOpacity key={u.id} style={[styles.selectRow, isSelected && styles.selectedRow]} onPress={() => toggleUserSelection(u.id)}>
-                                            <Text style={styles.selectText}>{isSelected ? '☑' : '☐'} {u.username}</Text>
-                                            <Text style={styles.subText}>{u.description}</Text>
+                                        <TouchableOpacity key={u.id} style={[styles.selectRow, isSelected && styles.selectedRow, { borderBottomColor: themeColors.border }]} onPress={() => toggleUserSelection(u.id)}>
+                                            <Text style={[styles.selectText, { color: themeColors.text }]}>{isSelected ? '☑' : '☐'} {u.username}</Text>
+                                            <Text style={[styles.subText, { color: themeColors.textSecondary }]}>{u.description}</Text>
                                         </TouchableOpacity>
                                     );
                                 })
@@ -276,9 +280,9 @@ export default function RecipientGroupDetailsScreen() {
                                     if (g.id === currentGroup.id) return null; // Don't add self
                                     const isSelected = selectedGroupIds.includes(g.id);
                                     return (
-                                        <TouchableOpacity key={g.id} style={[styles.selectRow, isSelected && styles.selectedRow]} onPress={() => toggleGroupSelection(g.id)}>
-                                            <Text style={styles.selectText}>{isSelected ? '☑' : '☐'} {g.name}</Text>
-                                            <Text style={styles.subText}>{g.usersCount} users</Text>
+                                        <TouchableOpacity key={g.id} style={[styles.selectRow, isSelected && styles.selectedRow, { borderBottomColor: themeColors.border }]} onPress={() => toggleGroupSelection(g.id)}>
+                                            <Text style={[styles.selectText, { color: themeColors.text }]}>{isSelected ? '☑' : '☐'} {g.name}</Text>
+                                            <Text style={[styles.subText, { color: themeColors.textSecondary }]}>{g.usersCount} users</Text>
                                         </TouchableOpacity>
                                     );
                                 })
@@ -287,7 +291,7 @@ export default function RecipientGroupDetailsScreen() {
 
                         <View style={styles.modalActions}>
                             <TouchableOpacity style={styles.closeBtn} onPress={() => setAddMemberModalVisible(false)}>
-                                <Text style={styles.closeText}>Cancel</Text>
+                                <Text style={[styles.closeText, { color: themeColors.textSecondary }]}>Cancel</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.confirmBtn} onPress={handleAddSelected}>
                                 <Text style={styles.confirmText}>

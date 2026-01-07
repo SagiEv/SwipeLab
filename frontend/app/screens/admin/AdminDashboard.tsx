@@ -9,6 +9,8 @@ import {
   View,
 } from "react-native";
 import useResponsive from "../../hooks/useResponsive";
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 
 // Images
 import addGoldImg from "../../../assets/images/add_gold_image.png";
@@ -29,6 +31,8 @@ const buttons = [
 
 export default function AdminDashboard({ navigation }: any) {
   const { isPhone } = useResponsive();
+  const { theme } = useThemeStore();
+  const themeColors = Colors[theme as keyof typeof Colors];
   const isWeb = Platform.OS === "web";
 
   // 🔹 Tile sizing
@@ -43,7 +47,7 @@ export default function AdminDashboard({ navigation }: any) {
           key={index}
           style={[
             styles.tile,
-            { width: tileSize, height: tileSize },
+            { width: tileSize, height: tileSize, backgroundColor: themeColors.card, borderColor: themeColors.border },
           ]}
           onPress={() => {
             if (btn.screen) {
@@ -57,7 +61,7 @@ export default function AdminDashboard({ navigation }: any) {
             style={{ width: imageSize, height: imageSize }}
             resizeMode="contain"
           />
-          <Text style={[styles.title, { fontSize }]}>
+          <Text style={[styles.title, { fontSize, color: themeColors.text }]}>
             {btn.title}
           </Text>
         </TouchableOpacity>
@@ -67,12 +71,12 @@ export default function AdminDashboard({ navigation }: any) {
 
   // 🌐 WEB — full-width background, no scroll
   if (isWeb) {
-    return <View style={styles.background}>{Content}</View>;
+    return <View style={[styles.background, { backgroundColor: themeColors.background }]}>{Content}</View>;
   }
 
   // 📱 MOBILE — scroll enabled
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
+    <ScrollView contentContainerStyle={[styles.scrollContainer, { backgroundColor: themeColors.background }]} showsVerticalScrollIndicator={false}>
       {Content}
     </ScrollView>
   );

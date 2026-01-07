@@ -5,11 +5,15 @@ import SwipeButtons from '../../components/user/SwipeButtons';
 import SwipeCard, { SwipeCardHandle } from '../../components/user/SwipeCard';
 import useResponsive from '../../hooks/useResponsive';
 import { SwipeDirection } from '../../types';
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 
 export default function SwipeScreen() {
   const [showReference, setShowReference] = useState(false);
   const [currentQuestion] = useState('Is this a ...');
   const { isPhone, isDesktop } = useResponsive();
+  const { theme } = useThemeStore();
+  const themeColors = Colors[theme as keyof typeof Colors];
   const size = isDesktop ? 200 : isPhone ? 300 : 250;
 
   const cardRef = useRef<SwipeCardHandle>(null);
@@ -49,7 +53,7 @@ export default function SwipeScreen() {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       <View style={[styles.cardSection, { maxWidth: size }]}>
         <SwipeCard
           ref={cardRef}

@@ -1,17 +1,19 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React, { useEffect, useState } from "react";
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
 } from "react-native";
 
 import { apiFetch } from "../../api/apiFetch";
 import ScreenHeaderLayout from "../../components/layout/ScreenHeaderLayout";
 import { AdminStackParamList } from "../../navigation/adminStack.types";
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 
 type Props = NativeStackScreenProps<
   AdminStackParamList,
@@ -26,6 +28,8 @@ export default function EditTaskScreen({ route, navigation }: Props) {
   const [targetSpecies, setTargetSpecies] = useState("");
   const [recipientGroups, setRecipientGroups] = useState("");
   const [loading, setLoading] = useState(false);
+  const { theme } = useThemeStore();
+  const themeColors = Colors[theme as keyof typeof Colors];
 
   // 🔹 Load task details
   useEffect(() => {
@@ -103,7 +107,7 @@ export default function EditTaskScreen({ route, navigation }: Props) {
       rightTitle="Tasks"
       onRightPress={() => navigation.navigate("TasksManagement")}
     >
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         <Text style={styles.label}>Task Name</Text>
         <TextInput
           style={styles.input}
@@ -111,29 +115,32 @@ export default function EditTaskScreen({ route, navigation }: Props) {
           onChangeText={setName}
         />
 
-        <Text style={styles.label}>Description</Text>
+        <Text style={[styles.label, { color: themeColors.text }]}>Description</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
           value={description}
           onChangeText={setDescription}
+          placeholderTextColor={themeColors.textSecondary}
         />
 
-        <Text style={styles.label}>
+        <Text style={[styles.label, { color: themeColors.text }]}>
           Target Species (comma-separated)
         </Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
           value={targetSpecies}
           onChangeText={setTargetSpecies}
+          placeholderTextColor={themeColors.textSecondary}
         />
 
-        <Text style={styles.label}>
+        <Text style={[styles.label, { color: themeColors.text }]}>
           Recipient Groups (IDs, comma-separated)
         </Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
           value={recipientGroups}
           onChangeText={setRecipientGroups}
+          placeholderTextColor={themeColors.textSecondary}
         />
 
         <TouchableOpacity

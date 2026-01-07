@@ -11,6 +11,8 @@ import {
 } from "react-native";
 import { apiFetch } from "../../api/apiFetch";
 import ScreenHeaderLayout from "../../components/layout/ScreenHeaderLayout";
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 
 export default function AddGoldImageScreen({ navigation }: any) {
     const [imageUrl, setImageUrl] = useState("");
@@ -21,6 +23,8 @@ export default function AddGoldImageScreen({ navigation }: any) {
     const [species, setSpecies] = useState("");
     const [difficultyLevel, setDifficultyLevel] = useState("MEDIUM");
     const [loading, setLoading] = useState(false);
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
 
     // For demo purposes, using taskId = 1. In production, this would come from navigation params
     const taskId = 1;
@@ -100,86 +104,87 @@ export default function AddGoldImageScreen({ navigation }: any) {
             rightTitle="Gold Images"
             onRightPress={() => navigation.navigate("GoldImagesManagement")}
         >
-            <ScrollView contentContainerStyle={styles.container}>
+            <ScrollView contentContainerStyle={[styles.container, { backgroundColor: themeColors.background }]} showsVerticalScrollIndicator={false}>
                 {/* Upload Section */}
                 <View style={styles.uploadSection}>
-                    <Text style={styles.sectionTitle}>Upload Your Image</Text>
+                    <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Upload Your Image</Text>
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
                         value={imageUrl}
                         onChangeText={setImageUrl}
                         placeholder="Enter image URL"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor={themeColors.textSecondary}
                     />
                 </View>
 
                 {/* Taxonomy Fields */}
                 <View style={styles.taxonomySection}>
                     <View style={styles.fieldRow}>
-                        <Text style={styles.label}>Class:</Text>
+                        <Text style={[styles.label, { color: themeColors.textSecondary }]}>Class:</Text>
                         <TextInput
-                            style={styles.taxonomyInput}
+                            style={[styles.taxonomyInput, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
                             value={classValue}
                             onChangeText={setClassValue}
                             placeholder="∨"
-                            placeholderTextColor="#D1D5DB"
+                            placeholderTextColor={themeColors.textSecondary}
                         />
                     </View>
 
                     <View style={styles.fieldRow}>
-                        <Text style={styles.label}>Order:</Text>
+                        <Text style={[styles.label, { color: themeColors.textSecondary }]}>Order:</Text>
                         <TextInput
-                            style={styles.taxonomyInput}
+                            style={[styles.taxonomyInput, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
                             value={order}
                             onChangeText={setOrder}
                             placeholder="∨"
-                            placeholderTextColor="#D1D5DB"
+                            placeholderTextColor={themeColors.textSecondary}
                         />
                     </View>
 
                     <View style={styles.fieldRow}>
-                        <Text style={styles.label}>Family:</Text>
+                        <Text style={[styles.label, { color: themeColors.textSecondary }]}>Family:</Text>
                         <TextInput
-                            style={styles.taxonomyInput}
+                            style={[styles.taxonomyInput, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
                             value={family}
                             onChangeText={setFamily}
                             placeholder="∨"
-                            placeholderTextColor="#D1D5DB"
+                            placeholderTextColor={themeColors.textSecondary}
                         />
                     </View>
 
                     <View style={styles.fieldRow}>
-                        <Text style={styles.label}>Genus:</Text>
+                        <Text style={[styles.label, { color: themeColors.textSecondary }]}>Genus:</Text>
                         <TextInput
-                            style={styles.taxonomyInput}
+                            style={[styles.taxonomyInput, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
                             value={genus}
                             onChangeText={setGenus}
                             placeholder="∨"
-                            placeholderTextColor="#D1D5DB"
+                            placeholderTextColor={themeColors.textSecondary}
                         />
                     </View>
 
                     <View style={styles.fieldRow}>
-                        <Text style={styles.label}>Species:</Text>
+                        <Text style={[styles.label, { color: themeColors.textSecondary }]}>Species:</Text>
                         <TextInput
-                            style={styles.taxonomyInput}
+                            style={[styles.taxonomyInput, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
                             value={species}
                             onChangeText={setSpecies}
                             placeholder="∨"
-                            placeholderTextColor="#D1D5DB"
+                            placeholderTextColor={themeColors.textSecondary}
                         />
                     </View>
                 </View>
 
                 {/* Difficulty Level */}
                 <View style={styles.difficultySection}>
-                    <Text style={styles.sectionTitle}>Difficulty Level</Text>
+                    <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Difficulty Level</Text>
                     <View style={styles.difficultyButtons}>
                         {["EASY", "MEDIUM", "HARD"].map((level) => (
                             <TouchableOpacity
                                 key={level}
                                 style={[
                                     styles.difficultyButton,
+                                    { backgroundColor: themeColors.card, borderColor: themeColors.border },
                                     difficultyLevel === level && styles.difficultyButtonActive,
                                 ]}
                                 onPress={() => setDifficultyLevel(level)}

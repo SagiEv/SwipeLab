@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 
 interface TaskCardProps {
     title: string;
@@ -25,10 +27,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
     onPress,
     onRemove
 }) => {
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
+
     return (
-        <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
+        <TouchableOpacity style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]} onPress={onPress} activeOpacity={0.9}>
             <View style={styles.headerRow}>
-                <Text style={styles.title} numberOfLines={1}>{title}</Text>
+                <Text style={[styles.title, { color: themeColors.text }]} numberOfLines={1}>{title}</Text>
 
                 <View style={styles.actionsRow}>
                     {/* Remove Button (Only if onRemove provided) */}
@@ -50,25 +55,25 @@ const TaskCard: React.FC<TaskCardProps> = ({
             </View>
 
             <View style={styles.contentRow}>
-                <Text style={styles.label}>Species: </Text>
+                <Text style={[styles.label, { color: themeColors.textSecondary }]}>Species: </Text>
                 <View style={styles.speciesContainer}>
                     {species.map((s, index) => (
                         <View key={index} style={styles.speciesItem}>
-                            <Text style={styles.speciesText}>{s}</Text>
-                            <Ionicons name="image-outline" size={14} color="#555" />
+                            <Text style={[styles.speciesText, { color: themeColors.text }]}>{s}</Text>
+                            <Ionicons name="image-outline" size={14} color={themeColors.icon} />
                         </View>
                     ))}
                 </View>
             </View>
 
-            <Text style={styles.description} numberOfLines={2}>
+            <Text style={[styles.description, { color: themeColors.textSecondary }]} numberOfLines={2}>
                 Description: {description}
             </Text>
 
-            <Text style={styles.statsText}>Images Classified: {imagesClassified}</Text>
+            <Text style={[styles.statsText, { color: themeColors.text }]}>Images Classified: {imagesClassified}</Text>
 
             <View style={styles.progressContainer}>
-                <Text style={styles.statsText}>Progression: {progress}%</Text>
+                <Text style={[styles.statsText, { color: themeColors.text }]}>Progression: {progress}%</Text>
                 {/* Simple Progress Bar */}
                 <View style={styles.progressBarBg}>
                     <View style={[styles.progressBarFill, { width: `${progress}%` }]} />
