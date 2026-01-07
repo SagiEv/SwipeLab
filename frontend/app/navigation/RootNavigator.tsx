@@ -26,10 +26,10 @@ export default function RootNavigator() {
     return (
       <NavigationContainer>
         <Stack.Navigator>
-          <Stack.Screen 
-            name="Login" 
-            component={LoginScreen} 
-            options={{ headerShown: false }} 
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+            options={{ headerShown: false }}
           />
         </Stack.Navigator>
       </NavigationContainer>
@@ -40,10 +40,10 @@ export default function RootNavigator() {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <NavigationContainer>
+      <NavigationContainer key={mode}>
         {isAdmin ? mode === "ADMIN"
-            ? <AdminNavigator />
-            : <UserNavigator />
+          ? <AdminNavigator />
+          : <UserNavigator />
           : <UserNavigator />}
       </NavigationContainer>
     </SafeAreaView>

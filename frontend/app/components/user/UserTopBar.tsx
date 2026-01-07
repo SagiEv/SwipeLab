@@ -48,12 +48,6 @@ export default function UserTopBar({
 
   const handleSwitchToManager = () => {
     setMode("ADMIN");
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: 'AdminDashboard' }],
-      })
-    );
   };
 
   // Dynamic styles for dark mode
