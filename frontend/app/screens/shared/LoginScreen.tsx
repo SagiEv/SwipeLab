@@ -30,37 +30,37 @@ export default function LoginScreen() {
     }
   }, [response]);
 
- const handleLogin = async () => {
-  setLoading(true);
-  setError("");
+  const handleLogin = async () => {
+    setLoading(true);
+    setError("");
 
-  try {
-    const res = await apiFetch("/api/v1/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        username,
-        password,
-      }),
-    });
+    try {
+      const res = await apiFetch("/api/v1/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          password,
+        }),
+      });
 
-    if (!res.ok) {
-      setError("Invalid username or password");
-      return;
+      if (!res.ok) {
+        setError("Invalid username or password");
+        return;
+      }
+
+      const data = await res.json();
+
+      // data comes from auth.mock.ts
+      setAuth(data.accessToken, data.user.role);
+    } catch (e) {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    const data = await res.json();
-
-    // data comes from auth.mock.ts
-    setAuth(data.accessToken, data.user.role);
-  } catch (e) {
-    setError("Something went wrong. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
 
   return (
