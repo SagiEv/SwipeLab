@@ -7,6 +7,11 @@ export type ScreenHeaderLayoutProps = {
   rightIcon: ImageSourcePropType;
   rightTitle: string;
   onRightPress?: () => void;
+
+  centerIcon?: ImageSourcePropType;
+  centerTitle?: string;
+  onCenterPress?: () => void;
+
   contentContainerStyle?: StyleProp<ViewStyle>;
 
   children: React.ReactNode;

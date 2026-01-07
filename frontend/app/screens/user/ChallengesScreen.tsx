@@ -106,6 +106,9 @@ export default function ChallengesScreen() {
         <ScreenHeaderLayout
             leftIcon={require('../../../assets/images/leaderboard.png')}
             leftTitle="Challenges"
+            centerIcon={require('../../../assets/images/leaderboard.png')}
+            centerTitle="Leaderboard"
+            onCenterPress={() => navigation.navigate('Leaderboard')}
             rightIcon={require('../../../assets/images/home.png')}
             rightTitle="Play"
             onRightPress={() => navigation.navigate('SwipeLab')}

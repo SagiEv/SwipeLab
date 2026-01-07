@@ -9,6 +9,9 @@ export default function ScreenHeaderLayout({
   rightIcon,
   rightTitle,
   onRightPress,
+  centerIcon,
+  centerTitle,
+  onCenterPress,
   children,
   contentContainerStyle,
 }: ScreenHeaderLayoutProps) {
@@ -21,6 +24,20 @@ export default function ScreenHeaderLayout({
           <Image source={leftIcon} style={styles.icon} />
           <Text style={styles.title} numberOfLines={1}>{leftTitle}</Text>
         </View>
+
+        {/* Center (optional navigation action) */}
+        {centerTitle && (
+          <View style={styles.centerWrapper}>
+            <TouchableOpacity
+              style={styles.centerHeaderItem}
+              onPress={onCenterPress}
+              disabled={!onCenterPress}
+            >
+              {centerIcon && <Image source={centerIcon} style={styles.icon} />}
+              <Text style={styles.button}>{centerTitle}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Right (navigation action) */}
         <TouchableOpacity
@@ -47,15 +64,33 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     padding: 12,
     borderBottomWidth: 1,
     borderColor: "#E0E0E0",
+    position: 'relative', // Ensure absolute child is relative to header
   },
   leftHeaderItem: {
     alignItems: "center",
     flexDirection: "row",
     gap: 8,
-    flex: 1.5,
+    flex: 1,
+    zIndex: 1,
+  },
+  centerWrapper: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 0,
+    pointerEvents: 'box-none',
+  },
+  centerHeaderItem: {
+    alignItems: "center",
+    justifyContent: "center",
   },
   rightHeaderItem: {
     alignItems: "center",
@@ -63,6 +98,7 @@ const styles = StyleSheet.create({
     gap: 8,
     flex: 1,
     justifyContent: "flex-end",
+    zIndex: 1,
   },
   icon: {
     width: 28,
@@ -77,6 +113,7 @@ const styles = StyleSheet.create({
   button: {
     fontSize: 14,
     fontWeight: "600",
+    textAlign: "center",
   },
   content: {
     flex: 1,
