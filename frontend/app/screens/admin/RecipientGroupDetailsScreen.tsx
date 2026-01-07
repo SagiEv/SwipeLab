@@ -38,7 +38,7 @@ export default function RecipientGroupDetailsScreen() {
     const [activeTab, setActiveTab] = useState<'USERS' | 'GROUPS'>('USERS');
 
     // Selection State
-    const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+    const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
     const [selectedGroupIds, setSelectedGroupIds] = useState<number[]>([]);
 
     // Data Sources
@@ -70,34 +70,35 @@ export default function RecipientGroupDetailsScreen() {
     };
 
     const handleAddSelected = async () => {
-        let finalUserIdsToAdd: number[] = [];
+        let finalUsernamesToAdd: string[] = [];
 
         if (activeTab === 'USERS') {
-            finalUserIdsToAdd = selectedUserIds;
+            finalUsernamesToAdd = selectedUserIds;
         } else {
             // Merge users from selected groups
             const groupsToAdd = allGroups.filter(g => selectedGroupIds.includes(g.id));
             groupsToAdd.forEach(g => {
                 g.users.forEach(u => {
                     if (!currentGroup.users.some(existing => existing.id === u.id)) {
-                        finalUserIdsToAdd.push(u.id);
+                        finalUsernamesToAdd.push(u.id);
                     }
                 });
             });
             // Unique IDs only
-            finalUserIdsToAdd = Array.from(new Set(finalUserIdsToAdd));
+            finalUsernamesToAdd = Array.from(new Set(finalUsernamesToAdd));
         }
 
-        if (finalUserIdsToAdd.length === 0) {
+        if (finalUsernamesToAdd.length === 0) {
             setAddMemberModalVisible(false);
             return;
         }
 
         try {
-            // Batch Add Request
-            const res = await apiFetch(`/api/v1/manager/recipient-groups/${currentGroup.id}/users`, {
-                method: 'POST',
-                body: JSON.stringify({ userIds: finalUserIdsToAdd })
+            // New Endpoint: /api/v1/dashboard/recipients/{id}/update
+            // Payload: { addUsernames: [...] }
+            const res = await apiFetch(`/api/v1/dashboard/recipients/${currentGroup.id}/update`, {
+                method: 'PUT',
+                body: JSON.stringify({ addUsernames: finalUsernamesToAdd })
             });
 
             if (res.ok) {
@@ -113,7 +114,7 @@ export default function RecipientGroupDetailsScreen() {
         }
     };
 
-    const toggleUserSelection = (userId: number) => {
+    const toggleUserSelection = (userId: string) => {
         if (selectedUserIds.includes(userId)) {
             setSelectedUserIds(selectedUserIds.filter(id => id !== userId));
         } else {
@@ -129,17 +130,35 @@ export default function RecipientGroupDetailsScreen() {
         }
     };
 
-    const handleRemoveUser = async (userId: number) => {
-        try {
-            const res = await apiFetch(`/api/v1/manager/recipient-groups/${currentGroup.id}/users/${userId}`, {
-                method: 'DELETE'
-            });
-            if (res.ok) {
-                refreshGroup();
-            }
-        } catch (error) {
-            console.error(error);
-        }
+    const handleRemoveUser = async (userId: string) => {
+        Alert.alert(
+            "Remove User",
+            "Are you sure you want to remove this user from the group?",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Remove",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            // New Endpoint: /api/v1/dashboard/recipients/{id}/update
+                            // Payload: { removeUsernames: [userId] }
+                            const res = await apiFetch(`/api/v1/dashboard/recipients/${currentGroup.id}/update`, {
+                                method: 'PUT',
+                                body: JSON.stringify({ removeUsernames: [userId] })
+                            });
+                            if (res.ok) {
+                                refreshGroup();
+                            } else {
+                                Alert.alert("Error", "Failed to remove user");
+                            }
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     // --- Composition Logic ---

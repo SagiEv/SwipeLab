@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import ScreenHeaderLayout from '../../components/layout/ScreenHeaderLayout/ScreenHeaderLayout';
 
 import TaskCard from '../../components/user/TaskCard';
 
@@ -67,6 +68,16 @@ export default function UserMyTasksScreen() {
         }
     };
 
+    // Calculate total completion
+    const totalAssigned = tasks.length;
+    let totalImages = 0;
+    let totalClassified = 0;
+    tasks.forEach(t => {
+        totalImages += t.totalImages;
+        totalClassified += t.imagesClassified;
+    });
+    const completionPercent = totalImages > 0 ? Math.round((totalClassified / totalImages) * 100) : 0;
+
     const handlePlayTask = (taskId: number) => {
         console.log(`Playing task ${taskId}`);
         // Navigate to the swipe screen (gameplay)
@@ -74,7 +85,13 @@ export default function UserMyTasksScreen() {
     };
 
     return (
-        <View style={styles.container}>
+        <ScreenHeaderLayout
+            leftIcon={require('../../../assets/images/tasks.png')}
+            leftTitle="My Tasks"
+            rightIcon={require('../../../assets/images/stats.png')}
+            rightTitle={`Completion: ${completionPercent}%`}
+            contentContainerStyle={{ padding: 0 }}
+        >
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
                 refreshControl={
@@ -83,17 +100,8 @@ export default function UserMyTasksScreen() {
             >
                 {/* ... existing content ... */}
                 {/* Section Title */}
-                <View style={styles.sectionHeader}>
-                    <View style={styles.titleBlock}>
-                        {/* Icon could go here */}
-                        <Text style={styles.sectionTitle}>My Tasks</Text>
-                    </View>
-
-                    {/* Completion Dial Placeholder - simple text for now as per design mockup it's a visual element */}
-                    <View style={styles.completionBlock}>
-                        <Text style={styles.completionText}>Completion</Text>
-                        {/* Could be a circular progress component */}
-                    </View>
+                <View style={[styles.sectionHeader, { marginBottom: 10 }]}>
+                    <Text style={styles.sectionTitle}>Current Tasks</Text>
                 </View>
 
                 {tasks.length === 0 && (
@@ -146,7 +154,7 @@ export default function UserMyTasksScreen() {
                 )}
 
             </ScrollView>
-        </View>
+        </ScreenHeaderLayout>
     );
 }
 

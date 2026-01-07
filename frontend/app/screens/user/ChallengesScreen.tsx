@@ -8,7 +8,9 @@ import {
     Text,
     View,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { apiFetch } from '../../api/apiFetch';
+import ScreenHeaderLayout from '../../components/layout/ScreenHeaderLayout/ScreenHeaderLayout';
 
 interface Challenge {
     id: number;
@@ -66,6 +68,7 @@ export default function ChallengesScreen() {
     const [challenges, setChallenges] = useState<Challenge[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const navigation = useNavigation<any>();
 
     const fetchChallenges = async () => {
         try {
@@ -100,34 +103,36 @@ export default function ChallengesScreen() {
     }
 
     return (
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={styles.content}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        <ScreenHeaderLayout
+            leftIcon={require('../../../assets/images/leaderboard.png')}
+            leftTitle="Challenges"
+            rightIcon={require('../../../assets/images/home.png')}
+            rightTitle="Play"
+            onRightPress={() => navigation.navigate('SwipeLab')}
+            contentContainerStyle={{ padding: 0 }}
         >
-            <View style={styles.header}>
-                {/* Simulated Header Icon */}
-                {/* Simulated Header Icon */}
-                <View style={styles.headerIconContainer}>
-                    <Text style={styles.headerIconEmoji}>💡</Text>
-                    <Text style={styles.headerTitle}>Challenges</Text>
-                </View>
-            </View>
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={styles.content}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+            >
 
-            {/* In Progress Section */}
-            <Text style={styles.sectionHeader}>In Progress</Text>
-            {challenges.filter(c => c.progress < c.total).map(challenge => (
-                <ChallengeCard key={challenge.id} challenge={challenge} />
-            ))}
 
-            {/* Completed Section */}
-            <Text style={styles.sectionHeader}>Completed</Text>
-            {challenges.filter(c => c.progress >= c.total).map(challenge => (
-                <ChallengeCard key={challenge.id} challenge={challenge} />
-            ))}
+                {/* In Progress Section */}
+                <Text style={styles.sectionHeader}>In Progress</Text>
+                {challenges.filter(c => c.progress < c.total).map(challenge => (
+                    <ChallengeCard key={challenge.id} challenge={challenge} />
+                ))}
 
-            <View style={{ height: 40 }} />
-        </ScrollView>
+                {/* Completed Section */}
+                <Text style={styles.sectionHeader}>Completed</Text>
+                {challenges.filter(c => c.progress >= c.total).map(challenge => (
+                    <ChallengeCard key={challenge.id} challenge={challenge} />
+                ))}
+
+                <View style={{ height: 40 }} />
+            </ScrollView>
+        </ScreenHeaderLayout>
     );
 }
 

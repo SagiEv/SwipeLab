@@ -1,17 +1,17 @@
 export interface User {
-  id: number;
+  id: string; // username
   username: string;
   description?: string; // e.g. "Student" or "Expert"
 }
 
 export const usersMock: User[] = [
-  { id: 101, username: 'user_1', description: 'Student' },
-  { id: 102, username: 'user_2', description: 'Student' },
-  { id: 103, username: 'expert_1', description: 'Expert' },
-  { id: 104, username: 'volunteer_a', description: 'Volunteer' },
-  { id: 105, username: 'volunteer_b', description: 'Volunteer' },
-  { id: 106, username: 'researcher_x', description: 'Researcher' },
-  { id: 107, username: 'researcher_y', description: 'Researcher' },
-  { id: 108, username: 'student_bonus', description: 'Student' },
+  { id: 'user_1', username: 'user_1', description: 'Student' },
+  { id: 'user_2', username: 'user_2', description: 'Student' },
+  { id: 'expert_1', username: 'expert_1', description: 'Expert' },
+  { id: 'volunteer_a', username: 'volunteer_a', description: 'Volunteer' },
+  { id: 'volunteer_b', username: 'volunteer_b', description: 'Volunteer' },
+  { id: 'researcher_x', username: 'researcher_x', description: 'Researcher' },
+  { id: 'researcher_y', username: 'researcher_y', description: 'Researcher' },
+  { id: 'student_bonus', username: 'student_bonus', description: 'Student' },
   // Add more as needed
 ];

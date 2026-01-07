@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import ScreenHeaderLayout from '../../components/layout/ScreenHeaderLayout/ScreenHeaderLayout';
 import { useAuthStore } from '../../stores/authStore';
 import { useThemeStore } from '../../stores/themeStore';
 
@@ -8,6 +10,7 @@ export default function SettingsScreen() {
   const { logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
   const [notifications, setNotifications] = useState(true);
+  const navigation = useNavigation<any>();
 
   const isDarkMode = theme === 'dark';
 
@@ -36,84 +39,95 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={[styles.container, dynamicStyles.container]}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={[styles.pageTitle, dynamicStyles.pageTitle]}>Settings</Text>
+    <ScreenHeaderLayout
+      leftIcon={require('../../../assets/images/settings.png')}
+      leftTitle="Settings"
+      rightIcon={require('../../../assets/images/my-profile.png')}
+      rightTitle="My Profile"
+      onRightPress={() => navigation.navigate('Profile')}
+      contentContainerStyle={{ padding: 0 }}
+    >
+      <View style={[styles.container, dynamicStyles.container]}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
 
-        {/* Account Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Account</Text>
+          {/* Account Section */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Account</Text>
 
-          <View style={[styles.settingRow, dynamicStyles.settingRow]}>
-            <View style={styles.settingLeft}>
-              <Ionicons name="person-outline" size={24} color={dynamicStyles.iconColor} />
-              <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>Profile</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={dynamicStyles.chevronColor} />
-          </View>
-        </View>
-
-        {/* Preferences Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Preferences</Text>
-
-          <View style={[styles.settingRow, dynamicStyles.settingRow]}>
-            <View style={styles.settingLeft}>
-              <Ionicons name="notifications-outline" size={24} color={dynamicStyles.iconColor} />
-              <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>Notifications</Text>
-            </View>
-            <Switch
-              value={notifications}
-              onValueChange={setNotifications}
-              trackColor={{ false: '#ccc', true: '#4B7BE5' }}
-              thumbColor={notifications ? '#fff' : '#f4f3f4'}
-            />
+            <TouchableOpacity
+              style={[styles.settingRow, dynamicStyles.settingRow]}
+              onPress={() => navigation.navigate('Profile')}
+            >
+              <View style={styles.settingLeft}>
+                <Ionicons name="person-outline" size={24} color={dynamicStyles.iconColor} />
+                <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>Profile</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={dynamicStyles.chevronColor} />
+            </TouchableOpacity>
           </View>
 
-          <View style={[styles.settingRow, dynamicStyles.settingRow]}>
-            <View style={styles.settingLeft}>
-              <Ionicons name="moon-outline" size={24} color={dynamicStyles.iconColor} />
-              <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>Dark Mode</Text>
+          {/* Preferences Section */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Preferences</Text>
+
+            <View style={[styles.settingRow, dynamicStyles.settingRow]}>
+              <View style={styles.settingLeft}>
+                <Ionicons name="notifications-outline" size={24} color={dynamicStyles.iconColor} />
+                <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>Notifications</Text>
+              </View>
+              <Switch
+                value={notifications}
+                onValueChange={setNotifications}
+                trackColor={{ false: '#ccc', true: '#4B7BE5' }}
+                thumbColor={notifications ? '#fff' : '#f4f3f4'}
+              />
             </View>
-            <Switch
-              value={isDarkMode}
-              onValueChange={toggleTheme}
-              trackColor={{ false: '#ccc', true: '#4B7BE5' }}
-              thumbColor={isDarkMode ? '#fff' : '#f4f3f4'}
-            />
+
+            <View style={[styles.settingRow, dynamicStyles.settingRow]}>
+              <View style={styles.settingLeft}>
+                <Ionicons name="moon-outline" size={24} color={dynamicStyles.iconColor} />
+                <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>Dark Mode</Text>
+              </View>
+              <Switch
+                value={isDarkMode}
+                onValueChange={toggleTheme}
+                trackColor={{ false: '#ccc', true: '#4B7BE5' }}
+                thumbColor={isDarkMode ? '#fff' : '#f4f3f4'}
+              />
+            </View>
           </View>
-        </View>
 
-        {/* Support Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Support</Text>
+          {/* Support Section */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Support</Text>
 
-          <TouchableOpacity style={[styles.settingRow, dynamicStyles.settingRow]}>
-            <View style={styles.settingLeft}>
-              <Ionicons name="help-circle-outline" size={24} color={dynamicStyles.iconColor} />
-              <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>Help Center</Text>
-            </View>
-            <Ionicons name="open-outline" size={20} color={dynamicStyles.chevronColor} />
+            <TouchableOpacity style={[styles.settingRow, dynamicStyles.settingRow]}>
+              <View style={styles.settingLeft}>
+                <Ionicons name="help-circle-outline" size={24} color={dynamicStyles.iconColor} />
+                <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>Help Center</Text>
+              </View>
+              <Ionicons name="open-outline" size={20} color={dynamicStyles.chevronColor} />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[styles.settingRow, dynamicStyles.settingRow]}>
+              <View style={styles.settingLeft}>
+                <Ionicons name="information-circle-outline" size={24} color={dynamicStyles.iconColor} />
+                <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>About</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={dynamicStyles.chevronColor} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Logout Button */}
+          <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+            <Ionicons name="log-out-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.logoutText}>Log Out</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.settingRow, dynamicStyles.settingRow]}>
-            <View style={styles.settingLeft}>
-              <Ionicons name="information-circle-outline" size={24} color={dynamicStyles.iconColor} />
-              <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>About</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={dynamicStyles.chevronColor} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-          <Ionicons name="log-out-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
-          <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
-
-        <Text style={[styles.versionText, dynamicStyles.versionText]}>SwipeLab v1.0.0-alpha</Text>
-      </ScrollView>
-    </View>
+          <Text style={[styles.versionText, dynamicStyles.versionText]}>SwipeLab v1.0.0-alpha</Text>
+        </ScrollView>
+      </View>
+    </ScreenHeaderLayout >
   );
 }
 

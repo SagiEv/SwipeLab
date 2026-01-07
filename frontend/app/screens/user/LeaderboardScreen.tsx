@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import ScreenHeaderLayout from '../../components/layout/ScreenHeaderLayout/ScreenHeaderLayout';
 import { apiFetch } from '../../api/apiFetch';
 
 interface LeaderboardEntry {
@@ -81,6 +83,7 @@ export default function LeaderboardScreen() {
     const [data, setData] = useState<LeaderboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const navigation = useNavigation<any>();
 
     const fetchLeaderboard = useCallback(async () => {
         try {
@@ -131,52 +134,53 @@ export default function LeaderboardScreen() {
     }
 
     return (
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            {/* Header */}
-            <View style={styles.header}>
-                <View style={styles.titleRow}>
-                    <Text style={styles.trophyIcon}>🏆</Text>
-                    <Text style={styles.title}>Leaderboard</Text>
-                </View>
-                <Text style={styles.yourSpot}>Your Spot: #{data.currentUser.rank}</Text>
-            </View>
+        <ScreenHeaderLayout
+            leftIcon={require('../../../assets/images/leaderboard.png')}
+            leftTitle="Leaderboard"
+            rightIcon={require('../../../assets/images/profile.png')}
+            rightTitle={data ? `Your Spot: #${data.currentUser.rank}` : 'Your Spot: -'}
+            contentContainerStyle={{ padding: 0 }}
+        >
+            <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+                {/* Header info (Your Spot) - Removed as it is now in the top header */}
 
-            {/* Test Controls (Debug Only) */}
-            {DEBUG_MODE && (
-                <View style={styles.testControls}>
-                    <Text style={styles.testLabel}>⚡ Test: Change Your Score</Text>
-                    <View style={styles.testButtons}>
-                        <TouchableOpacity style={styles.testBtn} onPress={() => updateScore(15000)}>
-                            <Text style={styles.testBtnText}>🥇 15,000</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.testBtn} onPress={() => updateScore(11900)}>
-                            <Text style={styles.testBtnText}>🥈 11,900</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.testBtn} onPress={() => updateScore(9400)}>
-                            <Text style={styles.testBtnText}>📅 9,400</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.testBtn} onPress={() => updateScore(7542)}>
-                            <Text style={styles.testBtnText}>Reset</Text>
-                        </TouchableOpacity>
+                {/* Test Controls (Debug Only) */}
+                {DEBUG_MODE && (
+                    <View style={styles.testControls}>
+                        <Text style={styles.testLabel}>⚡ Test: Change Your Score</Text>
+                        <View style={styles.testButtons}>
+                            <TouchableOpacity style={styles.testBtn} onPress={() => updateScore(15000)}>
+                                <Text style={styles.testBtnText}>🥇 15,000</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.testBtn} onPress={() => updateScore(11900)}>
+                                <Text style={styles.testBtnText}>🥈 11,900</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.testBtn} onPress={() => updateScore(9400)}>
+                                <Text style={styles.testBtnText}>📅 9,400</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.testBtn} onPress={() => updateScore(7542)}>
+                                <Text style={styles.testBtnText}>Reset</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <Text style={styles.currentScore}>Current: {data.currentUser.score.toLocaleString()} pts</Text>
                     </View>
-                    <Text style={styles.currentScore}>Current: {data.currentUser.score.toLocaleString()} pts</Text>
-                </View>
-            )}
+                )}
 
-            {/* All Time Leaderboard */}
-            <LeaderboardTable
-                title="Greatest Of All Time"
-                data={data.allTime}
-                type="allTime"
-            />
+                {/* All Time Leaderboard */}
+                <LeaderboardTable
+                    title="Greatest Of All Time"
+                    data={data.allTime}
+                    type="allTime"
+                />
 
-            {/* Monthly Leaderboard */}
-            <LeaderboardTable
-                title="Greatest Of The Month"
-                data={data.monthly}
-                type="monthly"
-            />
-        </ScrollView>
+                {/* Monthly Leaderboard */}
+                <LeaderboardTable
+                    title="Greatest Of The Month"
+                    data={data.monthly}
+                    type="monthly"
+                />
+            </ScrollView>
+        </ScreenHeaderLayout>
     );
 }
 
@@ -212,27 +216,12 @@ const styles = StyleSheet.create({
         color: '#dc3545',
         textAlign: 'center',
     },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+    headerInfo: {
         marginBottom: 20,
-    },
-    titleRow: {
-        flexDirection: 'row',
         alignItems: 'center',
-    },
-    trophyIcon: {
-        fontSize: 28,
-        marginRight: 8,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#1a1a2e',
     },
     yourSpot: {
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: '600',
         color: '#4B7BE5',
     },
