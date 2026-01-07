@@ -20,12 +20,6 @@ export default function AdminTopBar() {
 
   const handleSwitchToPlayer = () => {
     setMode("USER");
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: 'SwipeLab' }],
-      })
-    );
   };
 
   const dynamicStyles = {
