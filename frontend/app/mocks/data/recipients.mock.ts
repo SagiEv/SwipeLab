@@ -59,7 +59,7 @@ export const addRecipientGroup = (name: string) => {
     return newGroup;
 };
 
-export const addUserToGroup = (groupId: number, userId: number) => {
+export const addUserToGroup = (groupId: number, userId: string) => {
     const groupIndex = recipientGroups.findIndex(g => g.id === groupId);
     if (groupIndex === -1) return null;
 
@@ -78,7 +78,7 @@ export const addUserToGroup = (groupId: number, userId: number) => {
     return updatedGroup;
 };
 
-export const removeUserFromGroup = (groupId: number, userId: number) => {
+export const removeUserFromGroup = (groupId: number, userId: string) => {
     const groupIndex = recipientGroups.findIndex(g => g.id === groupId);
     if (groupIndex === -1) return null;
 

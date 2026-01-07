@@ -10,6 +10,7 @@ export default function ScreenHeaderLayout({
   rightTitle,
   onRightPress,
   children,
+  contentContainerStyle,
 }: ScreenHeaderLayoutProps) {
   return (
     <View style={styles.container}>
@@ -33,7 +34,7 @@ export default function ScreenHeaderLayout({
       </View>
 
       {/* Screen Content */}
-      <View style={styles.content}>{children}</View>
+      <View style={[styles.content, contentContainerStyle]}>{children}</View>
     </View>
   );
 }

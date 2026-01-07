@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View, RefreshControl } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { apiFetch } from '../../api/apiFetch';
+import ScreenHeaderLayout from '../../components/layout/ScreenHeaderLayout/ScreenHeaderLayout';
 
 const DEBUG_MODE = false; // Set to true for testing controls
 
@@ -71,6 +73,7 @@ export default function StatsScreen() {
     const [data, setData] = useState<StatsData | null>(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const navigation = useNavigation<any>();
 
     const fetchStats = useCallback(async () => {
         try {
@@ -127,101 +130,110 @@ export default function StatsScreen() {
     if (!data) return null;
 
     return (
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={styles.content}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        <ScreenHeaderLayout
+            leftIcon={require('../../../assets/images/stats.png')}
+            leftTitle="Your Performance"
+            rightIcon={require('../../../assets/images/my-profile.png')}
+            rightTitle="My Profile"
+            onRightPress={() => navigation.navigate('Profile')}
+            contentContainerStyle={{ padding: 0 }}
         >
-            <Text style={styles.headerTitle}>Your Performance</Text>
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={styles.content}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+            >
 
-            {/* User Profile Summary */}
-            <View style={styles.grid}>
-                <SummaryCard title="Global Rank" value={`#${data.summary.rankGlobal}`} subtext="Top 1%" />
-                <SummaryCard title="Score" value={data.summary.score.toLocaleString()} />
-                <SummaryCard title="Tasks Done" value={data.summary.completedTasks} />
-                <SummaryCard title="Accuracy" value={`${(data.summary.accuracy * 100).toFixed(1)}%`} subtext="Overall" />
-            </View>
 
-            {/* Streak */}
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>🔥 Streak</Text>
-                <View style={styles.streakContainer}>
-                    <Text style={styles.streakText}>Current: <Text style={styles.streakBold}>{data.summary.currentStreakDays} days</Text></Text>
-                    <Text style={styles.streakText}>Longest: <Text style={styles.streakBold}>{data.summary.longestStreakDays} days</Text></Text>
+                {/* User Profile Summary */}
+                <View style={styles.grid}>
+                    <SummaryCard title="Global Rank" value={`#${data.summary.rankGlobal}`} subtext="Top 1%" />
+                    <SummaryCard title="Score" value={data.summary.score.toLocaleString()} />
+                    <SummaryCard title="Tasks Done" value={data.summary.completedTasks} />
+                    <SummaryCard title="Accuracy" value={`${(data.summary.accuracy * 100).toFixed(1)}%`} subtext="Overall" />
                 </View>
-            </View>
 
-            {/* Comparisons */}
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>⚖️ Comparisons</Text>
-                <View style={styles.card}>
-                    <Text style={styles.chartTitle}>Vs Experts</Text>
-                    <ProgressBar
-                        label="Your Accuracy"
-                        value={data.vsExperts.userAccuracy}
-                        color="#4B7BE5"
-                    />
-                    <ProgressBar
-                        label="Expert Benchmark"
-                        value={data.vsExperts.expertAccuracy}
-                        color="#8B008B"
-                    />
-                    <Text style={styles.insightText}>
-                        You are {Math.abs(data.vsExperts.difference * 100).toFixed(1)}%
-                        {data.vsExperts.difference >= 0 ? ' above ' : ' below '}
-                        expert level.
-                    </Text>
-
-                    <View style={styles.separator} />
-
-                    <Text style={styles.chartTitle}>Vs Community</Text>
-                    <ProgressBar
-                        label="Average User"
-                        value={data.vsUsers.averageUserAccuracy}
-                        color="#FFA500"
-                    />
-                    <Text style={styles.insightText}>
-                        You're in the top {100 - data.vsUsers.percentile}% of contributors!
-                    </Text>
-                </View>
-            </View>
-
-            {/* Breakdown */}
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>📝 Task Breakdown</Text>
-                {data.breakdown.byTask.map((task) => (
-                    <View key={task.taskId} style={styles.taskRow}>
-                        <View style={styles.taskInfo}>
-                            <Text style={styles.taskName}>{task.taskName}</Text>
-                            <Text style={styles.taskCount}>{task.classifications} classifications</Text>
-                        </View>
-                        <View style={styles.taskStat}>
-                            <Text style={styles.taskAccuracy}>{(task.accuracy * 100).toFixed(1)}%</Text>
-                        </View>
-                    </View>
-                ))}
-            </View>
-
-            {/* Debug Controls */}
-            {DEBUG_MODE && (
-                <View style={styles.debugControls}>
-                    <Text style={styles.debugTitle}>⚡ Debug: Adjust Accuracy</Text>
-                    <View style={styles.debugButtons}>
-                        <TouchableOpacity style={styles.debugBtn} onPress={() => updateAccuracy(0.65)}>
-                            <Text style={styles.debugBtnText}>Low (65%)</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.debugBtn} onPress={() => updateAccuracy(0.88)}>
-                            <Text style={styles.debugBtnText}>Avg (88%)</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.debugBtn} onPress={() => updateAccuracy(0.98)}>
-                            <Text style={styles.debugBtnText}>Expert (98%)</Text>
-                        </TouchableOpacity>
+                {/* Streak */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>🔥 Streak</Text>
+                    <View style={styles.streakContainer}>
+                        <Text style={styles.streakText}>Current: <Text style={styles.streakBold}>{data.summary.currentStreakDays} days</Text></Text>
+                        <Text style={styles.streakText}>Longest: <Text style={styles.streakBold}>{data.summary.longestStreakDays} days</Text></Text>
                     </View>
                 </View>
-            )}
 
-            <View style={{ height: 40 }} />
-        </ScrollView>
+                {/* Comparisons */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>⚖️ Comparisons</Text>
+                    <View style={styles.card}>
+                        <Text style={styles.chartTitle}>Vs Experts</Text>
+                        <ProgressBar
+                            label="Your Accuracy"
+                            value={data.vsExperts.userAccuracy}
+                            color="#4B7BE5"
+                        />
+                        <ProgressBar
+                            label="Expert Benchmark"
+                            value={data.vsExperts.expertAccuracy}
+                            color="#8B008B"
+                        />
+                        <Text style={styles.insightText}>
+                            You are {Math.abs(data.vsExperts.difference * 100).toFixed(1)}%
+                            {data.vsExperts.difference >= 0 ? ' above ' : ' below '}
+                            expert level.
+                        </Text>
+
+                        <View style={styles.separator} />
+
+                        <Text style={styles.chartTitle}>Vs Community</Text>
+                        <ProgressBar
+                            label="Average User"
+                            value={data.vsUsers.averageUserAccuracy}
+                            color="#FFA500"
+                        />
+                        <Text style={styles.insightText}>
+                            You're in the top {100 - data.vsUsers.percentile}% of contributors!
+                        </Text>
+                    </View>
+                </View>
+
+                {/* Breakdown */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>📝 Task Breakdown</Text>
+                    {data.breakdown.byTask.map((task) => (
+                        <View key={task.taskId} style={styles.taskRow}>
+                            <View style={styles.taskInfo}>
+                                <Text style={styles.taskName}>{task.taskName}</Text>
+                                <Text style={styles.taskCount}>{task.classifications} classifications</Text>
+                            </View>
+                            <View style={styles.taskStat}>
+                                <Text style={styles.taskAccuracy}>{(task.accuracy * 100).toFixed(1)}%</Text>
+                            </View>
+                        </View>
+                    ))}
+                </View>
+
+                {/* Debug Controls */}
+                {DEBUG_MODE && (
+                    <View style={styles.debugControls}>
+                        <Text style={styles.debugTitle}>⚡ Debug: Adjust Accuracy</Text>
+                        <View style={styles.debugButtons}>
+                            <TouchableOpacity style={styles.debugBtn} onPress={() => updateAccuracy(0.65)}>
+                                <Text style={styles.debugBtnText}>Low (65%)</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.debugBtn} onPress={() => updateAccuracy(0.88)}>
+                                <Text style={styles.debugBtnText}>Avg (88%)</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.debugBtn} onPress={() => updateAccuracy(0.98)}>
+                                <Text style={styles.debugBtnText}>Expert (98%)</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
+
+                <View style={{ height: 40 }} />
+            </ScrollView>
+        </ScreenHeaderLayout>
     );
 }
 

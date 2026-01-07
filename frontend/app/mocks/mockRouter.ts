@@ -9,6 +9,7 @@ import { statisticsMock, setUserAccuracy } from './data/statistics.mock'
 import { analyticsMock, getTaskAnalytics, getUserPerformance } from './data/analytics.mock'
 
 import { getLeaderboardData, setUserScore } from './data/leaderboard.mock'
+import { usersMock } from './data/users.mock'
 import {
   addRecipientGroup,
   addUserToGroup,
@@ -268,66 +269,77 @@ export async function mockRouter(
   }
 
   // ---------- MANAGER / RECIPIENTS ----------
+  if (method === 'GET' && url.endsWith('/api/v1/dashboard/recipients')) {
+    // Note: User provided API used 'dashboard/recipients/*' but list endpoint wasn't explicitly changed. 
+    // Assuming standard REST pattern or keeping existing GET but moving to dashboard/recipients if consistent.
+    // For now, let's support both or just the existing GET if not specified. 
+    // Wait, let's align with the new path '/api/v1/dashboard/recipients' for consistency.
+    return jsonResponse(getRecipientGroups())
+  }
+
+  // Also support the old one just in case until full refactor
   if (method === 'GET' && url.endsWith('/api/v1/manager/recipient-groups')) {
     return jsonResponse(getRecipientGroups())
   }
 
-  // Create Group
-  if (method === 'POST' && url.endsWith('/api/v1/manager/recipient-groups')) {
-    const { name } = body as { name: string };
+  // 4.3 Create Recipients List
+  if (method === 'POST' && url.endsWith('/api/v1/dashboard/recipients/create')) {
+    const { name, usernames } = body as { name: string, usernames: string[] };
     const newGroup = addRecipientGroup(name);
-    return jsonResponse(newGroup, 201);
+
+    // Add users immediately
+    if (usernames && Array.isArray(usernames)) {
+      usernames.forEach(username => {
+        addUserToGroup(newGroup.id, username);
+      });
+    }
+
+    // Return the updated group structure
+    const updatedGroup = getRecipientGroups().find(g => g.id === newGroup.id);
+    return jsonResponse(updatedGroup, 201);
   }
 
-  // Add User(s) to Group
-  if (method === 'POST' && url.match(/\/api\/v1\/manager\/recipient-groups\/\d+\/users$/)) {
-    const groupId = parseInt(url.split('/recipient-groups/')[1].split('/')[0]);
+  // 4.5 Update Recipients List
+  if (method === 'PUT' && url.includes('/api/v1/dashboard/recipients/') && url.endsWith('/update')) {
+    const groupId = parseInt(url.split('/recipients/')[1].split('/')[0]);
+    const { addUsernames, removeUsernames } = body as { addUsernames?: string[], removeUsernames?: string[] };
 
-    // Support batch { userIds: [] } or single { userId }
-    const userIds = body.userIds || (body.userId ? [body.userId] : []);
-
-    let updatedGroup;
-    userIds.forEach((uid: number) => {
-      updatedGroup = addUserToGroup(groupId, uid);
-    });
-
-    if (!updatedGroup && userIds.length > 0) return jsonResponse({ message: 'Group or User not found' }, 404);
-
-    // Return the latest state of the group
-    return jsonResponse(getRecipientGroups().find(g => g.id === groupId));
-  }
-
-  // Remove User from Group
-  if (method === 'DELETE' && url.match(/\/api\/v1\/manager\/recipient-groups\/\d+\/users\/\d+$/)) {
-    const parts = url.split('/');
-    const groupId = parseInt(parts[parts.indexOf('recipient-groups') + 1]);
-    const userId = parseInt(parts[parts.indexOf('users') + 1]);
-
-    const updatedGroup = removeUserFromGroup(groupId, userId);
+    let updatedGroup = getRecipientGroups().find(g => g.id === groupId);
     if (!updatedGroup) return jsonResponse({ message: 'Group not found' }, 404);
+
+    if (addUsernames) {
+      addUsernames.forEach(username => {
+        addUserToGroup(groupId, username);
+      });
+    }
+
+    if (removeUsernames) {
+      removeUsernames.forEach(username => {
+        removeUserFromGroup(groupId, username);
+      });
+    }
+
+    updatedGroup = getRecipientGroups().find(g => g.id === groupId);
     return jsonResponse(updatedGroup);
+  }
+
+  // 4.4 Delete Recipients List
+  if (method === 'DELETE' && url.includes('/api/v1/dashboard/recipients/')) {
+    // Mock deletion (not fully implemented in mock helper but we can simulate success)
+    // Parsing ID just to be sure
+    // const groupId = parseInt(url.split('/recipients/')[1]);
+    return jsonResponse({
+      taskId: 7, // Dummy response from contract
+      previousStatus: "ACTIVE",
+      currentStatus: "PAUSED",
+      pausedAt: new Date().toISOString()
+    });
   }
 
   // ---------- USERS MANAGEMENT ----------
   if (method === 'GET' && url.endsWith('/api/v1/manager/users')) {
-    const mockUsers = authMock.users.map((u, i) => ({
-      id: (i + 1).toString(),
-      username: u.username,
-      email: u.email,
-      role: u.role,
-      score: Math.floor(Math.random() * 100) / 100 // Random score 0.00 - 0.99
-    }));
-    // Add some extra dummy users for UI demonstration
-    for (let i = 0; i < 10; i++) {
-      mockUsers.push({
-        id: (mockUsers.length + 1).toString(),
-        username: `User${Math.floor(Math.random() * 1000)}`,
-        email: `user${i}@example.com`,
-        role: 'USER',
-        score: Math.floor(Math.random() * 100) / 100
-      });
-    }
-    return jsonResponse(mockUsers);
+    // Return the shared usersMock so IDs match what the recipients logic expects
+    return jsonResponse(usersMock);
   }
 
   // ---------- FALLBACK ----------
