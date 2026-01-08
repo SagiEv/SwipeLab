@@ -10,6 +10,7 @@ export type AdminStackParamList = {
   RecipientGroupDetails: { group: any };
   Analytics: undefined;
   UsersManagement: undefined;
+  AddUser: undefined;
   Taxonomy: undefined;
   UserSettings: undefined;
   Profile: undefined;
