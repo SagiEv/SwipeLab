@@ -65,7 +65,7 @@ export default function UsersManagementScreen() {
             leftTitle="Users"
             rightIcon={addTaskImg}
             rightTitle="Add User"
-            onRightPress={() => console.log("Add User Pressed")}
+            onRightPress={() => navigation.navigate('AddUser')}
         >
             <View style={[styles.container, { backgroundColor: themeColors.background }]}>
                 {loading ? (
