@@ -3,6 +3,8 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View
 import { useNavigation } from '@react-navigation/native';
 import ScreenHeaderLayout from '../../components/layout/ScreenHeaderLayout/ScreenHeaderLayout';
 import { apiFetch } from '../../api/apiFetch';
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 
 interface LeaderboardEntry {
     rank: number;
@@ -29,12 +31,28 @@ const getMedalEmoji = (rank: number): string => {
     }
 };
 
-const getRowStyle = (rank: number, type: 'allTime' | 'monthly') => {
-    const allTimeColors = ['#FFD700', '#FFA500', '#FF6347', '#DC143C'];
-    const monthlyColors = ['#FFD700', '#FFA500', '#9370DB', '#8B008B'];
+const getRowStyle = (rank: number, type: 'allTime' | 'monthly', themeColors: any, isDark: boolean) => {
+    // Relaxed Pastel Colors
+    // Rank 1: Soft Gold
+    // Rank 2: Soft Silver/Gray
+    // Rank 3: Soft Bronze/Orange
+    // Rank 4+: Default/Transparent
 
-    const colors = type === 'allTime' ? allTimeColors : monthlyColors;
-    return { backgroundColor: colors[rank - 1] || '#ccc' };
+    // Light Mode Pastels
+    const lightColors = ['#FFF9C4', '#F5F5F5', '#FFCCBC'];
+    // Dark Mode Muted Colors (Darker pastels so text is readable)
+    const darkColors = ['#5D4037', '#424242', '#3E2723']; // Just examples, better to use semi-transparent
+
+    // Better approach: Use opacity on base colors?
+    // Let's use relaxed solid colors that work for both or switch based on theme
+
+    let bgColor = isDark ? themeColors.card : '#fff'; // Default
+
+    if (rank === 1) bgColor = isDark ? '#4A3B00' : '#FFF59D'; // Gold-ish
+    else if (rank === 2) bgColor = isDark ? '#37474F' : '#CFD8DC'; // Silver-ish
+    else if (rank === 3) bgColor = isDark ? '#3E2723' : '#FFAB91'; // Bronze-ish
+
+    return { backgroundColor: bgColor };
 };
 
 interface LeaderboardTableProps {
@@ -44,27 +62,32 @@ interface LeaderboardTableProps {
 }
 
 function LeaderboardTable({ title, data, type }: LeaderboardTableProps) {
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
+    const headerBg = theme === 'dark' ? themeColors.card : '#e0e0e0';
+    const cellColor = theme === 'dark' ? themeColors.text : '#333';
+
     return (
         <View style={styles.tableContainer}>
-            <Text style={styles.tableTitle}>{title}</Text>
-            <View style={styles.table}>
+            <Text style={[styles.tableTitle, { color: themeColors.text }]}>{title}</Text>
+            <View style={[styles.table, { backgroundColor: themeColors.card }]}>
                 {/* Header Row */}
-                <View style={styles.headerRow}>
-                    <Text style={[styles.headerCell, styles.rankCol]}>Rank</Text>
-                    <Text style={[styles.headerCell, styles.userCol]}>User</Text>
-                    <Text style={[styles.headerCell, styles.scoreCol]}>Score</Text>
+                <View style={[styles.headerRow, { backgroundColor: headerBg }]}>
+                    <Text style={[styles.headerCell, styles.rankCol, { color: cellColor }]}>Rank</Text>
+                    <Text style={[styles.headerCell, styles.userCol, { color: cellColor }]}>User</Text>
+                    <Text style={[styles.headerCell, styles.scoreCol, { color: cellColor }]}>Score</Text>
                 </View>
 
                 {/* Data Rows */}
                 {data.map((entry) => (
                     <View
                         key={entry.rank}
-                        style={[styles.dataRow, getRowStyle(entry.rank, type)]}
+                        style={[styles.dataRow, getRowStyle(entry.rank, type, themeColors, theme === 'dark'), { borderBottomColor: themeColors.border }]}
                     >
-                        <Text style={[styles.dataCell, styles.rankCol]}>{entry.rank}</Text>
-                        <Text style={[styles.dataCell, styles.userCol]}>{entry.username}</Text>
+                        <Text style={[styles.dataCell, styles.rankCol, { color: cellColor }]}>{entry.rank}</Text>
+                        <Text style={[styles.dataCell, styles.userCol, { color: cellColor }]}>{entry.username}</Text>
                         <View style={styles.scoreContainer}>
-                            <Text style={[styles.dataCell, styles.scoreText]}>
+                            <Text style={[styles.dataCell, styles.scoreText, { color: cellColor }]}>
                                 {entry.score.toLocaleString()}
                             </Text>
                             <Text style={styles.medal}>{getMedalEmoji(entry.rank)}</Text>
@@ -84,6 +107,8 @@ export default function LeaderboardScreen() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const navigation = useNavigation<any>();
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
 
     const fetchLeaderboard = useCallback(async () => {
         try {
@@ -118,7 +143,7 @@ export default function LeaderboardScreen() {
 
     if (loading) {
         return (
-            <View style={styles.loadingContainer}>
+            <View style={[styles.loadingContainer, { backgroundColor: themeColors.background }]}>
                 <ActivityIndicator size="large" color="#4B7BE5" />
                 <Text style={styles.loadingText}>Loading leaderboard...</Text>
             </View>
@@ -141,7 +166,11 @@ export default function LeaderboardScreen() {
             rightTitle={data ? `Your Spot: #${data.currentUser.rank}` : 'Your Spot: -'}
             contentContainerStyle={{ padding: 0 }}
         >
-            <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+            <ScrollView
+                style={[styles.container, { backgroundColor: themeColors.background }]}
+                contentContainerStyle={styles.content}
+                showsVerticalScrollIndicator={false}
+            >
                 {/* Header info (Your Spot) - Removed as it is now in the top header */}
 
                 {/* Test Controls (Debug Only) */}
@@ -270,11 +299,7 @@ const styles = StyleSheet.create({
     dataCell: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#fff',
         textAlign: 'center',
-        textShadowColor: 'rgba(0,0,0,0.3)',
-        textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 2,
     },
     rankCol: {
         flex: 1,

@@ -48,7 +48,7 @@ export default function SettingsScreen() {
       contentContainerStyle={{ padding: 0 }}
     >
       <View style={[styles.container, dynamicStyles.container]}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
           {/* Account Section */}
           <View style={styles.section}>

@@ -11,6 +11,8 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { apiFetch } from '../../api/apiFetch';
 import ScreenHeaderLayout from '../../components/layout/ScreenHeaderLayout/ScreenHeaderLayout';
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 
 interface Challenge {
     id: number;
@@ -69,6 +71,8 @@ export default function ChallengesScreen() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const navigation = useNavigation<any>();
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
 
     const fetchChallenges = async () => {
         try {
@@ -115,20 +119,21 @@ export default function ChallengesScreen() {
             contentContainerStyle={{ padding: 0 }}
         >
             <ScrollView
-                style={styles.container}
+                style={[styles.container, { backgroundColor: themeColors.background }]}
                 contentContainerStyle={styles.content}
+                showsVerticalScrollIndicator={false}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             >
 
 
                 {/* In Progress Section */}
-                <Text style={styles.sectionHeader}>In Progress</Text>
+                <Text style={[styles.sectionHeader, { color: themeColors.text }]}>In Progress</Text>
                 {challenges.filter(c => c.progress < c.total).map(challenge => (
                     <ChallengeCard key={challenge.id} challenge={challenge} />
                 ))}
 
                 {/* Completed Section */}
-                <Text style={styles.sectionHeader}>Completed</Text>
+                <Text style={[styles.sectionHeader, { color: themeColors.text }]}>Completed</Text>
                 {challenges.filter(c => c.progress >= c.total).map(challenge => (
                     <ChallengeCard key={challenge.id} challenge={challenge} />
                 ))}

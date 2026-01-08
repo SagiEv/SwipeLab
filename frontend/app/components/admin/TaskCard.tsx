@@ -1,11 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+
+  View
 } from "react-native";
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 
 type AdminTask = {
   taskId: number;
@@ -36,16 +39,18 @@ export default function TaskCard({
   onArchive,
 }: Props) {
   const isActive = task.status === "ACTIVE";
+  const { theme } = useThemeStore();
+  const themeColors = Colors[theme as keyof typeof Colors];
 
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, { backgroundColor: themeColors.card }]}
       activeOpacity={0.85}
       onPress={onPress}
     >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text style={[styles.title, { color: themeColors.text }]} numberOfLines={1}>
           {task.name}
         </Text>
 
@@ -63,11 +68,11 @@ export default function TaskCard({
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.meta}>
+      <Text style={[styles.meta, { color: themeColors.textSecondary }]}>
         Species: {task.targetSpecies[0]?.commonName}
       </Text>
 
-      <Text style={styles.meta}>
+      <Text style={[styles.meta, { color: themeColors.textSecondary }]}>
         Progress: {task.progress.imagesClassified} /{" "}
         {task.progress.totalImages}
       </Text>
@@ -80,7 +85,7 @@ export default function TaskCard({
             onEdit();
           }}
         >
-          <Ionicons name="create-outline" size={22} />
+          <Ionicons name="create-outline" size={22} color={themeColors.text} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -89,7 +94,7 @@ export default function TaskCard({
             onArchive();
           }}
         >
-          <Ionicons name="archive-outline" size={22} />
+          <Ionicons name="archive-outline" size={22} color={themeColors.text} />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>

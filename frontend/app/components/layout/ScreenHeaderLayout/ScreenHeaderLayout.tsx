@@ -2,6 +2,8 @@
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { ScreenHeaderLayoutProps } from "./ScreenHeaderLayout.types";
+import { useThemeStore } from '../../../stores/themeStore';
+import { Colors } from '../../../../constants/theme';
 
 export default function ScreenHeaderLayout({
   leftIcon,
@@ -15,14 +17,17 @@ export default function ScreenHeaderLayout({
   children,
   contentContainerStyle,
 }: ScreenHeaderLayoutProps) {
+  const { theme } = useThemeStore();
+  const themeColors = Colors[theme as keyof typeof Colors];
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { borderColor: themeColors.border, backgroundColor: themeColors.card }]}>
         {/* Left (current screen) */}
         <View style={styles.leftHeaderItem}>
           <Image source={leftIcon} style={styles.icon} />
-          <Text style={styles.title} numberOfLines={1}>{leftTitle}</Text>
+          <Text style={[styles.title, { color: themeColors.text }]} numberOfLines={1}>{leftTitle}</Text>
         </View>
 
         {/* Center (optional navigation action) */}
@@ -46,7 +51,7 @@ export default function ScreenHeaderLayout({
           disabled={!onRightPress}
         >
           <Image source={rightIcon} style={styles.icon} />
-          <Text style={styles.button} numberOfLines={1}>{rightTitle}</Text>
+          <Text style={[styles.button, { color: themeColors.text }]} numberOfLines={1}>{rightTitle}</Text>
         </TouchableOpacity>
       </View>
 

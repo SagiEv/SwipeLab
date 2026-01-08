@@ -3,6 +3,8 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View
 import { useNavigation } from '@react-navigation/native';
 import { apiFetch } from '../../api/apiFetch';
 import ScreenHeaderLayout from '../../components/layout/ScreenHeaderLayout/ScreenHeaderLayout';
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 
 const DEBUG_MODE = false; // Set to true for testing controls
 
@@ -45,12 +47,14 @@ interface StatsData {
 }
 
 function ProgressBar({ value, color, label, maxValue = 1 }: { value: number; color: string; label: string; maxValue?: number }) {
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
     const percentage = Math.min(100, Math.max(0, (value / maxValue) * 100));
     return (
         <View style={styles.progressContainer}>
             <View style={styles.progressLabelRow}>
-                <Text style={styles.progressLabel}>{label}</Text>
-                <Text style={styles.progressValue}>{(value * 100).toFixed(1)}%</Text>
+                <Text style={[styles.progressLabel, { color: themeColors.textSecondary }]}>{label}</Text>
+                <Text style={[styles.progressValue, { color: themeColors.text }]}>{(value * 100).toFixed(1)}%</Text>
             </View>
             <View style={styles.progressBarTrack}>
                 <View style={[styles.progressBarFill, { width: `${percentage}%`, backgroundColor: color }]} />
@@ -60,10 +64,12 @@ function ProgressBar({ value, color, label, maxValue = 1 }: { value: number; col
 }
 
 function SummaryCard({ title, value, subtext }: { title: string; value: string | number; subtext?: string }) {
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
     return (
-        <View style={styles.summaryCard}>
-            <Text style={styles.cardTitle}>{title}</Text>
-            <Text style={styles.cardValue}>{value}</Text>
+        <View style={[styles.summaryCard, { backgroundColor: themeColors.card }]}>
+            <Text style={[styles.cardTitle, { color: themeColors.textSecondary }]}>{title}</Text>
+            <Text style={[styles.cardValue, { color: themeColors.text }]}>{value}</Text>
             {subtext && <Text style={styles.cardSubtext}>{subtext}</Text>}
         </View>
     );
@@ -74,6 +80,8 @@ export default function StatsScreen() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const navigation = useNavigation<any>();
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
 
     const fetchStats = useCallback(async () => {
         try {
@@ -142,8 +150,9 @@ export default function StatsScreen() {
             contentContainerStyle={{ padding: 0 }}
         >
             <ScrollView
-                style={styles.container}
+                style={[styles.container, { backgroundColor: themeColors.background }]}
                 contentContainerStyle={styles.content}
+                showsVerticalScrollIndicator={false}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             >
 
@@ -158,18 +167,18 @@ export default function StatsScreen() {
 
                 {/* Streak */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>🔥 Streak</Text>
-                    <View style={styles.streakContainer}>
-                        <Text style={styles.streakText}>Current: <Text style={styles.streakBold}>{data.summary.currentStreakDays} days</Text></Text>
-                        <Text style={styles.streakText}>Longest: <Text style={styles.streakBold}>{data.summary.longestStreakDays} days</Text></Text>
+                    <Text style={[styles.sectionTitle, { color: themeColors.text }]}>🔥 Streak</Text>
+                    <View style={[styles.streakContainer, { backgroundColor: themeColors.card }]}>
+                        <Text style={[styles.streakText, { color: themeColors.text }]}>Current: <Text style={styles.streakBold}>{data.summary.currentStreakDays} days</Text></Text>
+                        <Text style={[styles.streakText, { color: themeColors.text }]}>Longest: <Text style={styles.streakBold}>{data.summary.longestStreakDays} days</Text></Text>
                     </View>
                 </View>
 
                 {/* Comparisons */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>⚖️ Comparisons</Text>
-                    <View style={styles.card}>
-                        <Text style={styles.chartTitle}>Vs Experts</Text>
+                    <Text style={[styles.sectionTitle, { color: themeColors.text }]}>⚖️ Comparisons</Text>
+                    <View style={[styles.card, { backgroundColor: themeColors.card }]}>
+                        <Text style={[styles.chartTitle, { color: themeColors.text }]}>Vs Experts</Text>
                         <ProgressBar
                             label="Your Accuracy"
                             value={data.vsExperts.userAccuracy}
@@ -180,7 +189,7 @@ export default function StatsScreen() {
                             value={data.vsExperts.expertAccuracy}
                             color="#8B008B"
                         />
-                        <Text style={styles.insightText}>
+                        <Text style={[styles.insightText, { color: themeColors.textSecondary }]}>
                             You are {Math.abs(data.vsExperts.difference * 100).toFixed(1)}%
                             {data.vsExperts.difference >= 0 ? ' above ' : ' below '}
                             expert level.
@@ -188,13 +197,13 @@ export default function StatsScreen() {
 
                         <View style={styles.separator} />
 
-                        <Text style={styles.chartTitle}>Vs Community</Text>
+                        <Text style={[styles.chartTitle, { color: themeColors.text }]}>Vs Community</Text>
                         <ProgressBar
                             label="Average User"
                             value={data.vsUsers.averageUserAccuracy}
                             color="#FFA500"
                         />
-                        <Text style={styles.insightText}>
+                        <Text style={[styles.insightText, { color: themeColors.textSecondary }]}>
                             You're in the top {100 - data.vsUsers.percentile}% of contributors!
                         </Text>
                     </View>
@@ -202,11 +211,11 @@ export default function StatsScreen() {
 
                 {/* Breakdown */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>📝 Task Breakdown</Text>
+                    <Text style={[styles.sectionTitle, { color: themeColors.text }]}>📝 Task Breakdown</Text>
                     {data.breakdown.byTask.map((task) => (
-                        <View key={task.taskId} style={styles.taskRow}>
+                        <View key={task.taskId} style={[styles.taskRow, { backgroundColor: themeColors.card }]}>
                             <View style={styles.taskInfo}>
-                                <Text style={styles.taskName}>{task.taskName}</Text>
+                                <Text style={[styles.taskName, { color: themeColors.text }]}>{task.taskName}</Text>
                                 <Text style={styles.taskCount}>{task.classifications} classifications</Text>
                             </View>
                             <View style={styles.taskStat}>

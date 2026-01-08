@@ -12,6 +12,7 @@ import TaskDetailsScreen from "../screens/admin/TaskDetailsScreen";
 import TasksManagementScreen from "../screens/admin/TasksManagementScreen";
 import GoldImagesManagementScreen from "../screens/admin/GoldImagesManagementScreen";
 import AddGoldImageScreen from "../screens/admin/AddGoldImageScreen";
+import AddUserScreen from "../screens/admin/AddUserScreen";
 import AnalyticsScreen from "../screens/admin/AnalyticsScreen";
 import RecipientsListScreen from "../screens/admin/RecipientsListScreen";
 import RecipientGroupDetailsScreen from "../screens/admin/RecipientGroupDetailsScreen";
@@ -96,6 +97,12 @@ export default function AdminNavigator() {
             name="UsersManagement"
             component={UsersManagementScreen}
             options={{ title: "Users Management" }}
+          />
+
+          <Stack.Screen
+            name="AddUser"
+            component={AddUserScreen}
+            options={{ title: "Add User" }}
           />
 
           <Stack.Screen

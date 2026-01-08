@@ -22,6 +22,8 @@ import { AdminStackParamList } from '../../navigation/adminStack.types';
 import { RecipientGroup } from '../../mocks/data/recipients.mock';
 import useResponsive from '../../hooks/useResponsive';
 import { User } from '../../mocks/data/users.mock';
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 
 type NavigationProp = NativeStackNavigationProp<AdminStackParamList, 'RecipientsList'>;
 
@@ -31,6 +33,9 @@ export default function RecipientsListScreen() {
     // Responsive layout
     const { isDesktop, isTablet, width } = useResponsive();
     const modalWidth = isDesktop ? 600 : isTablet ? 500 : width * 0.9;
+
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
 
     const [groups, setGroups] = useState<RecipientGroup[]>([]);
     const [loading, setLoading] = useState(true);
@@ -139,7 +144,7 @@ export default function RecipientsListScreen() {
 
     if (loading) {
         return (
-            <View style={styles.loadingContainer}>
+            <View style={[styles.loadingContainer, { backgroundColor: themeColors.background }]}>
                 <ActivityIndicator size="large" color="#4B7BE5" />
             </View>
         );
@@ -155,8 +160,9 @@ export default function RecipientsListScreen() {
             contentContainerStyle={{ padding: 0 }}
         >
             <ScrollView
-                style={styles.container}
+                style={[styles.container, { backgroundColor: themeColors.background }]}
                 contentContainerStyle={styles.content}
+                showsVerticalScrollIndicator={false}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             >
 
@@ -180,10 +186,10 @@ export default function RecipientsListScreen() {
                         return (
                             <TouchableOpacity
                                 key={group.id}
-                                style={styles.card}
+                                style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
                                 onPress={() => navigation.navigate('RecipientGroupDetails', { group })}
                             >
-                                <Text style={styles.groupName}>{group.name}</Text>
+                                <Text style={[styles.groupName, { color: themeColors.text }]}>{group.name}</Text>
 
                                 {/* Detailed Composition Bar */}
                                 {total > 0 && (
@@ -200,7 +206,7 @@ export default function RecipientsListScreen() {
                                     </View>
                                 )}
 
-                                <Text style={styles.usersCount}>{total} users</Text>
+                                <Text style={[styles.usersCount, { color: themeColors.textSecondary }]}>{total} users</Text>
                             </TouchableOpacity>
                         );
                     })}
@@ -211,11 +217,12 @@ export default function RecipientsListScreen() {
                     <TouchableWithoutFeedback onPress={() => setCreateModalVisible(false)}>
                         <View style={styles.modalOverlay}>
                             <TouchableWithoutFeedback onPress={() => { }}>
-                                <View style={[styles.modalContent, { width: modalWidth, maxHeight: '80%' }]}>
-                                    <Text style={styles.modalTitle}>Create New List</Text>
+                                <View style={[styles.modalContent, { width: modalWidth, maxHeight: '80%', backgroundColor: themeColors.card }]}>
+                                    <Text style={[styles.modalTitle, { color: themeColors.text }]}>Create New List</Text>
                                     <TextInput
-                                        style={styles.input}
+                                        style={[styles.input, { color: themeColors.text, borderColor: themeColors.border, backgroundColor: themeColors.background }]}
                                         placeholder="Group Name"
+                                        placeholderTextColor={themeColors.textSecondary}
                                         value={newGroupName}
                                         onChangeText={setNewGroupName}
                                     />
@@ -237,14 +244,15 @@ export default function RecipientsListScreen() {
 
                                     {/* Search Bar */}
                                     <TextInput
-                                        style={styles.searchInput}
+                                        style={[styles.searchInput, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
                                         placeholder="Search..."
+                                        placeholderTextColor={themeColors.textSecondary}
                                         value={searchQuery}
                                         onChangeText={setSearchQuery}
                                     />
 
-                                    <Text style={styles.subLabel}>{activeTab === 'USERS' ? 'Select Users' : 'Select Groups to Merge'}</Text>
-                                    <ScrollView style={styles.userList} nestedScrollEnabled>
+                                    <Text style={[styles.subLabel, { color: themeColors.textSecondary }]}>{activeTab === 'USERS' ? 'Select Users' : 'Select Groups to Merge'}</Text>
+                                    <ScrollView style={[styles.userList, { borderColor: themeColors.border }]} nestedScrollEnabled showsVerticalScrollIndicator={false}>
                                         {activeTab === 'USERS' ? (
                                             allUsers
                                                 .filter(u => u.username.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -253,7 +261,7 @@ export default function RecipientsListScreen() {
                                                     return (
                                                         <TouchableOpacity
                                                             key={u.id}
-                                                            style={[styles.userRow, isSelected && styles.userRowSelected]}
+                                                            style={[styles.userRow, isSelected && styles.userRowSelected, { borderBottomColor: themeColors.border }]}
                                                             onPress={() => {
                                                                 if (isSelected) {
                                                                     setSelectedUserIds(prev => prev.filter(id => id !== u.id));
@@ -262,7 +270,7 @@ export default function RecipientsListScreen() {
                                                                 }
                                                             }}
                                                         >
-                                                            <Text style={[styles.userRowText, isSelected && styles.userRowTextSelected]}>
+                                                            <Text style={[styles.userRowText, isSelected && styles.userRowTextSelected, { color: isSelected ? '#4B7BE5' : themeColors.text }]}>
                                                                 {isSelected ? '☑' : '☐'} {u.username}
                                                             </Text>
                                                             <Text style={styles.userRowDesc}>{u.description}</Text>
@@ -277,7 +285,7 @@ export default function RecipientsListScreen() {
                                                     return (
                                                         <TouchableOpacity
                                                             key={g.id}
-                                                            style={[styles.userRow, isSelected && styles.userRowSelected]}
+                                                            style={[styles.userRow, isSelected && styles.userRowSelected, { borderBottomColor: themeColors.border }]}
                                                             onPress={() => {
                                                                 if (isSelected) {
                                                                     setSelectedGroupIds(prev => prev.filter(id => id !== g.id));
@@ -286,7 +294,7 @@ export default function RecipientsListScreen() {
                                                                 }
                                                             }}
                                                         >
-                                                            <Text style={[styles.userRowText, isSelected && styles.userRowTextSelected]}>
+                                                            <Text style={[styles.userRowText, isSelected && styles.userRowTextSelected, { color: isSelected ? '#4B7BE5' : themeColors.text }]}>
                                                                 {isSelected ? '☑' : '☐'} {g.name}
                                                             </Text>
                                                             <Text style={styles.userRowDesc}>{g.users ? g.users.length : 0} users</Text>
@@ -311,8 +319,8 @@ export default function RecipientsListScreen() {
                         </View>
                     </TouchableWithoutFeedback>
                 </Modal>
-            </ScrollView>
-        </ScreenHeaderLayout>
+            </ScrollView >
+        </ScreenHeaderLayout >
     );
 }
 

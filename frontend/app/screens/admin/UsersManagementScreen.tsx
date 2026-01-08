@@ -5,6 +5,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AdminStackParamList } from "../../navigation/adminStack.types";
 import ScreenHeaderLayout from "../../components/layout/ScreenHeaderLayout/ScreenHeaderLayout";
 import { apiFetch } from "../../api/apiFetch";
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 
 // Images
 import usersImg from "../../../assets/images/users.png";
@@ -23,6 +25,8 @@ export default function UsersManagementScreen() {
     const navigation = useNavigation<UsersManagementScreenNavigationProp>();
     const [users, setUsers] = React.useState<User[]>([]);
     const [loading, setLoading] = React.useState(true);
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
 
     React.useEffect(() => {
         loadUsers();
@@ -46,12 +50,12 @@ export default function UsersManagementScreen() {
     };
 
     const renderItem = ({ item }: { item: User }) => (
-        <TouchableOpacity style={styles.card}>
+        <TouchableOpacity style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
             <View style={styles.avatarContainer}>
                 <Image source={profileImg} style={styles.avatar} />
             </View>
-            <Text style={styles.username}>{item.username}</Text>
-            <Text style={styles.score}>{item.score}</Text>
+            <Text style={[styles.username, { color: themeColors.text }]}>{item.username}</Text>
+            <Text style={[styles.score, { color: themeColors.textSecondary }]}>{item.score}</Text>
         </TouchableOpacity>
     );
 
@@ -61,13 +65,14 @@ export default function UsersManagementScreen() {
             leftTitle="Users"
             rightIcon={addTaskImg}
             rightTitle="Add User"
-            onRightPress={() => console.log("Add User Pressed")}
+            onRightPress={() => navigation.navigate('AddUser')}
         >
-            <View style={styles.container}>
+            <View style={[styles.container, { backgroundColor: themeColors.background }]}>
                 {loading ? (
-                    <Text style={{ textAlign: 'center', marginTop: 20 }}>Loading...</Text>
+                    <Text style={{ textAlign: 'center', marginTop: 20, color: themeColors.text }}>Loading...</Text>
                 ) : (
                     <FlatList
+                        showsVerticalScrollIndicator={false}
                         data={users}
                         renderItem={renderItem}
                         keyExtractor={item => item.id}
