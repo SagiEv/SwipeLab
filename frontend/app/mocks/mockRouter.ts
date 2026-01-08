@@ -2,6 +2,7 @@ import { authMock } from './data/auth.mock'
 import { classificationMock } from './data/classification.mock'
 import { dashboardAdminMock } from './data/dashboard.admin.mock'
 import { dashboardUserMock } from './data/dashboard.user.mock'
+import { getCollection, getCollectionStats, addToCollection } from './data/collection.mock'
 
 import { leaderboardMock } from './data/leaderboard.mock'
 import { refinedChallengesMock } from './data/challenges.mock'
@@ -340,6 +341,27 @@ export async function mockRouter(
   if (method === 'GET' && url.endsWith('/api/v1/manager/users')) {
     // Return the shared usersMock so IDs match what the recipients logic expects
     return jsonResponse(usersMock);
+  }
+
+  // ---------- COLLECTION ----------
+  if (method === 'GET' && url.endsWith('/api/v1/collection')) {
+    return jsonResponse(getCollection());
+  }
+
+  if (method === 'GET' && url.endsWith('/api/v1/collection/stats')) {
+    return jsonResponse(getCollectionStats());
+  }
+
+  if (method === 'POST' && url.endsWith('/api/v1/collection/add')) {
+    const { imageUrl, label, taskId, taskName, question } = body as {
+      imageUrl: string;
+      label: string;
+      taskId: number;
+      taskName: string;
+      question: string;
+    };
+    const newItem = addToCollection(imageUrl, label as any, taskId, taskName, question);
+    return jsonResponse(newItem, 201);
   }
 
   // ---------- FALLBACK ----------

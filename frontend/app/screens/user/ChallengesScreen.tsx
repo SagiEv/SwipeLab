@@ -13,6 +13,7 @@ import { apiFetch } from '../../api/apiFetch';
 import ScreenHeaderLayout from '../../components/layout/ScreenHeaderLayout/ScreenHeaderLayout';
 import { useThemeStore } from '../../stores/themeStore';
 import { Colors } from '../../../constants/theme';
+import { Ionicons } from '@expo/vector-icons';
 
 interface Challenge {
     id: number;
@@ -108,9 +109,12 @@ export default function ChallengesScreen() {
 
     return (
         <ScreenHeaderLayout
-            leftIcon={require('../../../assets/images/leaderboard.png')}
+            leftIcon={require('../../../assets/images/challenges.png')}
             leftTitle="Challenges"
-            rightIcon={require('../../../assets/images/home.png')}
+            centerIcon={require('../../../assets/images/leaderboard.png')}
+            centerTitle="Leaderboard"
+            onCenterPress={() => navigation.navigate('Leaderboard')}
+            rightIcon={<Ionicons name="play" size={28} color={themeColors.text} />}
             rightTitle="Play"
             onRightPress={() => navigation.navigate('SwipeLab')}
             contentContainerStyle={{ padding: 0 }}

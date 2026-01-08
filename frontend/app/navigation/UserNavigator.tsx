@@ -7,10 +7,13 @@ import UserMyTasksScreen from "../screens/user/UserMyTasksScreen";
 import SwipeScreen from "../screens/user/SwipeScreen";
 import ChallengesScreen from "../screens/user/ChallengesScreen";
 import StatsScreen from "../screens/user/StatsScreen";
+import MyCollectionScreen from "../screens/user/MyCollectionScreen";
 import ProfileScreen from "../screens/shared/ProfileScreen";
 import BottomBar from "./components/BottomBar";
 import TaskDetailsScreen from "../screens/user/TaskDetailsScreen";
 import TopBar from "./components/TopBar";
+
+import CollectionDetailsScreen from "../screens/user/CollectionDetailsScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -27,9 +30,11 @@ export default function UserNavigator() {
           <Stack.Screen name="Tasks" component={UserMyTasksScreen} />
           <Stack.Screen name="TaskDetails" component={TaskDetailsScreen} />
           <Stack.Screen name="Challenges" component={ChallengesScreen} />
+          <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
+          <Stack.Screen name="Collection" component={MyCollectionScreen} />
+          <Stack.Screen name="CollectionDetails" component={CollectionDetailsScreen} />
           <Stack.Screen name="UserSettings" component={SettingsScreen} />
           <Stack.Screen name="Stats" component={StatsScreen} />
-          <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
           <Stack.Screen name="Profile" component={ProfileScreen} />
         </Stack.Navigator>
       </View>
