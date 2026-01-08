@@ -5,6 +5,8 @@ import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "rea
 
 import { apiFetch } from "../../api/apiFetch";
 import { AdminStackParamList } from "../../navigation/adminStack.types";
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 
 type Props = NativeStackScreenProps<AdminStackParamList, "TaskDetails">;
 
@@ -30,6 +32,8 @@ export default function TaskDetailsScreen({ route, navigation }: Props) {
   const [task, setTask] = useState<TaskDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { theme } = useThemeStore();
+  const themeColors = Colors[theme as keyof typeof Colors];
 
   useEffect(() => {
     async function fetchTask() {
@@ -54,14 +58,18 @@ export default function TaskDetailsScreen({ route, navigation }: Props) {
   const isActive = task.status === "ACTIVE";
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      style={{ backgroundColor: themeColors.background }}
+      contentContainerStyle={[styles.container, { backgroundColor: themeColors.background }]}
+      showsVerticalScrollIndicator={false}
+    >
       {/* Task Info */}
-      <View style={styles.card}>
-        
-        <Text style={styles.title}>{task.name}</Text>
-        <Text style={styles.description}>{task.description}</Text>
-        
-        
+      <View style={[styles.card, { backgroundColor: themeColors.card }]}>
+
+        <Text style={[styles.title, { color: themeColors.text }]}>{task.name}</Text>
+        <Text style={[styles.description, { color: themeColors.textSecondary }]}>{task.description}</Text>
+
+
         {/* Edit / Pause / Archive buttons */}
         <View style={styles.actions}>
           <TouchableOpacity
@@ -84,34 +92,34 @@ export default function TaskDetailsScreen({ route, navigation }: Props) {
         </View>
 
         <View style={styles.infoRow}>
-          <Text style={styles.label}>Status:</Text>
-          <Text style={styles.value}>{task.status}</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>Status:</Text>
+          <Text style={[styles.value, { color: themeColors.textSecondary }]}>{task.status}</Text>
         </View>
 
         <View style={styles.infoRow}>
-          <Text style={styles.label}>Progress:</Text>
-          <Text style={styles.value}>
+          <Text style={[styles.label, { color: themeColors.text }]}>Progress:</Text>
+          <Text style={[styles.value, { color: themeColors.textSecondary }]}>
             {task.progress.imagesClassified} / {task.progress.totalImages} images classified
           </Text>
         </View>
 
         <View style={styles.infoRow}>
-          <Text style={styles.label}>Min classifications:</Text>
-          <Text style={styles.value}>{task.minClassificationsPerImage}</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>Min classifications:</Text>
+          <Text style={[styles.value, { color: themeColors.textSecondary }]}>{task.minClassificationsPerImage}</Text>
         </View>
 
         <View style={styles.infoRow}>
-          <Text style={styles.label}>Consensus threshold:</Text>
-          <Text style={styles.value}>{task.consensusThreshold}%</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>Consensus threshold:</Text>
+          <Text style={[styles.value, { color: themeColors.textSecondary }]}>{task.consensusThreshold}%</Text>
         </View>
 
       </View>
 
       {/* Target Species */}
-      <Text style={styles.sectionTitle}>Target Species</Text>
+      <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Target Species</Text>
       {task.targetSpecies.map((species) => (
-        <View key={species.name} style={styles.speciesCard}>
-          <Text style={styles.speciesName}>
+        <View key={species.name} style={[styles.speciesCard, { backgroundColor: themeColors.card }]}>
+          <Text style={[styles.speciesName, { color: themeColors.text }]}>
             {species.commonName} ({species.name})
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
@@ -121,7 +129,7 @@ export default function TaskDetailsScreen({ route, navigation }: Props) {
                   source={{ uri: `data:${img.contentType};base64,${img.data}` }}
                   style={styles.image}
                 />
-                <Text style={styles.imageCaption}>{img.caption}</Text>
+                <Text style={[styles.imageCaption, { color: themeColors.textSecondary }]}>{img.caption}</Text>
               </View>
             ))}
           </ScrollView>

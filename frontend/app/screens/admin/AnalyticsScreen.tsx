@@ -12,6 +12,8 @@ import {
 import { apiFetch } from "../../api/apiFetch";
 import MetricCard from "../../components/admin/MetricCard";
 import ScreenHeaderLayout from "../../components/layout/ScreenHeaderLayout";
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 
 type TaskAnalytics = {
     taskId: number;
@@ -46,6 +48,8 @@ export default function AnalyticsScreen({ navigation }: any) {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const selectedTaskId = 1;
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
 
     useEffect(() => {
         fetchAnalytics(selectedTaskId);
@@ -128,14 +132,15 @@ export default function AnalyticsScreen({ navigation }: any) {
             onRightPress={() => navigation.navigate("TasksManagement")}
         >
             <ScrollView
-                contentContainerStyle={styles.container}
+                contentContainerStyle={[styles.container, { backgroundColor: themeColors.background }]}
+                showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
                 }
             >
                 {loading && !analytics ? (
                     <View style={styles.loadingContainer}>
-                        <Text style={styles.loadingText}>Loading analytics...</Text>
+                        <Text style={[styles.loadingText, { color: themeColors.textSecondary }]}>Loading analytics...</Text>
                     </View>
                 ) : !analytics ? (
                     <View style={styles.emptyContainer}>
@@ -145,9 +150,9 @@ export default function AnalyticsScreen({ navigation }: any) {
                     <>
                         {/* Task Info */}
                         <View style={styles.section}>
-                            <Text style={styles.sectionTitle}>Task</Text>
-                            <View style={styles.taskInfo}>
-                                <Text style={styles.taskName}>{analytics.taskName}</Text>
+                            <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Task</Text>
+                            <View style={[styles.taskInfo, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+                                <Text style={[styles.taskName, { color: themeColors.text }]}>{analytics.taskName}</Text>
                                 <View
                                     style={[
                                         styles.statusBadge,
@@ -165,7 +170,7 @@ export default function AnalyticsScreen({ navigation }: any) {
 
                         {/* Progress Section */}
                         <View style={styles.section}>
-                            <Text style={styles.sectionTitle}>📊 Progress</Text>
+                            <Text style={[styles.sectionTitle, { color: themeColors.text }]}>📊 Progress</Text>
                             <View style={styles.row}>
                                 <View style={styles.halfWidth}>
                                     <MetricCard
@@ -192,7 +197,7 @@ export default function AnalyticsScreen({ navigation }: any) {
 
                         {/* Quality Section */}
                         <View style={styles.section}>
-                            <Text style={styles.sectionTitle}>✨ Data Quality</Text>
+                            <Text style={[styles.sectionTitle, { color: themeColors.text }]}>✨ Data Quality</Text>
                             <MetricCard
                                 label="Average Consensus"
                                 value={`${analytics.averageConsensus.toFixed(1)}%`}
@@ -220,7 +225,7 @@ export default function AnalyticsScreen({ navigation }: any) {
 
                         {/* Users Section */}
                         <View style={styles.section}>
-                            <Text style={styles.sectionTitle}>👥 Users</Text>
+                            <Text style={[styles.sectionTitle, { color: themeColors.text }]}>👥 Users</Text>
                             <MetricCard
                                 label="Active Users"
                                 value={analytics.uniqueClassifiers}
@@ -228,14 +233,14 @@ export default function AnalyticsScreen({ navigation }: any) {
                                 variant="primary"
                             />
 
-                            <Text style={styles.subsectionTitle}>Top Performers</Text>
+                            <Text style={[styles.subsectionTitle, { color: themeColors.textSecondary }]}>Top Performers</Text>
                             {topPerformers.map((user, index) => (
-                                <View key={user.username} style={styles.userCard}>
+                                <View key={user.username} style={[styles.userCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
                                     <View style={styles.userRank}>
                                         <Text style={styles.rankText}>#{index + 1}</Text>
                                     </View>
                                     <View style={styles.userInfo}>
-                                        <Text style={styles.userName}>{user.displayName}</Text>
+                                        <Text style={[styles.userName, { color: themeColors.text }]}>{user.displayName}</Text>
                                         <Text style={styles.userStats}>
                                             {user.totalClassifications} classifications •{" "}
                                             {user.goldAccuracy.toFixed(1)}% accuracy
@@ -253,7 +258,7 @@ export default function AnalyticsScreen({ navigation }: any) {
 
                         {/* Actions Section */}
                         <View style={styles.section}>
-                            <Text style={styles.sectionTitle}>⚙️ Actions</Text>
+                            <Text style={[styles.sectionTitle, { color: themeColors.text }]}>⚙️ Actions</Text>
 
                             <TouchableOpacity
                                 style={styles.exportButton}
@@ -262,7 +267,7 @@ export default function AnalyticsScreen({ navigation }: any) {
                                 <Text style={styles.exportButtonText}>📥 Export Results</Text>
                             </TouchableOpacity>
 
-                            <Text style={styles.subsectionTitle}>Task Controls</Text>
+                            <Text style={[styles.subsectionTitle, { color: themeColors.textSecondary }]}>Task Controls</Text>
                             <View style={styles.controlButtons}>
                                 {analytics.status !== "ACTIVE" && (
                                     <TouchableOpacity

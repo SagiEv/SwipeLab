@@ -7,6 +7,8 @@ import {
     TouchableOpacity,
     View
 } from "react-native";
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 
 type GoldImageData = {
     id: number;
@@ -21,8 +23,11 @@ type Props = {
 };
 
 export default function GoldImageCard({ goldImage, onDelete }: Props) {
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
+
     return (
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
             {/* Image Thumbnail */}
             <View style={styles.imageContainer}>
                 <Image
@@ -34,11 +39,11 @@ export default function GoldImageCard({ goldImage, onDelete }: Props) {
 
             {/* Content */}
             <View style={styles.content}>
-                <Text style={styles.species} numberOfLines={1}>
+                <Text style={[styles.species, { color: themeColors.text }]} numberOfLines={1}>
                     {goldImage.correctLabelName}
                 </Text>
                 {goldImage.difficultyLevel && (
-                    <Text style={styles.difficulty}>
+                    <Text style={[styles.difficulty, { color: themeColors.textSecondary }]}>
                         Level: {goldImage.difficultyLevel}
                     </Text>
                 )}

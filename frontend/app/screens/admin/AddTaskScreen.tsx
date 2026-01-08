@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import { apiFetch } from "../../api/apiFetch";
 import ScreenHeaderLayout from "../../components/layout/ScreenHeaderLayout";
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 
 export default function AddTaskScreen({ navigation }: any) {
   const [name, setName] = useState("");
@@ -17,6 +19,8 @@ export default function AddTaskScreen({ navigation }: any) {
   const [targetSpecies, setTargetSpecies] = useState(""); // comma-separated
   const [recipientGroups, setRecipientGroups] = useState(""); // comma-separated
   const [loading, setLoading] = useState(false);
+  const { theme } = useThemeStore();
+  const themeColors = Colors[theme as keyof typeof Colors];
 
   const handleSubmit = async () => {
     if (!name || !description) {
@@ -58,43 +62,46 @@ export default function AddTaskScreen({ navigation }: any) {
 
   return (
     <ScreenHeaderLayout
-        leftIcon={require("../../../assets/images/add_task.png")}
-        leftTitle="Add Task"
-        rightIcon={require("../../../assets/images/tasks_mgmt.png")}
-        rightTitle="Tasks"
-        onRightPress={() => navigation.navigate("TasksManagement")}
+      leftIcon={require("../../../assets/images/add_task.png")}
+      leftTitle="Add Task"
+      rightIcon={require("../../../assets/images/tasks_mgmt.png")}
+      rightTitle="Tasks"
+      onRightPress={() => navigation.navigate("TasksManagement")}
     >
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.label}>Task Name</Text>
+      <ScrollView contentContainerStyle={[styles.container, { backgroundColor: themeColors.background }]} showsVerticalScrollIndicator={false}>
+        <Text style={[styles.label, { color: themeColors.text }]}>Task Name</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
           value={name}
           onChangeText={setName}
           placeholder="Enter task name"
         />
 
-        <Text style={styles.label}>Description</Text>
+        <Text style={[styles.label, { color: themeColors.text }]}>Description</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
           value={description}
           onChangeText={setDescription}
           placeholder="Enter description"
+          placeholderTextColor={themeColors.textSecondary}
         />
 
-        <Text style={styles.label}>Target Species (comma-separated)</Text>
+        <Text style={[styles.label, { color: themeColors.text }]}>Target Species (comma-separated)</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
           value={targetSpecies}
           onChangeText={setTargetSpecies}
           placeholder="e.g., Asian Giant Hornet, Honey Bee"
+          placeholderTextColor={themeColors.textSecondary}
         />
 
-        <Text style={styles.label}>Recipient Groups (IDs, comma-separated)</Text>
+        <Text style={[styles.label, { color: themeColors.text }]}>Recipient Groups (IDs, comma-separated)</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
           value={recipientGroups}
           onChangeText={setRecipientGroups}
           placeholder="e.g., 1, 2, 3"
+          placeholderTextColor={themeColors.textSecondary}
         />
 
         <TouchableOpacity

@@ -10,8 +10,13 @@ import { statisticsMock } from '../../mocks/data/statistics.mock';
 import { dashboardUserMock } from '../../mocks/data/dashboard.user.mock';
 import { authMock } from '../../mocks/data/auth.mock'; // For logout or user info if needed
 
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
+
 export default function UserMyTasksScreen() {
     const navigation = useNavigation<any>();
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
     const [refreshing, setRefreshing] = useState(false);
 
     // State for data
@@ -93,19 +98,21 @@ export default function UserMyTasksScreen() {
             contentContainerStyle={{ padding: 0 }}
         >
             <ScrollView
-                contentContainerStyle={styles.scrollContent}
+                style={{ backgroundColor: themeColors.background }}
+                contentContainerStyle={[styles.scrollContent, { backgroundColor: themeColors.background }]}
+                showsVerticalScrollIndicator={false}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={loadData} />
+                    <RefreshControl refreshing={refreshing} onRefresh={loadData} tintColor={themeColors.text} />
                 }
             >
                 {/* ... existing content ... */}
                 {/* Section Title */}
                 <View style={[styles.sectionHeader, { marginBottom: 10 }]}>
-                    <Text style={styles.sectionTitle}>Current Tasks</Text>
+                    <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Current Tasks</Text>
                 </View>
 
                 {tasks.length === 0 && (
-                    <Text style={styles.emptyState}>No tasks assigned yet.</Text>
+                    <Text style={[styles.emptyState, { color: themeColors.textSecondary }]}>No tasks assigned yet.</Text>
                 )}
 
                 {tasks.map((task) => {
@@ -150,7 +157,7 @@ export default function UserMyTasksScreen() {
                     );
                 })}
                 {availableTasks.length === 0 && (
-                    <Text style={styles.emptyState}>No new tasks available.</Text>
+                    <Text style={[styles.emptyState, { color: themeColors.textSecondary }]}>No new tasks available.</Text>
                 )}
 
             </ScrollView>

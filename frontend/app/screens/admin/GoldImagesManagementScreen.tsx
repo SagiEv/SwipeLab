@@ -4,6 +4,8 @@ import { Alert, FlatList, StyleSheet, Text, View } from "react-native";
 import { apiFetch } from "../../api/apiFetch";
 import GoldImageCard from "../../components/admin/GoldImageCard";
 import ScreenHeaderLayout from "../../components/layout/ScreenHeaderLayout";
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 
 type GoldImageResponse = {
     id: number;
@@ -85,6 +87,8 @@ const MOCK_GOLD_IMAGES: GoldImageResponse[] = [
 export default function GoldImagesManagementScreen({ navigation }: any) {
     const [goldImages, setGoldImages] = useState<GoldImageResponse[]>(MOCK_GOLD_IMAGES);
     const [loading, setLoading] = useState(false);
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
 
     // For demo purposes, using taskId = 1. In production, this would come from navigation params or context
     const taskId = 1;
@@ -145,18 +149,19 @@ export default function GoldImagesManagementScreen({ navigation }: any) {
             onRightPress={() => navigation.navigate("AddGoldImage")}
         >
             {loading ? (
-                <View style={styles.centerContainer}>
-                    <Text>Loading...</Text>
+                <View style={[styles.centerContainer, { backgroundColor: themeColors.background }]}>
+                    <Text style={{ color: themeColors.text }}>Loading...</Text>
                 </View>
             ) : goldImages.length === 0 ? (
-                <View style={styles.centerContainer}>
-                    <Text style={styles.emptyText}>No gold images found</Text>
-                    <Text style={styles.emptySubtext}>
+                <View style={[styles.centerContainer, { backgroundColor: themeColors.background }]}>
+                    <Text style={[styles.emptyText, { color: themeColors.textSecondary }]}>No gold images found</Text>
+                    <Text style={[styles.emptySubtext, { color: themeColors.textSecondary }]}>
                         Tap "Add Image" to create your first gold image
                     </Text>
                 </View>
             ) : (
                 <FlatList
+                    showsVerticalScrollIndicator={false}
                     data={goldImages}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => (

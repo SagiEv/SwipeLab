@@ -13,9 +13,14 @@ interface UserProfile {
     badges: string[];
 }
 
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
+
 export default function ProfileScreen() {
     const navigation = useNavigation<any>();
     const { isDesktop } = useResponsive();
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
     const [user, setUser] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -123,54 +128,54 @@ export default function ProfileScreen() {
         }
 
         return (
-            <View style={[styles.contentWrapper, isDesktop && styles.desktopCard]}>
+            <View style={[styles.contentWrapper, isDesktop && styles.desktopCard, { backgroundColor: isDesktop ? themeColors.card : undefined }]}>
                 {/* User Info Section */}
                 <View style={styles.section}>
                     <View style={styles.avatarContainer}>
                     </View>
 
                     <View style={styles.infoRow}>
-                        <Text style={styles.label}>Username:</Text>
-                        <Text style={styles.value}>{user.username}</Text>
+                        <Text style={[styles.label, { color: themeColors.textSecondary }]}>Username:</Text>
+                        <Text style={[styles.value, { color: themeColors.text }]}>{user.username}</Text>
                     </View>
                     <View style={styles.infoRow}>
-                        <Text style={styles.label}>Email:</Text>
-                        <Text style={styles.value}>{user.email}</Text>
+                        <Text style={[styles.label, { color: themeColors.textSecondary }]}>Email:</Text>
+                        <Text style={[styles.value, { color: themeColors.text }]}>{user.email}</Text>
                     </View>
                 </View>
 
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
 
                 {/* Stats Section */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Stats</Text>
+                    <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Stats</Text>
                     <View style={styles.statsRow}>
                         <View style={styles.statItem}>
                             <Text style={styles.statValue}>{user.score}</Text>
-                            <Text style={styles.statLabel}>Score</Text>
+                            <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>Score</Text>
                         </View>
                         <View style={styles.statItem}>
                             <Text style={styles.statValue}>{user.rank}</Text>
-                            <Text style={styles.statLabel}>Rank</Text>
+                            <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>Rank</Text>
                         </View>
                     </View>
                 </View>
 
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
 
                 {/* Badges Section */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Badges</Text>
+                    <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Badges</Text>
                     <View style={styles.badgesContainer}>
                         {user.badges.map((badge, index) => (
-                            <View key={index} style={styles.badge}>
+                            <View key={index} style={[styles.badge, { backgroundColor: themeColors.background, borderColor: themeColors.border }]}>
                                 <Text style={styles.badgeText}>{badge}</Text>
                             </View>
                         ))}
                     </View>
                 </View>
 
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
 
                 {/* Actions Section */}
                 <View style={styles.section}>
@@ -187,19 +192,21 @@ export default function ProfileScreen() {
                     onRequestClose={handleCancelChangePassword}
                 >
                     <View style={styles.modalOverlay}>
-                        <View style={[styles.modalContent, isDesktop && styles.modalContentDesktop]}>
-                            <Text style={styles.modalTitle}>Change Password</Text>
+                        <View style={[styles.modalContent, isDesktop && styles.modalContentDesktop, { backgroundColor: themeColors.card }]}>
+                            <Text style={[styles.modalTitle, { color: themeColors.text }]}>Change Password</Text>
 
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
                                 placeholder="New Password"
+                                placeholderTextColor={themeColors.textSecondary}
                                 value={newPassword}
                                 onChangeText={setNewPassword}
                                 secureTextEntry
                             />
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
                                 placeholder="Confirm New Password"
+                                placeholderTextColor={themeColors.textSecondary}
                                 value={confirmPassword}
                                 onChangeText={setConfirmPassword}
                                 secureTextEntry
@@ -209,11 +216,11 @@ export default function ProfileScreen() {
 
                             <View style={styles.actionButtons}>
                                 <TouchableOpacity
-                                    style={[styles.smallButton, styles.cancelButton]}
+                                    style={[styles.smallButton, styles.cancelButton, { backgroundColor: themeColors.border }]}
                                     onPress={handleCancelChangePassword}
                                     disabled={isSavingPassword}
                                 >
-                                    <Text style={[styles.smallButtonText, styles.cancelButtonText]}>Cancel</Text>
+                                    <Text style={[styles.smallButtonText, styles.cancelButtonText, { color: themeColors.text }]}>Cancel</Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
@@ -246,8 +253,11 @@ export default function ProfileScreen() {
             <ScrollView
                 contentContainerStyle={[
                     styles.scrollContainer,
-                    isDesktop && styles.scrollContainerDesktop
+                    isDesktop && styles.scrollContainerDesktop,
+                    { backgroundColor: themeColors.background }
                 ]}
+                style={{ backgroundColor: themeColors.background }}
+                showsVerticalScrollIndicator={false}
             >
                 {renderContent()}
             </ScrollView>

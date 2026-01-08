@@ -5,65 +5,70 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import UserTopBar from '../../components/user/UserTopBar';
 
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
+
 export default function TaskDetailsScreen() {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
     const { task } = route.params;
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
 
     const handlePlay = () => {
         navigation.navigate('SwipeLab');
     };
 
     return (
-        <View style={styles.container}>
-            <View style={styles.header}>
+        <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+            <View style={[styles.header, { backgroundColor: themeColors.card, borderBottomColor: themeColors.border }]}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color="#333" />
+                    <Ionicons name="arrow-back" size={24} color={themeColors.text} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Task Details</Text>
+                <Text style={[styles.headerTitle, { color: themeColors.text }]}>Task Details</Text>
                 <View style={{ width: 24 }} />
             </View>
 
-            <ScrollView contentContainerStyle={styles.content}>
+            <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
                 {/* Title & Stats */}
-                <Text style={styles.title}>{task.name}</Text>
+                <Text style={[styles.title, { color: themeColors.text }]}>{task.name}</Text>
 
-                <View style={styles.statsRow}>
+                <View style={[styles.statsRow, { backgroundColor: themeColors.card, shadowColor: themeColors.text }]}>
                     <View style={styles.statItem}>
                         <Text style={styles.statValue}>{task.imagesClassified}</Text>
-                        <Text style={styles.statLabel}>Classified</Text>
+                        <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>Classified</Text>
                     </View>
                     <View style={styles.statItem}>
                         {/* Approximate pending based on total */}
                         <Text style={styles.statValue}>{task.totalImages - task.imagesClassified}</Text>
-                        <Text style={styles.statLabel}>Pending</Text>
+                        <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>Pending</Text>
                     </View>
                     <View style={styles.statItem}>
                         <Text style={styles.statValue}>{Math.round((task.imagesClassified / task.totalImages) * 100)}%</Text>
-                        <Text style={styles.statLabel}>Progress</Text>
+                        <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>Progress</Text>
                     </View>
                 </View>
 
                 {/* Motivation / Description */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Motivation</Text>
-                    <Text style={styles.bodyText}>
+                    <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Motivation</Text>
+                    <Text style={[styles.bodyText, { color: themeColors.textSecondary }]}>
                         {task.motivation || task.description || "No description provided."}
                     </Text>
                 </View>
 
                 {/* Species */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Target Species</Text>
+                    <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Target Species</Text>
                     <View style={styles.speciesList}>
                         {task.species.map((s: any, index: number) => (
-                            <View key={index} style={styles.speciesCard}>
+                            <View key={index} style={[styles.speciesCard, { backgroundColor: themeColors.card }]}>
                                 {/* Placeholder image for species */}
-                                <View style={styles.speciesImagePlaceholder}>
-                                    <Ionicons name="image" size={30} color="#ccc" />
+                                <View style={[styles.speciesImagePlaceholder, { backgroundColor: themeColors.background }]}>
+                                    <Ionicons name="image" size={30} color={themeColors.icon} />
                                 </View>
-                                <Text style={styles.speciesName}>{s.name}</Text>
+                                <Text style={[styles.speciesName, { color: themeColors.text }]}>{s.name}</Text>
                             </View>
                         ))}
                     </View>
@@ -73,7 +78,7 @@ export default function TaskDetailsScreen() {
 
             </ScrollView>
 
-            <View style={styles.footer}>
+            <View style={[styles.footer, { backgroundColor: themeColors.card, borderTopColor: themeColors.border }]}>
                 <TouchableOpacity style={styles.playButton} onPress={handlePlay}>
                     <Text style={styles.playButtonText}>Start Classifying</Text>
                     <Ionicons name="arrow-forward" size={20} color="#fff" style={{ marginLeft: 8 }} />

@@ -13,7 +13,7 @@ export const Colors = {
     text: '#11181C',
     background: '#f8f9fa',
     tint: tintColorLight,
-    icon: '#687076',
+    icon: '#666',
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
     card: '#fff',
@@ -24,7 +24,7 @@ export const Colors = {
     text: '#fff', // Updated from #ECEDEE to match Settings
     background: '#1a1a2e', // Updated from #151718 to match Settings
     tint: tintColorDark,
-    icon: '#9BA1A6',
+    icon: '#9ca3af',
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
     card: '#2d2d44',

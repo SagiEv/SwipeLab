@@ -4,6 +4,8 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AdminStackParamList } from "../../navigation/adminStack.types";
 import ScreenHeaderLayout from "../../components/layout/ScreenHeaderLayout/ScreenHeaderLayout";
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 
 // Images
 import taxonomyImg from "../../../assets/images/taxonomy.png";
@@ -21,6 +23,8 @@ const TAXONOMY_RANKS = [
 
 export default function TaxonomyScreen() {
     const navigation = useNavigation<TaxonomyScreenNavigationProp>();
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
 
     const handleRankPress = (rank: string) => {
         // For now, we just log the press. In the future, this will navigate to a detail list.
@@ -35,15 +39,15 @@ export default function TaxonomyScreen() {
             rightTitle="Add Task"
             onRightPress={() => navigation.navigate("AddTask")}
         >
-            <ScrollView contentContainerStyle={styles.container}>
+            <ScrollView contentContainerStyle={[styles.container, { backgroundColor: themeColors.background }]} showsVerticalScrollIndicator={false}>
                 <View style={styles.listContainer}>
                     {TAXONOMY_RANKS.map((rank, index) => (
                         <TouchableOpacity
                             key={index}
-                            style={styles.rankButton}
+                            style={[styles.rankButton, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
                             onPress={() => handleRankPress(rank)}
                         >
-                            <Text style={styles.rankText}>{rank}</Text>
+                            <Text style={[styles.rankText, { color: themeColors.text }]}>{rank}</Text>
                         </TouchableOpacity>
                     ))}
                 </View>
