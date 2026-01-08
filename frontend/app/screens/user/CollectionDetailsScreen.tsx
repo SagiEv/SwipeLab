@@ -3,11 +3,15 @@ import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import ScreenHeaderLayout from '../../components/layout/ScreenHeaderLayout/ScreenHeaderLayout';
 import { CollectionItem, SwipeDirection } from '../../types';
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 
 export default function CollectionDetailsScreen() {
     const route = useRoute<any>();
     const navigation = useNavigation<any>();
     const { item } = route.params as { item: CollectionItem };
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
 
     if (!item) return null;
 
@@ -35,14 +39,14 @@ export default function CollectionDetailsScreen() {
         <ScreenHeaderLayout
             leftIcon={require('../../../assets/images/gold_images.png')}
             leftTitle="Details"
-            rightIcon={require('../../../assets/images/home.png')}
-            rightTitle="Home"
-            onRightPress={() => navigation.navigate('SwipeLab')}
+            rightIcon={require('../../../assets/images/collection.png')}
+            rightTitle="Collection"
+            onRightPress={() => navigation.navigate('Collection')}
         >
-            <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+            <ScrollView style={[styles.container, { backgroundColor: themeColors.background }]} contentContainerStyle={styles.content}>
 
                 {/* Image Section */}
-                <View style={styles.imageContainer}>
+                <View style={[styles.imageContainer, { backgroundColor: themeColors.card }]}>
                     <Image source={{ uri: item.imageUrl }} style={styles.image} resizeMode="cover" />
                     <View style={[styles.labelBadge, { backgroundColor: getLabelColor(item.label) }]}>
                         <Text style={styles.labelText}>{getLabelText(item.label)}</Text>
@@ -51,24 +55,24 @@ export default function CollectionDetailsScreen() {
 
                 {/* Info Section */}
                 <View style={styles.infoContainer}>
-                    <Text style={styles.speciesName}>{item.speciesName}</Text>
-                    <Text style={styles.scientificName}>{item.scientificName}</Text>
+                    <Text style={[styles.speciesName, { color: themeColors.text }]}>{item.speciesName}</Text>
+                    <Text style={[styles.scientificName, { color: themeColors.textSecondary }]}>{item.scientificName}</Text>
 
-                    <View style={styles.separator} />
+                    <View style={[styles.separator, { backgroundColor: themeColors.border }]} />
 
-                    <Text style={styles.sectionTitle}>Description</Text>
-                    <Text style={styles.description}>{item.description}</Text>
+                    <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Description</Text>
+                    <Text style={[styles.description, { color: themeColors.textSecondary }]}>{item.description}</Text>
 
-                    <View style={styles.separator} />
+                    <View style={[styles.separator, { backgroundColor: themeColors.border }]} />
 
                     <View style={styles.metaRow}>
                         <View style={styles.metaItem}>
                             <Text style={styles.metaLabel}>Task</Text>
-                            <Text style={styles.metaValue}>{item.taskName}</Text>
+                            <Text style={[styles.metaValue, { color: themeColors.text }]}>{item.taskName}</Text>
                         </View>
                         <View style={styles.metaItem}>
                             <Text style={styles.metaLabel}>Date Labeled</Text>
-                            <Text style={styles.metaValue}>{new Date(item.labeledAt).toLocaleDateString()}</Text>
+                            <Text style={[styles.metaValue, { color: themeColors.text }]}>{new Date(item.labeledAt).toLocaleDateString()}</Text>
                         </View>
                     </View>
                 </View>

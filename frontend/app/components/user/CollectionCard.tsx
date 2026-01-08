@@ -2,6 +2,8 @@ import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { CollectionItem, SwipeDirection } from '../../types';
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 
 interface CollectionCardProps {
     item: CollectionItem;
@@ -17,6 +19,8 @@ const LABEL_CONFIG: Record<SwipeDirection, { color: string; bgColor: string; tex
 export default function CollectionCard({ item }: CollectionCardProps) {
     const navigation = useNavigation<any>();
     const labelConfig = LABEL_CONFIG[item.label];
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
@@ -36,7 +40,7 @@ export default function CollectionCard({ item }: CollectionCardProps) {
 
     return (
         <TouchableOpacity
-            style={styles.card}
+            style={[styles.card, { backgroundColor: themeColors.card }]}
             onPress={handlePress}
             activeOpacity={0.8}
             accessibilityLabel={item.speciesName || item.taskName}

@@ -140,10 +140,10 @@ export default function StatsScreen() {
     return (
         <ScreenHeaderLayout
             leftIcon={require('../../../assets/images/stats.png')}
-            leftTitle="Your Performance"
-            centerIcon={require('../../../assets/images/leaderboard.png')}
-            centerTitle="Leaderboard"
-            onCenterPress={() => navigation.navigate('Leaderboard')}
+            leftTitle="Stats"
+            centerIcon={require('../../../assets/images/collection.png')}
+            centerTitle="Collection"
+            onCenterPress={() => navigation.navigate('Collection')}
             rightIcon={require('../../../assets/images/my-profile.png')}
             rightTitle="My Profile"
             onRightPress={() => navigation.navigate('Profile')}

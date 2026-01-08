@@ -12,13 +12,18 @@ import CollectionCard from '../../components/user/CollectionCard';
 import ScreenHeaderLayout from '../../components/layout/ScreenHeaderLayout/ScreenHeaderLayout';
 import { useCollectionStore } from '../../stores/collectionStore';
 import { SwipeDirection } from '../../types';
-
+import { useNavigation } from '@react-navigation/native';
+import { useThemeStore } from '../../stores/themeStore';
+import { Colors } from '../../../constants/theme';
 // Filter options removed as we only show collected bugs
 
 
 export default function MyCollectionScreen() {
     const { items, stats, isLoading, fetchCollection } = useCollectionStore();
     const [refreshing, setRefreshing] = useState(false);
+    const navigation = useNavigation<any>();
+    const { theme } = useThemeStore();
+    const themeColors = Colors[theme as keyof typeof Colors];
 
     useEffect(() => {
         fetchCollection();
@@ -33,7 +38,7 @@ export default function MyCollectionScreen() {
 
     if (isLoading && items.length === 0) {
         return (
-            <View style={styles.loadingContainer}>
+            <View style={[styles.loadingContainer, { backgroundColor: themeColors.background }]}>
                 <ActivityIndicator size="large" color="#4B7BE5" />
             </View>
         );
@@ -41,22 +46,23 @@ export default function MyCollectionScreen() {
 
     return (
         <ScreenHeaderLayout
-            leftIcon={require('../../../assets/images/gold_images.png')}
+            leftIcon={require('../../../assets/images/collection.png')}
             leftTitle="My Collection"
-            rightIcon={require('../../../assets/images/my-profile.png')}
-            rightTitle=""
+            rightIcon={require('../../../assets/images/stats.png')}
+            rightTitle="Stats"
+            onRightPress={() => navigation.navigate('Stats')}
             contentContainerStyle={{ padding: 0 }}
         >
             <ScrollView
-                style={styles.container}
+                style={[styles.container, { backgroundColor: themeColors.background }]}
                 contentContainerStyle={styles.content}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             >
                 {/* Collection Summary */}
                 <View style={styles.statsContainer}>
-                    <View style={styles.statCard}>
+                    <View style={[styles.statCard, { backgroundColor: themeColors.card }]}>
                         <Text style={styles.statNumber}>{items.length}</Text>
-                        <Text style={styles.statLabel}>Bugs Collected</Text>
+                        <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>Species Collected</Text>
                     </View>
                 </View>
 
@@ -64,8 +70,8 @@ export default function MyCollectionScreen() {
                 {items.length === 0 ? (
                     <View style={styles.emptyState}>
                         <Text style={styles.emptyEmoji}>📷</Text>
-                        <Text style={styles.emptyTitle}>No items yet</Text>
-                        <Text style={styles.emptySubtitle}>
+                        <Text style={[styles.emptyTitle, { color: themeColors.text }]}>No items yet</Text>
+                        <Text style={[styles.emptySubtitle, { color: themeColors.textSecondary }]}>
                             Complete tasks by identifying bugs to add them to your collection!
                         </Text>
                     </View>

@@ -26,7 +26,7 @@ export default function ScreenHeaderLayout({
       <View style={[styles.header, { borderColor: themeColors.border, backgroundColor: themeColors.card }]}>
         {/* Left (current screen) */}
         <View style={styles.leftHeaderItem}>
-          <Image source={leftIcon} style={styles.icon} />
+          {React.isValidElement(leftIcon) ? leftIcon : <Image source={leftIcon as any} style={styles.icon} />}
           <Text style={[styles.title, { color: themeColors.text }]} numberOfLines={1}>{leftTitle}</Text>
         </View>
 
@@ -38,21 +38,25 @@ export default function ScreenHeaderLayout({
               onPress={onCenterPress}
               disabled={!onCenterPress}
             >
-              {centerIcon && <Image source={centerIcon} style={styles.icon} />}
-              <Text style={styles.button}>{centerTitle}</Text>
+              {centerIcon && (
+                React.isValidElement(centerIcon) ? centerIcon : <Image source={centerIcon as any} style={styles.icon} />
+              )}
+              <Text style={[styles.button, { color: themeColors.text }]}>{centerTitle}</Text>
             </TouchableOpacity>
           </View>
         )}
 
         {/* Right (navigation action) */}
-        <TouchableOpacity
-          style={styles.rightHeaderItem}
-          onPress={onRightPress}
-          disabled={!onRightPress}
-        >
-          <Image source={rightIcon} style={styles.icon} />
-          <Text style={[styles.button, { color: themeColors.text }]} numberOfLines={1}>{rightTitle}</Text>
-        </TouchableOpacity>
+        <View style={styles.rightHeaderItem}>
+          <TouchableOpacity
+            style={styles.rightContentWrapper}
+            onPress={onRightPress}
+            disabled={!onRightPress}
+          >
+            {React.isValidElement(rightIcon) ? rightIcon : <Image source={rightIcon as any} style={styles.icon} />}
+            <Text style={[styles.button, { color: themeColors.text }]} numberOfLines={1}>{rightTitle}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Screen Content */}
@@ -81,6 +85,7 @@ const styles = StyleSheet.create({
     gap: 8,
     flex: 1,
     zIndex: 1,
+    pointerEvents: 'box-none',
   },
   centerWrapper: {
     position: "absolute",
@@ -98,12 +103,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   rightHeaderItem: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8,
     flex: 1,
     justifyContent: "flex-end",
+    alignItems: "flex-end", // Align wrapper to the right
     zIndex: 1,
+    pointerEvents: 'box-none', // Allow touches to pass through empty space
+  },
+  rightContentWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   icon: {
     width: 28,

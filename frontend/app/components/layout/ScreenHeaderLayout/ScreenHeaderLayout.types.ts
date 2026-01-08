@@ -1,14 +1,14 @@
 import { ImageSourcePropType, StyleProp, ViewStyle } from "react-native";
 
 export type ScreenHeaderLayoutProps = {
-  leftIcon: ImageSourcePropType;
+  leftIcon: ImageSourcePropType | React.ReactNode;
   leftTitle: string;
 
-  rightIcon: ImageSourcePropType;
+  rightIcon: ImageSourcePropType | React.ReactNode;
   rightTitle: string;
   onRightPress?: () => void;
 
-  centerIcon?: ImageSourcePropType;
+  centerIcon?: ImageSourcePropType | React.ReactNode;
   centerTitle?: string;
   onCenterPress?: () => void;
 

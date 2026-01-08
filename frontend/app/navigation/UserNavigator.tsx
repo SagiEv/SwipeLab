@@ -30,11 +30,11 @@ export default function UserNavigator() {
           <Stack.Screen name="Tasks" component={UserMyTasksScreen} />
           <Stack.Screen name="TaskDetails" component={TaskDetailsScreen} />
           <Stack.Screen name="Challenges" component={ChallengesScreen} />
+          <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
           <Stack.Screen name="Collection" component={MyCollectionScreen} />
           <Stack.Screen name="CollectionDetails" component={CollectionDetailsScreen} />
           <Stack.Screen name="UserSettings" component={SettingsScreen} />
           <Stack.Screen name="Stats" component={StatsScreen} />
-          <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
           <Stack.Screen name="Profile" component={ProfileScreen} />
         </Stack.Navigator>
       </View>
@@ -44,7 +44,7 @@ export default function UserNavigator() {
         items={[
           { label: "Home", route: "SwipeLab", icon: require("../../assets/images/home.png") },
           { label: "My Tasks", route: "Tasks", icon: require("../../assets/images/tasks.png") },
-          { label: "Collection", route: "Collection", icon: require("../../assets/images/gold_images.png") },
+          { label: "Leaderboard", route: "Leaderboard", icon: require("../../assets/images/leaderboard.png") },
           { label: "Stats", route: "Stats", icon: require("../../assets/images/stats.png") },
           { label: "Settings", route: "UserSettings", icon: require("../../assets/images/settings.png") },
         ]}

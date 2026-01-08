@@ -105,10 +105,6 @@ export default function ProfileScreen() {
         }
     };
 
-    const handleNavigateToChallenges = () => {
-        navigation.navigate("Challenges");
-    };
-
     // Render Logic
     const renderContent = () => {
         if (loading) {
@@ -246,9 +242,9 @@ export default function ProfileScreen() {
         <ScreenHeaderLayout
             leftIcon={require("../../../assets/images/my-profile.png")}
             leftTitle="My Profile"
-            rightIcon={require("../../../assets/images/tasks.png")}
-            rightTitle="Challenges"
-            onRightPress={handleNavigateToChallenges}
+            rightIcon={require("../../../assets/images/settings.png")}
+            rightTitle="Settings"
+            onRightPress={() => navigation.navigate("UserSettings")}
         >
             <ScrollView
                 contentContainerStyle={[
