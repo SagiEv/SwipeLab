@@ -1,3 +1,0 @@
-ALTER TABLE users
-ADD COLUMN agreement_with_experts DOUBLE PRECISION DEFAULT 0.0,
-ADD COLUMN majority_agreement_score DOUBLE PRECISION DEFAULT 0.0;

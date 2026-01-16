@@ -1,7 +1,7 @@
 package com.swipelab.controller;
 
 import com.swipelab.model.entity.Label;
-import com.swipelab.repository.LabelRepository;
+
 import com.swipelab.service.LabelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
