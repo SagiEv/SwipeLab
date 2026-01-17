@@ -13,4 +13,5 @@ INSERT INTO badges (name, description, icon_url, criteria_json) VALUES
 ('100 Swipes', 'Awarded for completing 100 classifications', 'badge_100_swipes.png', '{"type": "COUNT", "threshold": 100}'),
 ('3 Day Streak', 'Awarded for maintaining a 3-day streak', 'badge_streak_3.png', '{"type": "STREAK", "threshold": 3}'),
 ('7 Day Streak', 'Awarded for maintaining a 7-day streak', 'badge_streak_7.png', '{"type": "STREAK", "threshold": 7}'),
-('1000 Points', 'Awarded for earning 1000 points', 'badge_points_1000.png', '{"type": "POINTS", "threshold": 1000}');
+('1000 Points', 'Awarded for earning 1000 points', 'badge_points_1000.png', '{"type": "POINTS", "threshold": 1000}')
+ON CONFLICT (name) DO NOTHING;
