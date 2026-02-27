@@ -1,22 +1,22 @@
 import { authMock } from './data/auth.mock'
 import { classificationMock } from './data/classification.mock'
+import { addToCollection, getCollection, getCollectionStats } from './data/collection.mock'
 import { dashboardAdminMock } from './data/dashboard.admin.mock'
 import { dashboardUserMock } from './data/dashboard.user.mock'
-import { getCollection, getCollectionStats, addToCollection } from './data/collection.mock'
 
-import { leaderboardMock } from './data/leaderboard.mock'
+import { getTaskAnalytics, getUserPerformance } from './data/analytics.mock'
 import { refinedChallengesMock } from './data/challenges.mock'
-import { statisticsMock, setUserAccuracy } from './data/statistics.mock'
-import { analyticsMock, getTaskAnalytics, getUserPerformance } from './data/analytics.mock'
+import { setUserAccuracy, statisticsMock } from './data/statistics.mock'
 
+import { MOCK_GOLD_IMAGES } from './data/goldImages.mock'
 import { getLeaderboardData, setUserScore } from './data/leaderboard.mock'
-import { usersMock } from './data/users.mock'
 import {
   addRecipientGroup,
   addUserToGroup,
-  removeUserFromGroup,
-  getRecipientGroups
+  getRecipientGroups,
+  removeUserFromGroup
 } from './data/recipients.mock'
+import { usersMock } from './data/users.mock'
 
 type Method = 'GET' | 'POST' | 'PUT' | 'DELETE'
 
@@ -135,11 +135,15 @@ export async function mockRouter(
 
 
   // ---------- DASHBOARD (USER) ----------
-  if (method === 'GET' && url.endsWith('/api/v1/dashboard/my-tasks')) {
+  if (method === 'GET' && url.split('?')[0].endsWith('/api/v1/dashboard/my-tasks')) {
     return jsonResponse(dashboardUserMock.tasks)
   }
 
-  if (method === 'GET' && url.match(/\/api\/v1\/dashboard\/my-tasks\/\d+$/)) {
+  if (method === 'GET' && url.split('?')[0].endsWith('/api/v1/dashboard/available-tasks')) {
+    return jsonResponse(dashboardUserMock.availableTasks)
+  }
+
+  if (method === 'GET' && url.split('?')[0].match(/\/api\/v1\/dashboard\/my-tasks\/\d+$/)) {
     return jsonResponse(dashboardUserMock.taskDetails)
   }
 
@@ -181,7 +185,7 @@ export async function mockRouter(
 
 
   // ---------- CLASSIFICATION ----------
-  if (method === 'GET' && url.endsWith('/api/v1/classifications/next-batch')) {
+  if (method === 'GET' && url.split('?')[0].endsWith('/api/v1/classifications/next-batch')) {
     return jsonResponse(classificationMock.nextBatch)
   }
 
@@ -194,7 +198,7 @@ export async function mockRouter(
   }
 
   // ---------- LEADERBOARD ----------
-  if (method === 'GET' && url.includes('/api/v1/leaderboard/')) {
+  if (method === 'GET' && url.includes('/api/v1/gamification/leaderboard')) {
     return jsonResponse(getLeaderboardData())
   }
 
@@ -255,13 +259,36 @@ export async function mockRouter(
   }
 
   // User Performance Analytics
-  if (method === 'GET' && url.includes('/api/v1/dashboard/analytics/users')) {
+  if (method === 'GET' && url.includes('/api/v1/analytics/users')) {
     // Extract taskId from query params if present
     const urlObj = new URL(url, 'http://localhost');
     const taskIdParam = urlObj.searchParams.get('taskId');
     const taskId = taskIdParam ? parseInt(taskIdParam, 10) : undefined;
 
     return jsonResponse(getUserPerformance(taskId));
+  }
+
+  // Top Performers
+  if (method === 'GET' && url.includes('/api/v1/analytics/top-performers')) {
+    const urlObj = new URL(url, 'http://localhost');
+    const limitParam = urlObj.searchParams.get('limit');
+    let limit = limitParam ? parseInt(limitParam, 10) : 10;
+    if (isNaN(limit)) limit = 10;
+
+    // Sort logic isn't strictly necessary for a mock, but sorting by score or current values is nice.
+    // For now we slice the user performance mock logic.
+    const performers = getUserPerformance().slice(0, limit);
+    return jsonResponse(performers);
+  }
+
+  // Exports
+  if (method === 'POST' && url.includes('/api/v1/analytics/exports')) {
+    return jsonResponse({
+      exportId: "exp_" + Date.now().toString(),
+      status: "QUEUED",
+      createdAt: new Date().toISOString(),
+      estimatedCompletion: new Date(Date.now() + 10 * 60000).toISOString()
+    }, 202);
   }
 
   // CHALLENGES
@@ -362,6 +389,25 @@ export async function mockRouter(
     };
     const newItem = addToCollection(imageUrl, label as any, taskId, taskName, question);
     return jsonResponse(newItem, 201);
+  }
+
+  // ---------- GOLD IMAGES ----------
+  if (method === 'GET' && url.split('?')[0].endsWith('/api/admin/gold-images/get-all')) {
+    return jsonResponse(MOCK_GOLD_IMAGES)
+  }
+
+  if (method === 'GET' && url.split('?')[0].endsWith('/api/admin/gold-images')) {
+    const urlObj = new URL(url, 'http://localhost');
+    const taskIdParam = urlObj.searchParams.get('taskId');
+    if (taskIdParam) {
+      const taskId = parseInt(taskIdParam, 10);
+      return jsonResponse(MOCK_GOLD_IMAGES.filter(g => g.taskId === taskId));
+    }
+    return jsonResponse(MOCK_GOLD_IMAGES);
+  }
+
+  if (method === 'DELETE' && url.includes('/api/admin/gold-images/')) {
+    return jsonResponse({ message: 'Gold image deleted' });
   }
 
   // ---------- FALLBACK ----------

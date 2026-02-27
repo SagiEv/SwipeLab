@@ -1,0 +1,51 @@
+package com.swipelab.auth.application;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
+@Service
+@Slf4j
+public class EmailService {
+
+    @Async
+    public void sendVerificationEmail(String email, String token) {
+        // TODO: Implement actual email sending (e.g., using SendGrid, AWS SES, JavaMailSender)
+        // For now, just log the verification link
+        String verificationLink = "http://localhost:8080/auth/verify-email?token=" + token;
+
+        log.info("==============================================");
+        log.info("VERIFICATION EMAIL");
+        log.info("To: {}", email);
+        log.info("Verification Link: {}", verificationLink);
+        log.info("==============================================");
+
+        // Simulate email sending delay
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    @Async
+    public void sendPasswordResetEmail(String email, String token) {
+        // TODO: Implement actual email sending (e.g., using SendGrid, AWS SES, JavaMailSender)
+        // For now, just log the password reset link
+        String resetLink = "http://localhost:8080/auth/password/reset?token=" + token;
+
+        log.info("==============================================");
+        log.info("PASSWORD RESET EMAIL");
+        log.info("To: {}", email);
+        log.info("Reset Link: {}", resetLink);
+        log.info("Token expires in 1 hour");
+        log.info("==============================================");
+
+        // Simulate email sending delay
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+}

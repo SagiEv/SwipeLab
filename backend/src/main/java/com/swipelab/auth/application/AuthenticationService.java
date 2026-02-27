@@ -1,0 +1,273 @@
+package com.swipelab.auth.application;
+
+import com.swipelab.dto.request.RegisterRequest;
+import com.swipelab.dto.request.ResetPasswordRequest;
+import com.swipelab.dto.response.AuthResponse;
+import com.swipelab.exception.EmailVerificationException;
+import com.swipelab.exception.PasswordResetException;
+import com.swipelab.users.domain.User;
+import com.swipelab.users.infrastructure.UserRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.swipelab.dto.request.LoginRequest;
+import com.swipelab.exception.UnauthorizedException;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class AuthenticationService {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
+    private final com.swipelab.auth.domain.AuthMapper authMapper;
+    private final JwtService jwtService;
+    private final com.swipelab.eventing.kafka.KafkaEventPublisher eventPublisher;
+
+    @Value("${app.auto-verify-emails:false}")
+    private boolean autoVerifyEmails;
+
+    @Transactional
+    public AuthResponse register(RegisterRequest request) {
+        // Check if email already exists
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email already registered");
+        }
+
+        // Check if username already exists
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new RuntimeException("Username already taken");
+        }
+
+        // Generate email verification token
+        String verificationToken = UUID.randomUUID().toString();
+
+        // Create new user using Mapper
+        User user = authMapper.toUser(request);
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setEmailVerificationToken(verificationToken);
+        user.setVerificationTokenExpiry(LocalDateTime.now().plusHours(24)); // 24-hour expiry
+
+        // Auto-verify emails in development environment
+        if (autoVerifyEmails) {
+            user.setEmailVerified(true);
+            log.info("✅ Auto-verified email for user: {} (development mode)", user.getEmail());
+        } else {
+            user.setEmailVerified(false);
+        }
+
+        // Save user
+        User savedUser = userRepository.save(user);
+
+        // Publish UserCreatedEvent
+        eventPublisher.publish(com.swipelab.eventing.kafka.KafkaConfig.USER_EVENTS_TOPIC,
+                com.swipelab.users.events.UserCreatedEvent.builder()
+                        .username(savedUser.getUsername())
+                        .email(savedUser.getEmail())
+                        .displayName(savedUser.getDisplayName())
+                        .build());
+
+        // Send verification email asynchronously (only if not auto-verified)
+        if (!autoVerifyEmails) {
+            emailService.sendVerificationEmail(savedUser.getEmail(), verificationToken);
+        }
+
+        // Generate tokens
+        String accessToken = jwtService.generateAccessToken(savedUser);
+        String refreshToken = jwtService.generateRefreshToken(savedUser);
+
+        return authMapper.toAuthResponse(accessToken, refreshToken, savedUser);
+    }
+
+    /**
+     * Verifies user's email using the verification token
+     *
+     * @param token The verification token sent via email
+     * @throws EmailVerificationException if token is invalid or expired
+     */
+    @Transactional
+    public void verifyEmail(String token) {
+        // Find user by verification token
+        User user = userRepository.findByEmailVerificationToken(token)
+                .orElseThrow(() -> new EmailVerificationException("Invalid verification token"));
+
+        // Check if token has expired
+        if (user.getVerificationTokenExpiry() == null ||
+                LocalDateTime.now().isAfter(user.getVerificationTokenExpiry())) {
+            throw new EmailVerificationException("Verification token has expired");
+        }
+
+        // Check if email is already verified
+        if (user.getEmailVerified()) {
+            throw new EmailVerificationException("Email is already verified");
+        }
+
+        // Mark email as verified
+        user.setEmailVerified(true);
+
+        // Invalidate the token
+        user.setEmailVerificationToken(null);
+        user.setVerificationTokenExpiry(null);
+
+        // Save updated user
+        userRepository.save(user);
+    }
+
+    /**
+     * Resends verification email if the previous token expired
+     *
+     * @param email User's email address
+     * @throws EmailVerificationException if email is already verified or not found
+     */
+    @Transactional
+    public void resendVerificationEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EmailVerificationException("User not found with email: " + email));
+
+        if (user.getEmailVerified()) {
+            throw new EmailVerificationException("Email is already verified");
+        }
+
+        // Generate new verification token
+        String verificationToken = UUID.randomUUID().toString();
+        user.setEmailVerificationToken(verificationToken);
+        user.setVerificationTokenExpiry(LocalDateTime.now().plusHours(24));
+
+        userRepository.save(user);
+
+        // Send new verification email
+        emailService.sendVerificationEmail(user.getEmail(), verificationToken);
+    }
+
+    @Transactional
+    public AuthResponse login(LoginRequest request) {
+
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new UnauthorizedException("User not exists"));
+
+        // Account state checks
+        if (!Boolean.TRUE.equals(user.getActive()) ||
+                Boolean.TRUE.equals(user.getAccountLocked())) {
+            throw new UnauthorizedException("Account disabled or locked");
+        }
+
+        // Email verification check
+        if (!Boolean.TRUE.equals(user.getEmailVerified())) {
+            throw new UnauthorizedException("Email not verified");
+        }
+
+        // Password validation
+        if (user.getPasswordHash() == null ||
+                !passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            throw new UnauthorizedException("Wrong password");
+        }
+
+        // Generate tokens
+        String accessToken = jwtService.generateAccessToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
+
+        user.setLastLogin(LocalDateTime.now());
+        userRepository.save(user);
+
+        return authMapper.toAuthResponse(accessToken, refreshToken, user);
+    }
+
+    @Transactional
+    public AuthResponse refresh(String refreshToken) {
+        return jwtService.refreshTokens(refreshToken);
+    }
+
+    @Transactional
+    public void logout(String refreshToken) {
+
+        if (!jwtService.isRefreshToken(refreshToken)) {
+            throw new UnauthorizedException("Invalid refresh token");
+        }
+
+        String username = jwtService.extractUsername(refreshToken);
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UnauthorizedException("User not found"));
+
+        // Invalidate refresh token
+        user.setRefreshTokenHash(null);
+        userRepository.save(user);
+    }
+
+    /**
+     * Handles forgot password request
+     * Generates reset token and sends email for existing users
+     * Returns success for non-existing emails (security best practice)
+     *
+     * @param email User's email address
+     */
+    @Transactional
+    public void forgotPassword(String email) {
+        // Look up user by email
+        User user = userRepository.findByEmail(email).orElse(null);
+
+        // If user exists, generate token and send email
+        if (user != null) {
+            // Generate password reset token
+            String resetToken = UUID.randomUUID().toString();
+
+            // Set token and expiry (1 hour)
+            user.setResetPasswordToken(resetToken);
+            user.setResetTokenExpiry(LocalDateTime.now().plusHours(1));
+
+            // Save user with reset token
+            userRepository.save(user);
+
+            // Send password reset email asynchronously
+            emailService.sendPasswordResetEmail(user.getEmail(), resetToken);
+        }
+
+        // Always return success, regardless of whether email exists
+        // This prevents email enumeration attacks
+    }
+
+    /**
+     * Resets user password using a valid reset token
+     *
+     * @param request Contains reset token and new password
+     * @throws PasswordResetException if token is invalid, expired, or already used
+     */
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        // Find user by reset token
+        User user = userRepository.findByResetPasswordToken(request.getToken())
+                .orElseThrow(() -> new PasswordResetException("Invalid or expired reset token"));
+
+        // Validate token expiry
+        if (user.getResetTokenExpiry() == null ||
+                LocalDateTime.now().isAfter(user.getResetTokenExpiry())) {
+            // Invalidate expired token
+            user.setResetPasswordToken(null);
+            user.setResetTokenExpiry(null);
+            userRepository.save(user);
+            throw new PasswordResetException("Reset token has expired");
+        }
+
+        // Hash the new password
+        String hashedPassword = passwordEncoder.encode(request.getNewPassword());
+        user.setPasswordHash(hashedPassword);
+
+        // Invalidate the reset token (one-time use)
+        user.setResetPasswordToken(null);
+        user.setResetTokenExpiry(null);
+
+        // Optionally: Invalidate all refresh tokens for security
+        user.setRefreshTokenHash(null);
+
+        // Save updated user
+        userRepository.save(user);
+    }
+
+}
