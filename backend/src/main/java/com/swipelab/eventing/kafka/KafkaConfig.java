@@ -72,6 +72,11 @@ public class KafkaConfig {
         // Trust all packages for JSON deserialization
         props.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
 
+        // Ensure consumers always start from the earliest offset available.
+        // Critical for integration tests where the consumer may register after the
+        // producer sends.
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
