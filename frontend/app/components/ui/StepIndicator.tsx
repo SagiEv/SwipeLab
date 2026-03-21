@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   },
   stepItem: {
     alignItems: 'center',
-    width: 70, // Increased to allow "Description" and "Recipients" to fit
+    width: 76, // Increased to allow "Description" and "Recipients" to fit without wrapping
   },
   circle: {
     width: 32,
@@ -128,11 +128,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   label: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '500',
     marginTop: 4,
     textAlign: 'center',
     color: '#6b7280',
+    width: 76,
   },
   labelActive: {
     color: ACTIVE_GREEN,

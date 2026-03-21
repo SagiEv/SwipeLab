@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Colors } from '../../../../constants/theme';
 import { useThemeStore } from '../../../stores/themeStore';
 import { StepProps } from './addTaskTypes';
@@ -10,7 +10,12 @@ export default function StepDescription({ formData, onUpdate, onNext, onBack }: 
   const canProceed = formData.description.trim().length > 0;
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+    >
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" bounces={false}>
       <Text style={[styles.heading, { color: themeColors.text }]}>Describe the task</Text>
       <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>
         Provide clear instructions so classifiers know exactly what to look for.
@@ -41,12 +46,13 @@ export default function StepDescription({ formData, onUpdate, onNext, onBack }: 
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingVertical: 16 },
+  container: { flexGrow: 1, paddingVertical: 16 },
   heading: { fontSize: 22, fontWeight: '700', marginBottom: 8 },
   subtitle: { fontSize: 14, marginBottom: 24, lineHeight: 20 },
   input: {

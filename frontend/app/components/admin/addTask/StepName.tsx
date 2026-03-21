@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Colors } from '../../../../constants/theme';
 import { useThemeStore } from '../../../stores/themeStore';
 import { StepProps } from './addTaskTypes';
@@ -10,7 +10,12 @@ export default function StepName({ formData, onUpdate, onNext }: StepProps) {
   const canProceed = formData.name.trim().length > 0;
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+    >
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" bounces={false}>
       <Text style={[styles.heading, { color: themeColors.text }]}>What's the name of your task?</Text>
       <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>
         Choose a clear, descriptive name for the classification task.
@@ -34,12 +39,13 @@ export default function StepName({ formData, onUpdate, onNext }: StepProps) {
           <Text style={styles.nextButtonText}>Next →</Text>
         </TouchableOpacity>
       </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingVertical: 16 },
+  container: { flexGrow: 1, paddingVertical: 16 },
   heading: { fontSize: 22, fontWeight: '700', marginBottom: 8 },
   subtitle: { fontSize: 14, marginBottom: 24, lineHeight: 20 },
   input: {
