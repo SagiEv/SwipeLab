@@ -1,4 +1,4 @@
-import { MultiSelectOption } from '../../components/ui/MultiSelect';
+import { MultiSelectOption } from '../../ui/MultiSelect';
 
 export interface AddTaskFormData {
   name: string;
