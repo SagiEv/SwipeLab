@@ -45,6 +45,7 @@ services:
     ports:
       - "8080:8080"
     environment:
+      - SPRING_PROFILES_ACTIVE=mock
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/${DB_NAME:-swipelab}
       - SPRING_DATASOURCE_USERNAME=${DB_USER:-postgres}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-postgres}
@@ -56,7 +57,7 @@ services:
     build:
       context: ./frontend
       args:
-        - EXPO_PUBLIC_API_URL=http://${VM_IP}:8080
+        - EXPO_PUBLIC_API_URL=http://132.73.84.74
     container_name: swipelab-frontend
     depends_on:
       - backend
