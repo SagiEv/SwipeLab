@@ -58,6 +58,7 @@ export default function LoginScreen() {
       // data comes from auth.mock.ts
       setAuth(data.accessToken, data.user.role);
     } catch (e) {
+      console.error("[LoginScreen] Network/Fetch Exception Caught:", e);
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);

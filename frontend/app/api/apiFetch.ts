@@ -19,10 +19,10 @@ export async function apiFetch(
   // }
 
 
-  const backendUrl =
-    Platform.OS === "web"
+  const backendUrl = process.env.EXPO_PUBLIC_API_URL ||
+    (Platform.OS === "web"
       ? "http://localhost:8080"
-      : "http://172.20.10.8:8080"; //real IP for IOS&ANDROID
+      : "http://172.20.10.8:8080"); //real IP for IOS&ANDROID
 
 
   // Get token from storage
@@ -33,7 +33,11 @@ export async function apiFetch(
     token = await SecureStore.getItemAsync("token");
   }
 
-  return fetch(backendUrl + input, {
+  const fullUrl = backendUrl + input;
+  console.log("[apiFetch] Full exact URL being fetch'ed:", fullUrl);
+  console.log("[apiFetch] Header Token Present:", token ? "YES (length " + token.length + ")" : "NO (null/undefined)");
+
+  return fetch(fullUrl, {
     ...init,
     headers: {
       ...(init?.headers ?? {}),
