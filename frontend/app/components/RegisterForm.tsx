@@ -66,14 +66,14 @@ export default function RegisterForm({ onClose }: Props) {
       }
 
       const data = await response.json();
-      const { accessToken, user, message } = data;
+      const { accessToken, refreshToken, user, message } = data;
 
       if (accessToken) {
         // Ensure we treat the user object correctly
         // Assuming user object has username, email, displayName, and possibly role
         const userRole = user?.role || "USER";
 
-        setAuth(accessToken, userRole);
+        setAuth(accessToken, userRole, refreshToken);
 
         // Set default mode based on role
         if (userRole === "ADMIN") {
