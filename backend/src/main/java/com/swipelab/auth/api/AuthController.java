@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Value;
 import com.swipelab.users.domain.User;
 
 import java.security.Principal;
@@ -36,9 +37,8 @@ public class AuthController {
      * Register a new user
      */
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        AuthResponse response = authenticationService.register(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<java.util.Map<String, Object>> register(@Valid @RequestBody RegisterRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(authenticationService.register(request));
     }
 
     /**
@@ -55,6 +55,35 @@ public class AuthController {
         response.put("status", "success");
 
         return ResponseEntity.ok(response);
+    }
+
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
+
+    /**
+     * Verify user email with token via browser GET (Link clicked in email)
+     */
+    @GetMapping(value = "/verify-email", produces = org.springframework.http.MediaType.TEXT_HTML_VALUE)
+    public String verifyEmailLink(@RequestParam String token) {
+        try {
+            authenticationService.verifyEmail(token);
+            return "<html><head><meta http-equiv=\"refresh\" content=\"5;url=" + frontendUrl + "\" /></head>" +
+                   "<body style='font-family:sans-serif; text-align:center; padding-top: 50px; background-color: #f4f6f9;'>" +
+                   "<div style='max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>" +
+                   "<h2 style='color: #4B7BE5;'>Email Verified Successfully! <br>&#10004;</h2>" +
+                   "<p style='font-size: 16px; color: #333;'>Your account is now fully active.</p>" +
+                   "<p style='font-size: 16px; color: #666;'>You will be redirected back to the app to log in shortly.</p>" +
+                   "<p style='font-size: 14px; color: #999; margin-top: 20px;'>Redirecting in <span id='countdown'>5</span> seconds...</p>" +
+                   "<script>var time=5; setInterval(function(){ if(time>0){time--; document.getElementById('countdown').innerText=time;} }, 1000);</script>" +
+                   "</div></body></html>";
+        } catch (Exception e) {
+            return "<html><body style='font-family:sans-serif; text-align:center; padding-top: 50px; background-color: #f4f6f9;'>" +
+                   "<div style='max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>" +
+                   "<h2 style='color: #E11D48;'>Verification Failed &#10006;</h2>" +
+                   "<p style='font-size: 16px; color: #333;'>" + e.getMessage() + "</p>" +
+                   "<p style='font-size: 16px; color: #666;'>Please try registering again or contact support.</p>" +
+                   "</div></body></html>";
+        }
     }
 
     /**
@@ -213,6 +242,25 @@ public class AuthController {
 
         Map<String, String> response = new HashMap<>();
         response.put("message", "Password reset successfully. You can now login with your new password.");
+        response.put("status", "success");
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Send an invitation email to a new admin or researcher
+     *
+     * Endpoint: POST /api/v1/auth/invitation/admin
+     */
+    @PostMapping("/invitation/admin")
+    // @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> inviteAdmin(
+            @Valid @RequestBody InviteAdminRequest request) {
+
+        authenticationService.inviteAdmin(request);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Invitation sent successfully to " + request.getEmail());
         response.put("status", "success");
 
         return ResponseEntity.ok(response);

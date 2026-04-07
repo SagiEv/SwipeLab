@@ -88,6 +88,7 @@ public class UserService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
         user.setActive(false);
+        user.setStatus(com.swipelab.model.enums.UserStatus.BANNED);
         User updatedUser = userRepository.save(user);
         return authMapper.toUserProfileResponse(updatedUser);
     }
@@ -97,6 +98,7 @@ public class UserService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
         user.setActive(true);
+        user.setStatus(com.swipelab.model.enums.UserStatus.ACTIVE);
         User updatedUser = userRepository.save(user);
         return authMapper.toUserProfileResponse(updatedUser);
     }

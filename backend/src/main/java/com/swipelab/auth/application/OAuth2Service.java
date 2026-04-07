@@ -27,7 +27,7 @@ public class OAuth2Service {
 
     private final UserRepository userRepository;
 
-    @Value("${GOOGLE_CLIENT_ID}")
+    @Value("${GOOGLE_CLIENT_ID:your-google-client-id}")
     private String googleClientId;
 
     public GoogleIdToken.Payload verifyGoogleToken(String idTokenString) {
