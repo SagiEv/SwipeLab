@@ -2,6 +2,7 @@ package com.swipelab.auth.infrastructure;
 
 import com.swipelab.auth.infrastructure.CustomOAuth2UserService;
 import com.swipelab.auth.infrastructure.JwtAuthenticationFilter;
+import com.swipelab.auth.external.ExternalAuthFilter;
 import com.swipelab.auth.infrastructure.OAuth2AuthenticationFailureHandler;
 import com.swipelab.auth.infrastructure.OAuth2AuthenticationSuccessHandler;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,6 +30,9 @@ public class SecurityConfig {
 
         @Autowired
         private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+        @Autowired
+        private ExternalAuthFilter externalAuthFilter;
 
         @Autowired
         private OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
@@ -69,6 +73,7 @@ public class SecurityConfig {
                                                                 "/login/**",
                                                                 "/v3/api-docs/**",
                                                                 "/swagger-ui/**",
+                                                                "/swipelab/**",
                                                                 "/swagger-ui.html",
                                                                 "/uploads/**")
                                                 .permitAll()
@@ -83,7 +88,8 @@ public class SecurityConfig {
                                                                 .baseUri("/oauth2/callback/**"))
                                                 .successHandler(oAuth2AuthenticationSuccessHandler)
                                                 .failureHandler(oAuth2AuthenticationFailureHandler))
-                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                                .addFilterAfter(externalAuthFilter, JwtAuthenticationFilter.class);
 
                 return http.build();
         }
