@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Verify your SwipeLab account</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .header { background-color: #4B7BE5; color: #ffffff; padding: 30px 20px; text-align: center; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+        .content { padding: 30px 20px; line-height: 1.6; }
+        .content h2 { margin-top: 0; font-size: 20px; font-weight: 600; color: #1f2937; }
+        .btn-container { text-align: center; margin: 30px 0; }
+        .btn { display: inline-block; background-color: #4B7BE5; color: #ffffff; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: 600; font-size: 16px; }
+        .footer { background-color: #f9fafb; padding: 20px; text-align: center; font-size: 13px; color: #6b7280; border-top: 1px solid #e5e7eb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="cid:logoImage" alt="SwipeLab Logo" style="width: 65px; height: 65px; margin-bottom: 12px; border-radius: 12px; background-color: #ffffff; padding: 2px;" />
+            <h1>SwipeLab</h1>
+        </div>
+        <div class="content">
+            <h2>Welcome to SwipeLab!</h2>
+            <p>Thank you for signing up. Please verify your email address to activate your account and start contributing to our dataset.</p>
+            <div class="btn-container">
+                <a th:href="${verificationLink}" class="btn" style="color: #ffffff;">Verify Email Address</a>
+            </div>
+            <p>If the button doesn't work, copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; font-size: 14px; color: #4B7BE5;" th:text="${verificationLink}"></p>
+            <p>Welcome aboard!<br>The SwipeLab Team</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 SwipeLab. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -35,7 +35,7 @@ public class AuthenticationService {
     private boolean autoVerifyEmails;
 
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public java.util.Map<String, Object> register(RegisterRequest request) {
         // Check if email already exists
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already registered");
@@ -58,9 +58,11 @@ public class AuthenticationService {
         // Auto-verify emails in development environment
         if (autoVerifyEmails) {
             user.setEmailVerified(true);
+            user.setStatus(com.swipelab.model.enums.UserStatus.ACTIVE);
             log.info("✅ Auto-verified email for user: {} (development mode)", user.getEmail());
         } else {
             user.setEmailVerified(false);
+            user.setStatus(com.swipelab.model.enums.UserStatus.PENDING_VERIFICATION);
         }
 
         // Save user
@@ -79,11 +81,22 @@ public class AuthenticationService {
             emailService.sendVerificationEmail(savedUser.getEmail(), verificationToken);
         }
 
-        // Generate tokens
-        String accessToken = jwtService.generateAccessToken(savedUser);
-        String refreshToken = jwtService.generateRefreshToken(savedUser);
-
-        return authMapper.toAuthResponse(accessToken, refreshToken, savedUser);
+        // Generate tokens only if auto-verified
+        if (autoVerifyEmails) {
+            String accessToken = jwtService.generateAccessToken(savedUser);
+            String refreshToken = jwtService.generateRefreshToken(savedUser);
+            
+            java.util.Map<String, Object> response = new java.util.HashMap<>();
+            response.put("message", "Registration successful. Auto-verified.");
+            response.put("accessToken", accessToken);
+            response.put("refreshToken", refreshToken);
+            // using authMapper to just get the DTO for the user if needed, or we can just return the raw object 
+            // because spring will serialize it, but it's safer to use the DTO
+            response.put("user", authMapper.toAuthResponse(accessToken, refreshToken, savedUser).getUser());
+            return response;
+        } else {
+            return java.util.Map.of("message", "Registration successful! A verification link has been sent to your email.");
+        }
     }
 
     /**
@@ -111,6 +124,7 @@ public class AuthenticationService {
 
         // Mark email as verified
         user.setEmailVerified(true);
+        user.setStatus(com.swipelab.model.enums.UserStatus.ACTIVE);
 
         // Invalidate the token
         user.setEmailVerificationToken(null);
@@ -267,7 +281,36 @@ public class AuthenticationService {
         user.setRefreshTokenHash(null);
 
         // Save updated user
+        // Save updated user
         userRepository.save(user);
+    }
+    
+        /**
+     * Invite a new admin user
+     * generates an invitation token and sends an email.
+     */
+    @Transactional
+    public void inviteAdmin(com.swipelab.dto.request.InviteAdminRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("User already exists with this email");
+        }
+
+        String invitationToken = UUID.randomUUID().toString();
+
+        User user = new User();
+        user.setUsername(request.getEmail()); // Using email as username for invited admins initially
+        user.setEmail(request.getEmail());
+        user.setRole(request.getRole());
+        user.setEmailVerified(false);
+        user.setStatus(com.swipelab.model.enums.UserStatus.PENDING_INVITE);
+        user.setEmailVerificationToken(invitationToken); 
+        user.setVerificationTokenExpiry(LocalDateTime.now().plusDays(7));
+        user.setProvider(com.swipelab.auth.infrastructure.AuthProvider.LOCAL);
+        user.setActive(true);
+
+        userRepository.save(user);
+
+        emailService.sendInvitationEmail(user.getEmail(), request.getRole().name(), invitationToken);
     }
 
 }

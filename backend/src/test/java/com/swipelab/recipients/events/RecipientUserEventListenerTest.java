@@ -3,6 +3,8 @@ package com.swipelab.recipients.events;
 import com.swipelab.recipients.domain.RecipientUser;
 import com.swipelab.recipients.infrastructure.RecipientUserEventListener;
 import com.swipelab.recipients.infrastructure.RecipientUserRepository;
+import com.swipelab.users.events.UserCreatedEvent;
+import com.swipelab.users.events.UserStatusChangedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

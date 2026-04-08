@@ -79,10 +79,9 @@ class AuthControllerTest {
         request.setPassword("password123");
         request.setDisplayName("Test User");
 
-        AuthResponse authResponse = AuthResponse.builder()
-                .accessToken("access")
-                .refreshToken("refresh")
-                .build();
+        Map<String, Object> authResponse = Map.of(
+            "message", "Registration successful! A verification link has been sent to your email."
+        );
 
         when(authenticationService.register(any(RegisterRequest.class))).thenReturn(authResponse);
 
@@ -90,8 +89,7 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.accessToken").value("access"))
-                .andExpect(jsonPath("$.refreshToken").value("refresh"));
+                .andExpect(jsonPath("$.message").value("Registration successful! A verification link has been sent to your email."));
 
         verify(authenticationService, times(1)).register(any(RegisterRequest.class));
     }

@@ -96,18 +96,11 @@ class AuthenticationServiceTest {
         when(authMapper.toUser(request)).thenReturn(user);
         when(passwordEncoder.encode(anyString())).thenReturn("hashed-password");
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArguments()[0]);
-        when(jwtService.generateAccessToken(any())).thenReturn("access");
-        when(jwtService.generateRefreshToken(any())).thenReturn("refresh");
-        
-        AuthResponse response = AuthResponse.builder()
-                .accessToken("access")
-                .build();
-        when(authMapper.toAuthResponse(anyString(), anyString(), any())).thenReturn(response);
 
-        AuthResponse result = authenticationService.register(request);
+        java.util.Map<String, Object> result = authenticationService.register(request);
 
         assertNotNull(result);
-        assertEquals("access", result.getAccessToken());
+        assertEquals("Registration successful! A verification link has been sent to your email.", result.get("message"));
 
         verify(emailService, times(1)).sendVerificationEmail(eq("test@swipelab.com"), anyString());
         verify(eventPublisher, times(1)).publish(anyString(), any());

@@ -8,6 +8,18 @@ spring:
       maximum-pool-size: 10           # Production connection pool
       minimum-idle: 5
   
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${SMTP_USERNAME}        # Must be set in environment
+    password: ${SMTP_PASSWORD}        # Must be set in environment
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
   jpa:
     hibernate:
       ddl-auto: validate
