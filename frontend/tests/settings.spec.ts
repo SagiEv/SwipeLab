@@ -2,118 +2,106 @@ import { test, expect } from '@playwright/test';
 
 const BASE_URL = 'http://localhost:8081';
 
-// Helper to login as user
+const USER_USER  = 'user_mock';
+const ADMIN_USER = 'admin_mock';
+const PASSWORD   = 'password';
+
 async function loginAsUser(page: any) {
     await page.goto(BASE_URL);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
     await expect(page.locator('text=Welcome to SwipeLab')).toBeVisible({ timeout: 15000 });
 
-    await page.locator('input[placeholder="Username"]').fill('john_doe');
-    await page.locator('input[placeholder="Password"]').fill('1234');
+    await page.locator('input[placeholder="Username"]').fill(USER_USER);
+    await page.locator('input[placeholder="Password"]').fill(PASSWORD);
     await page.locator('text=Login').first().click();
 
     await expect(page.locator('text=Welcome to SwipeLab')).not.toBeVisible({ timeout: 15000 });
+    await page.waitForTimeout(1000);
 }
 
-// Helper to login as admin
 async function loginAsAdmin(page: any) {
     await page.goto(BASE_URL);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
     await expect(page.locator('text=Welcome to SwipeLab')).toBeVisible({ timeout: 15000 });
 
-    await page.locator('input[placeholder="Username"]').fill('admin_user');
-    await page.locator('input[placeholder="Password"]').fill('1234');
+    await page.locator('input[placeholder="Username"]').fill(ADMIN_USER);
+    await page.locator('input[placeholder="Password"]').fill(PASSWORD);
     await page.locator('text=Login').first().click();
 
-    await expect(page.locator('text=Tasks')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('text=Tasks').first()).toBeVisible({ timeout: 15000 });
 }
 
+// ── User Settings ──────────────────────────────────────────────────────────────
 test.describe('Settings Screen - User', () => {
     test.beforeEach(async ({ page }) => {
         await loginAsUser(page);
     });
 
-    test('can navigate to settings', async ({ page }) => {
+    test('can navigate to Settings via bottom tab', async ({ page }) => {
+        await page.locator('text=Settings').first().click();
         await page.waitForTimeout(2000);
 
-        // Look for settings icon or tab
-        const settingsTab = page.locator('text=Settings');
-        const hasSettings = await settingsTab.isVisible({ timeout: 3000 }).catch(() => false);
-
-        if (hasSettings) {
-            await settingsTab.click();
-            await page.waitForTimeout(2000);
-        }
-
-        expect(true).toBe(true);
+        // Settings screen header shows "Settings"
+        await expect(page.locator('text=Settings').first()).toBeVisible();
     });
 
-    test('settings page displays correctly', async ({ page }) => {
+    test('settings page shows Profile, Notifications, Dark Mode options', async ({ page }) => {
+        await page.locator('text=Settings').first().click();
         await page.waitForTimeout(2000);
 
-        // Navigate to settings
-        const settingsTab = page.locator('text=Settings');
-        if (await settingsTab.isVisible({ timeout: 2000 }).catch(() => false)) {
-            await settingsTab.click();
-            await page.waitForTimeout(2000);
-        }
-
-        // Page should be visible
-        await expect(page.locator('body')).toBeVisible();
-        expect(true).toBe(true);
+        await expect(page.locator('text=Profile')).toBeVisible();
+        await expect(page.locator('text=Notifications')).toBeVisible();
+        await expect(page.locator('text=Dark Mode')).toBeVisible();
     });
 
-    test('settings are interactive', async ({ page }) => {
+    test('Log Out button exists on settings page', async ({ page }) => {
+        await page.locator('text=Settings').first().click();
         await page.waitForTimeout(2000);
 
-        // Navigate to settings
-        const settingsTab = page.locator('text=Settings');
-        if (await settingsTab.isVisible({ timeout: 2000 }).catch(() => false)) {
-            await settingsTab.click();
-            await page.waitForTimeout(2000);
-        }
-
-        // Page should be interactive
-        expect(true).toBe(true);
+        // The logout button text in SettingsScreen is "Log Out" (two words)
+        await expect(page.locator('text=Log Out')).toBeVisible({ timeout: 5000 });
     });
 
-    test('logout functionality exists', async ({ page }) => {
+    test('clicking Log Out returns to login screen', async ({ page }) => {
+        await page.locator('text=Settings').first().click();
         await page.waitForTimeout(2000);
 
-        // Navigate to settings
-        const settingsTab = page.locator('text=Settings');
-        if (await settingsTab.isVisible({ timeout: 2000 }).catch(() => false)) {
-            await settingsTab.click();
-            await page.waitForTimeout(2000);
-        }
+        await page.locator('text=Log Out').click();
+        await page.waitForTimeout(2000);
 
-        // Look for logout button
-        const logoutButton = page.locator('text=Logout');
-        const hasLogout = await logoutButton.isVisible({ timeout: 2000 }).catch(() => false);
+        // Should be back on the login screen
+        await expect(page.locator('text=Welcome to SwipeLab')).toBeVisible({ timeout: 10000 });
+    });
 
-        expect(true).toBe(true);
+    test('user top bar Logout also works', async ({ page }) => {
+        // UserTopBar has an inline "Logout" button (different from settings "Log Out")
+        await expect(page.locator('text=Logout').first()).toBeVisible({ timeout: 5000 });
+        await page.locator('text=Logout').first().click();
+        await page.waitForTimeout(2000);
+
+        await expect(page.locator('text=Welcome to SwipeLab')).toBeVisible({ timeout: 10000 });
     });
 });
 
+// ── Admin Settings ─────────────────────────────────────────────────────────────
 test.describe('Settings Screen - Admin', () => {
     test.beforeEach(async ({ page }) => {
         await loginAsAdmin(page);
     });
 
-    test('admin can access settings', async ({ page }) => {
+    test('admin can navigate to Settings via bottom tab', async ({ page }) => {
+        await page.locator('text=Settings').first().click();
         await page.waitForTimeout(2000);
 
-        // Look for settings option
-        const settingsTab = page.locator('text=Settings');
-        const hasSettings = await settingsTab.isVisible({ timeout: 3000 }).catch(() => false);
+        await expect(page.locator('text=Settings').first()).toBeVisible();
+    });
 
-        if (hasSettings) {
-            await settingsTab.click();
-            await page.waitForTimeout(2000);
-        }
+    test('admin settings page shows Log Out button', async ({ page }) => {
+        await page.locator('text=Settings').first().click();
+        await page.waitForTimeout(2000);
 
-        expect(true).toBe(true);
+        await expect(page.locator('text=Log Out')).toBeVisible({ timeout: 5000 });
     });
 });
