@@ -2,11 +2,11 @@ import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { API_ENDPOINTS } from '../../api/apiEndpoints';
 import { apiFetch } from "../../api/apiFetch";
 import { preloadAfterLogin } from "../../api/queries";
 import RegisterForm from "../../components/RegisterForm";
 import { useAuthStore } from "../../stores/authStore";
-import { API_ENDPOINTS } from '../../api/apiEndpoints';
 
 
 
@@ -30,7 +30,7 @@ export default function LoginScreen() {
       const { authentication } = response;
       const token = "mock-jwt-token";
       const role = "ADMIN";
-      
+
       // Needs async wrapper
       (async () => {
         setLoading(true);
@@ -102,17 +102,25 @@ export default function LoginScreen() {
 
       const stardbiData = await stardbiRes.json();
 
-      // 2. Map through backend
+      // 2. Map through backend – send the full Stardbi response so the backend
+      //    can validate the token AND auto-provision the user if first login.
       const backendRes = await apiFetch("/api/v1/auth/external/stardbi/loginExternal", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          accessToken: stardbiData.access,
+          access: stardbiData.access,
+          refresh: stardbiData.refresh,
+          lifetime: stardbiData.lifetime,
+          id: stardbiData.id,
           username: stardbiData.username || username,
+          first_name: stardbiData.first_name,
+          last_name: stardbiData.last_name,
+          email: stardbiData.email,
         }),
       });
+
 
       if (!backendRes.ok) {
         setError("Backend failed to validate Researcher credentials");

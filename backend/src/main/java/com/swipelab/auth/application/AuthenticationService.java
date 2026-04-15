@@ -183,12 +183,10 @@ public class AuthenticationService {
             throw new UnauthorizedException("Wrong password");
         }
 
-        // Generate tokens
+        // Generate tokens — set lastLogin first so generateRefreshToken saves both in one UPDATE
         String accessToken = jwtService.generateAccessToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
-
         user.setLastLogin(LocalDateTime.now());
-        userRepository.save(user);
+        String refreshToken = jwtService.generateRefreshToken(user); // saves user with refreshTokenHash + lastLogin
 
         return authMapper.toAuthResponse(accessToken, refreshToken, user);
     }
@@ -205,14 +203,14 @@ public class AuthenticationService {
             throw new UnauthorizedException("Invalid refresh token");
         }
 
+        // Username is already validated inside isRefreshToken — no extra SELECT needed.
         String username = jwtService.extractUsername(refreshToken);
 
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UnauthorizedException("User not found"));
-
-        // Invalidate refresh token
-        user.setRefreshTokenHash(null);
-        userRepository.save(user);
+        // Single UPDATE — skips the redundant SELECT that caused the double-query in logs.
+        int updated = userRepository.revokeRefreshToken(username);
+        if (updated == 0) {
+            log.warn("logout: no refresh token found to revoke for user '{}'", username);
+        }
     }
 
     /**
