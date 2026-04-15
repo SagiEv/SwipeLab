@@ -21,6 +21,25 @@ public class StardbiClient {
     @Value("${stardbi.api.url:https://stardbi.cs.bgu.ac.il}")
     private String baseUrl;
 
+    @Value("${stardbi.service-account.username:swipelab_server}")
+    private String serviceAccountUsername;
+
+    @Value("${stardbi.service-account.password:default_password}")
+    private String serviceAccountPassword;
+
+    private String serviceAccountToken;
+    private java.time.Instant tokenExpiration;
+
+    private synchronized String getServiceAccountToken() {
+        if (serviceAccountToken == null || java.time.Instant.now().isAfter(tokenExpiration)) {
+            StardbiAuthResponseDto dto = login(new StardbiAuthRequestDto(serviceAccountUsername, serviceAccountPassword));
+            this.serviceAccountToken = dto.getAccess();
+            long lifetimeSeconds = dto.getLifetime() != null ? dto.getLifetime().longValue() : 3600;
+            this.tokenExpiration = java.time.Instant.now().plusSeconds(lifetimeSeconds - 60);
+        }
+        return serviceAccountToken;
+    }
+
     private HttpHeaders createAuthHeaders(String accessToken) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(accessToken);
@@ -67,7 +86,7 @@ public class StardbiClient {
     // ======================================
 
     public List<ExternalExperimentDto> getExperiments(String accessToken) {
-        String url = baseUrl + "/swipelab/experiments/";
+        String url = baseUrl + "/swipe_lab/experiments/";
         HttpEntity<Void> entity = new HttpEntity<>(createAuthHeaders(accessToken));
         
         ResponseEntity<List<ExternalExperimentDto>> response = restTemplate.exchange(
@@ -79,17 +98,17 @@ public class StardbiClient {
     // IMAGES (BOUNDING BOXES)
     // ======================================
 
-    public List<Long> getUnclassifiedImageIds(Long experimentId, String accessToken) {
-        String url = baseUrl + "/swipelab/bounding_boxes/?experiment=" + experimentId;
+    public List<ExternalCropDto> getUnclassifiedImageIds(Long experimentId, String accessToken) {
+        String url = baseUrl + "/swipe_lab/crops/?experiment=" + experimentId;
         HttpEntity<Void> entity = new HttpEntity<>(createAuthHeaders(accessToken));
         
-        ResponseEntity<List<Long>> response = restTemplate.exchange(
-                url, HttpMethod.GET, entity, new ParameterizedTypeReference<List<Long>>() {});
+        ResponseEntity<List<ExternalCropDto>> response = restTemplate.exchange(
+                url, HttpMethod.GET, entity, new ParameterizedTypeReference<List<ExternalCropDto>>() {});
         return response.getBody();
     }
 
-    public byte[] getImageBuffer(Long imageId, String accessToken) {
-        String url = baseUrl + "/swipelab/bounding_boxes/" + imageId + "/";
+    public byte[] getImageBuffer(Long boxId, String accessToken) {
+        String url = baseUrl + "/swipe_lab/crops/" + boxId + "/image/";
         HttpEntity<Void> entity = new HttpEntity<>(createAuthHeaders(accessToken));
         
         ResponseEntity<byte[]> response = restTemplate.exchange(
@@ -101,9 +120,9 @@ public class StardbiClient {
     // TAXONOMY
     // ======================================
 
-    public List<ExternalTaxonomyDto> getTaxonomy(String accessToken) {
-        String url = baseUrl + "/swipelab/taxonomy/";
-        HttpEntity<Void> entity = new HttpEntity<>(createAuthHeaders(accessToken));
+    public List<ExternalTaxonomyDto> getTaxonomy() {
+        String url = baseUrl + "/swipe_lab/taxonomy/";
+        HttpEntity<Void> entity = new HttpEntity<>(createAuthHeaders(getServiceAccountToken()));
         
         ResponseEntity<List<ExternalTaxonomyDto>> response = restTemplate.exchange(
                 url, HttpMethod.GET, entity, new ParameterizedTypeReference<List<ExternalTaxonomyDto>>() {});
@@ -111,12 +130,12 @@ public class StardbiClient {
     }
 
     // ======================================
-    // CLASSIFICATION
+    // CLASSIFICATION (LABELS)
     // ======================================
 
-    public void submitClassifications(List<ExternalClassificationDto> classifications, String accessToken) {
-        String url = baseUrl + "/swipelab/classification/";
-        HttpEntity<List<ExternalClassificationDto>> entity = new HttpEntity<>(classifications, createAuthHeaders(accessToken));
+    public void postLabel(ExternalLabelDto label) {
+        String url = baseUrl + "/swipe_lab/labels/";
+        HttpEntity<ExternalLabelDto> entity = new HttpEntity<>(label, createAuthHeaders(getServiceAccountToken()));
         
         restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
     }

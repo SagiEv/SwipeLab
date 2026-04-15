@@ -58,7 +58,7 @@ public class MockStardbiController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/swipelab/experiments/")
+    @GetMapping("/swipe_lab/experiments/")
     public ResponseEntity<Object> getExperiments() {
         log.info("Mock Stardbi get experiments");
         return ResponseEntity.ok(List.of(
@@ -79,15 +79,21 @@ public class MockStardbiController {
         ));
     }
 
-    @GetMapping("/swipelab/bounding_boxes/")
-    public ResponseEntity<Object> getBoundingBoxes(@RequestParam("experiment") Long experimentId) {
-        log.info("Mock Stardbi get bounding boxes for experiment {}", experimentId);
-        return ResponseEntity.ok(List.of(101L, 102L, 103L, 104L, 105L));
+    @GetMapping("/swipe_lab/crops/")
+    public ResponseEntity<Object> getCrops(@RequestParam("experiment") Long experimentId) {
+        log.info("Mock Stardbi get crops for experiment {}", experimentId);
+        return ResponseEntity.ok(List.of(
+                Map.of("box_id", 101L, "image_id", 201L, "species_id", 301L),
+                Map.of("box_id", 102L, "image_id", 201L, "species_id", 301L),
+                Map.of("box_id", 103L, "image_id", 202L, "species_id", 302L),
+                Map.of("box_id", 104L, "image_id", 202L, "species_id", 302L),
+                Map.of("box_id", 105L, "image_id", 203L, "species_id", 303L)
+        ));
     }
 
-    @GetMapping("/swipelab/bounding_boxes/{id}/")
-    public ResponseEntity<Resource> getBoundingBoxImage(@PathVariable("id") Long id) {
-        log.info("Mock Stardbi get bounding box image {}", id);
+    @GetMapping("/swipe_lab/crops/{id}/image/")
+    public ResponseEntity<Resource> getCropImage(@PathVariable("id") Long id) {
+        log.info("Mock Stardbi get crop image {}", id);
         try {
             Path imagePath = Paths.get("src/main/resources/mock-images/" + id + ".png");
             MediaType mediaType = MediaType.IMAGE_PNG;
@@ -110,7 +116,7 @@ public class MockStardbiController {
         return ResponseEntity.notFound().build();
     }
 
-    @GetMapping("/swipelab/taxonomy/")
+    @GetMapping("/swipe_lab/taxonomy/")
     public ResponseEntity<Object> getTaxonomy() {
         log.info("Mock Stardbi get taxonomy");
         return ResponseEntity.ok(List.of(
@@ -134,9 +140,9 @@ public class MockStardbiController {
         ));
     }
 
-    @PostMapping("/swipelab/classification/")
-    public ResponseEntity<Object> submitClassifications(@RequestBody List<Map<String, Object>> classifications) {
-        log.info("Mock Stardbi submit classifications: {}", classifications.size());
-        return ResponseEntity.ok(classifications);
+    @PostMapping("/swipe_lab/labels/")
+    public ResponseEntity<Object> postLabel(@RequestBody Map<String, Object> label) {
+        log.info("Mock Stardbi post label: {}", label);
+        return ResponseEntity.ok(Map.of("label_id", 1L));
     }
 }
