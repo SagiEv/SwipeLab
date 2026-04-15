@@ -7,7 +7,7 @@ import { Colors } from '../../../constants/theme';
 import { apiFetch } from "../../api/apiFetch";
 import { AdminStackParamList } from "../../navigation/adminStack.types";
 import { useThemeStore } from '../../stores/themeStore';
-import { useTaskDetails } from "../../api/queries";
+import { useTaskDetails, useExperiments } from "../../api/queries";
 
 
 type Props = NativeStackScreenProps<AdminStackParamList, "TaskDetails">;
@@ -35,6 +35,7 @@ export default function TaskDetailsScreen({ route, navigation }: Props) {
   const themeColors = Colors[theme as keyof typeof Colors];
 
   const { data: task, isLoading: loading, error } = useTaskDetails(taskId);
+  const { data: experimentsList } = useExperiments();
 
   if (loading) return <Text style={styles.loading}>Loading...</Text>;
   if (error) return <Text style={styles.error}>Error: {(error as Error).message || "Failed to fetch task"}</Text>;
@@ -97,6 +98,19 @@ export default function TaskDetailsScreen({ route, navigation }: Props) {
           <Text style={[styles.label, { color: themeColors.text }]}>Consensus threshold:</Text>
           <Text style={[styles.value, { color: themeColors.textSecondary }]}>{task.consensusThreshold}%</Text>
         </View>
+
+        {task.experiments?.length > 0 && (
+          <View style={[styles.infoRow, { marginTop: 8 }]}>
+            <Text style={[styles.label, { color: themeColors.text }]}>Experiments:</Text>
+            <View style={{ flex: 1, alignItems: 'flex-end' }}>
+              {task.experiments.map((expId: number) => {
+                const exp = experimentsList?.find((e: any) => e.id === expId);
+                const desc = exp ? exp.name : `ID: ${expId}`;
+                return <Text key={expId} style={[styles.value, { color: themeColors.textSecondary, marginBottom: 2 }]}>{desc}</Text>;
+              })}
+            </View>
+          </View>
+        )}
 
       </View>
 

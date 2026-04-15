@@ -17,6 +17,7 @@ export const API_ENDPOINTS = {
         DASHBOARD: '/api/v1/tasks/dashboard',
         DASHBOARD_DETAILS: (taskId: string | number) => `/api/v1/tasks/dashboard/${taskId}`,
         DASHBOARD_TASK: (taskId: string | number) => `/api/v1/tasks/dashboard/${taskId}`,
+        EXPERIMENTS: '/api/v1/tasks/dashboard/experiments',
         PLAY_TASK: (taskId: string | number) => `/api/v1/classifications/tasks/${taskId}/play`,
         UPDATE_TASK: (taskId: string | number) => `/api/v1/tasks/${taskId}`,
     },

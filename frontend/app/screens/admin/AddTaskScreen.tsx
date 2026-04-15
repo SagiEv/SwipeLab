@@ -14,8 +14,9 @@ import StepDescription from "../../components/admin/addTask/StepDescription";
 import StepName from "../../components/admin/addTask/StepName";
 import StepRecipients from "../../components/admin/addTask/StepRecipients";
 import StepSpecies from "../../components/admin/addTask/StepSpecies";
+import StepExperiments from "../../components/admin/addTask/StepExperiments";
 
-const STEPS = ["Name", "Description", "Species", "Recipients", "Confirm"];
+const STEPS = ["Name", "Description", "Experiments", "Species", "Recipients", "Confirm"];
 
 export default function AddTaskScreen({ navigation }: any) {
   const { theme } = useThemeStore();
@@ -26,12 +27,14 @@ export default function AddTaskScreen({ navigation }: any) {
   const [formData, setFormData] = useState<AddTaskFormData>({
     name: "",
     description: "",
+    selectedExperiments: [],
     speciesList: [],
     isPublic: false,
     selectedRecipients: [],
   });
 
   const [availableOptions, setAvailableOptions] = useState<{ id: string; label: string }[]>([]);
+  const [availableExperiments, setAvailableExperiments] = useState<{ id: string; label: string }[]>([]);
   const [optionsLoading, setOptionsLoading] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -39,9 +42,10 @@ export default function AddTaskScreen({ navigation }: any) {
     const fetchOptions = async () => {
       setOptionsLoading(true);
       try {
-        const [groupsRes, usersRes] = await Promise.all([
+        const [groupsRes, usersRes, experimentsRes] = await Promise.all([
           apiFetch(API_ENDPOINTS.ADMIN.RECIPIENTS),
-          apiFetch(API_ENDPOINTS.USERS.GET_ALL)
+          apiFetch(API_ENDPOINTS.USERS.GET_ALL),
+          apiFetch(API_ENDPOINTS.TASKS.EXPERIMENTS)
         ]);
 
         let loaded: { id: string, label: string }[] = [];
@@ -52,6 +56,10 @@ export default function AddTaskScreen({ navigation }: any) {
         if (usersRes.ok) {
           const users = await usersRes.json();
           users.forEach((u: any) => loaded.push({ id: `U-${u.username}`, label: `(User) ${u.username}` }));
+        }
+        if (experimentsRes.ok) {
+          const exps = await experimentsRes.json();
+          setAvailableExperiments(exps.map((e: any) => ({ id: String(e.id), label: e.name || `Experiment ${e.id}` })));
         }
         setAvailableOptions(loaded);
       } catch (error) {
@@ -88,6 +96,7 @@ export default function AddTaskScreen({ navigation }: any) {
     const payload = {
       name: formData.name,
       description: formData.description,
+      experiments: formData.selectedExperiments.map(Number),
       targetSpecies: formData.speciesList.map((s) => ({ commonName: s.trim() })),
       isPublic: formData.isPublic,
       recipientGroups: formData.selectedRecipients.filter(id => id.startsWith("G-")).map(id => Number(id.replace("G-", ""))),
@@ -125,8 +134,19 @@ export default function AddTaskScreen({ navigation }: any) {
       case 1:
         return <StepDescription formData={formData} onUpdate={updateFormData} onNext={nextStep} onBack={prevStep} />;
       case 2:
-        return <StepSpecies formData={formData} onUpdate={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        return (
+          <StepExperiments
+            formData={formData}
+            onUpdate={updateFormData}
+            onNext={nextStep}
+            onBack={prevStep}
+            availableExperiments={availableExperiments}
+            optionsLoading={optionsLoading}
+          />
+        );
       case 3:
+        return <StepSpecies formData={formData} onUpdate={updateFormData} onNext={nextStep} onBack={prevStep} />;
+      case 4:
         return (
           <StepRecipients
             formData={formData}
@@ -137,7 +157,7 @@ export default function AddTaskScreen({ navigation }: any) {
             optionsLoading={optionsLoading}
           />
         );
-      case 4:
+      case 5:
         return (
           <StepConfirm
             formData={formData}

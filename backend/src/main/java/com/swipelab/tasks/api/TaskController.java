@@ -4,6 +4,8 @@ import com.swipelab.dto.request.CreateTaskRequest;
 import com.swipelab.dto.request.UpdateTaskRequest;
 import com.swipelab.dto.response.TaskPageResponse;
 import com.swipelab.dto.response.TaskResponse;
+import com.swipelab.integration.stardbi.StardbiClient;
+import com.swipelab.integration.stardbi.dto.ExternalExperimentDto;
 import com.swipelab.tasks.application.TaskService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ import java.util.List;
 public class TaskController {
 
     private final TaskService taskService;
+    private final StardbiClient stardbiClient;
 
     // =========================
     // User Endpoints
@@ -61,6 +64,16 @@ public class TaskController {
     // get task details admin view
     public ResponseEntity<TaskResponse> getTaskDetailsAdmin(@PathVariable Long taskId) {
         return ResponseEntity.ok(taskService.getTaskDetailsAdmin(taskId));
+    }
+
+    @GetMapping("/dashboard/experiments")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<ExternalExperimentDto>> getExperiments(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        String token = authHeader.substring(7);
+        return ResponseEntity.ok(stardbiClient.getExperiments(token));
     }
 
     @PostMapping("/create")
