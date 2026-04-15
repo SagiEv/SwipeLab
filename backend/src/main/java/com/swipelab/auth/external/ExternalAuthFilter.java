@@ -74,4 +74,10 @@ public class ExternalAuthFilter extends OncePerRequestFilter {
         // Simple JWT check: contains two dots
         return token.split("\\.").length == 3;
     }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getServletPath();
+        return path != null && (path.startsWith("/auth/") || path.startsWith("/swipe_lab/"));
+    }
 }
