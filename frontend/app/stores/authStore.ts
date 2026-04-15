@@ -69,6 +69,22 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: async () => {
+    // Guard against duplicate logout calls (React Strict Mode / 401 race)
+    const state = useAuthStore.getState();
+    if (!state.token && !state.role) {
+      console.log("[logout] Already logged out, skipping duplicate call.");
+      return;
+    }
+
+    // 1. Get the refresh token before clearing storage
+    let refreshToken = null;
+    if (Platform.OS === 'web') {
+      refreshToken = localStorage.getItem("refreshToken");
+    } else {
+      refreshToken = await SecureStore.getItemAsync("refreshToken");
+    }
+
+    // 2. Clear frontend state immediately to prevent re-entry
     set({ token: null, role: null, authProvider: null });
     if (Platform.OS === 'web') {
       localStorage.removeItem("token");
@@ -81,10 +97,23 @@ export const useAuthStore = create<AuthState>((set) => ({
       await SecureStore.deleteItemAsync("refreshToken");
       await SecureStore.deleteItemAsync("authProvider");
     }
-    apiFetch(API_ENDPOINTS.AUTH.LOGOUT, {
-      method: "POST",
-    });
-    // Clear mode on logout
+
+    // 3. Call the backend to invalidate the refresh token (fire-and-forget)
+    if (refreshToken) {
+      const backendUrl = process.env.EXPO_PUBLIC_API_URL ||
+        (Platform.OS === "web"
+          ? "http://localhost:8080"
+          : "http://192.168.1.133:8080");
+
+      fetch(backendUrl + API_ENDPOINTS.AUTH.LOGOUT, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${refreshToken}`
+        }
+      }).catch(e => console.error("Logout request failed", e));
+    }
+
+    // 4. Clear mode and query cache
     useModeStore.getState().resetMode?.();
     const { queryClient } = require("../queryClient");
     queryClient.clear();
