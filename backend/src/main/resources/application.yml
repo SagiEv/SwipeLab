@@ -103,3 +103,11 @@ app:
   base-url: ${APP_BASE_URL:http://localhost:8080}
   frontend-url: ${APP_FRONTEND_URL:http://localhost:8081}
   auto-verify-emails: ${AUTO_VERIFY_EMAILS:false}
+
+# Stardbi Configuration
+stardbi:
+  api:
+    url: ${STARDBI_API_URL:https://stardbi.cs.bgu.ac.il}
+  service-account:
+    username: ${STARDBI_SERVICE_ACCOUNT_USERNAME:swipelab_server}
+    password: ${STARDBI_SERVICE_ACCOUNT_PASSWORD:default_password}
