@@ -99,7 +99,7 @@ public class StardbiClient {
     // ======================================
 
     public List<ExternalCropDto> getUnclassifiedImageIds(Long experimentId, String accessToken) {
-        String url = baseUrl + "/swipe_lab/crops/?experiment=" + experimentId;
+        String url = baseUrl + "/swipe_lab/crops/download/?experiment=" + experimentId;
         HttpEntity<Void> entity = new HttpEntity<>(createAuthHeaders(accessToken));
         
         ResponseEntity<List<ExternalCropDto>> response = restTemplate.exchange(
@@ -107,9 +107,9 @@ public class StardbiClient {
         return response.getBody();
     }
 
-    public byte[] getImageBuffer(Long boxId, String accessToken) {
+    public byte[] getImageBuffer(Long boxId) {
         String url = baseUrl + "/swipe_lab/crops/" + boxId + "/image/";
-        HttpEntity<Void> entity = new HttpEntity<>(createAuthHeaders(accessToken));
+        HttpEntity<Void> entity = new HttpEntity<>(createAuthHeaders(getServiceAccountToken()));
         
         ResponseEntity<byte[]> response = restTemplate.exchange(
                 url, HttpMethod.GET, entity, byte[].class);

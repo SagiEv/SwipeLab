@@ -44,7 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } else {
-                    logger.warn("INVALID or EXPIRED JWT Token: " + jwt);
+                    logger.debug("INVALID or EXPIRED JWT Token (may be an external stardbi token): " + jwt);
                 }
             } else {
                 logger.debug("No JWT Token found in the request headers");

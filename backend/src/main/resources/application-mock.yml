@@ -34,6 +34,3 @@ logging:
   level:
     com.swipelab: DEBUG
 
-stardbi:
-  api:
-    url: http://localhost:8080
