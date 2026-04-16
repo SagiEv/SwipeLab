@@ -33,7 +33,9 @@ export default function EditTaskScreen({ route, navigation }: Props) {
   const [description, setDescription] = useState("");
   const [targetSpecies, setTargetSpecies] = useState("");
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
+  const [selectedExperiments, setSelectedExperiments] = useState<string[]>([]);
   const [availableOptions, setAvailableOptions] = useState<{ id: string; label: string }[]>([]);
+  const [availableExperiments, setAvailableExperiments] = useState<{ id: string; label: string }[]>([]);
   const [optionsLoading, setOptionsLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
@@ -44,9 +46,10 @@ export default function EditTaskScreen({ route, navigation }: Props) {
     const fetchOptions = async () => {
       setOptionsLoading(true);
       try {
-        const [groupsRes, usersRes] = await Promise.all([
+        const [groupsRes, usersRes, experimentsRes] = await Promise.all([
           apiFetch(API_ENDPOINTS.ADMIN.RECIPIENTS),
-          apiFetch(API_ENDPOINTS.USERS.GET_ALL)
+          apiFetch(API_ENDPOINTS.USERS.GET_ALL),
+          apiFetch(API_ENDPOINTS.TASKS.EXPERIMENTS)
         ]);
 
         let loaded: { id: string, label: string }[] = [];
@@ -57,6 +60,10 @@ export default function EditTaskScreen({ route, navigation }: Props) {
         if (usersRes.ok) {
           const users = await usersRes.json();
           users.forEach((u: any) => loaded.push({ id: `U-${u.username}`, label: `(User) ${u.username}` }));
+        }
+        if (experimentsRes.ok) {
+          const exps = await experimentsRes.json();
+          setAvailableExperiments(exps.map((e: any) => ({ id: String(e.id), label: e.name || `Experiment ${e.id}` })));
         }
         setAvailableOptions(loaded);
       } catch (error) {
@@ -83,6 +90,8 @@ export default function EditTaskScreen({ route, navigation }: Props) {
             .join(", ")
         );
 
+        setSelectedExperiments(data.experiments?.map((id: number) => String(id)) || []);
+
         setIsPublic(data.isPublic || false);
 
         const loadedGroups = data.recipientGroups?.map((id: number) => `G-${id}`) || [];
@@ -104,6 +113,7 @@ export default function EditTaskScreen({ route, navigation }: Props) {
       status: "ACTIVE",
       name,
       description,
+      experiments: selectedExperiments.map(Number),
       targetSpecies: targetSpecies
         .split(",")
         .map((s) => ({
@@ -180,6 +190,19 @@ export default function EditTaskScreen({ route, navigation }: Props) {
           value={targetSpecies}
           onChangeText={setTargetSpecies}
           placeholderTextColor={themeColors.textSecondary}
+        />
+
+        <Text style={[styles.label, { color: themeColors.text }]}>Experiments</Text>
+        <MultiSelect
+          options={availableExperiments}
+          selectedIds={selectedExperiments || []}
+          onToggle={(id) => {
+            setSelectedExperiments((prev) =>
+              (prev || []).includes(id as string) ? prev.filter((eid) => eid !== id) : [...(prev || []), id as string]
+            );
+          }}
+          placeholder="Search experiments..."
+          loading={optionsLoading}
         />
 
         <Text style={[styles.label, { color: themeColors.text }]}>Task Visibility</Text>

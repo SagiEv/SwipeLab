@@ -8,6 +8,7 @@ export const QUERY_KEYS = {
   availableTasks: ['tasks', 'available'],
   dashboardTasks: ['tasks', 'dashboard'],
   taskDetails: (id: string | number) => ['tasks', id],
+  experiments: ['tasks', 'experiments'],
   
   // User Profile
   userProfile: ['user', 'profile'],
@@ -99,6 +100,14 @@ export const useAnalyticsTask = (taskId: string | number) => {
     queryKey: QUERY_KEYS.analyticsTasks(taskId),
     queryFn: () => fetchJson(API_ENDPOINTS.ADMIN.ANALYTICS_TASKS(taskId)),
     staleTime: 2 * 60 * 1000,
+  });
+};
+
+export const useExperiments = () => {
+  return useQuery({
+    queryKey: QUERY_KEYS.experiments,
+    queryFn: () => fetchJson(API_ENDPOINTS.TASKS.EXPERIMENTS),
+    staleTime: 5 * 60 * 1000,
   });
 };
 
