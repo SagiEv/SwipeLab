@@ -106,7 +106,7 @@ public class StardbiClient {
     // ======================================
 
     public List<ExternalCropDto> getUnclassifiedImageIds(Long experimentId) {
-        String url = baseUrl + "/swipe_lab/crops/download/?experiment=" + experimentId;
+        String url = baseUrl + "/swipe_lab/crops/?experiment=" + experimentId;
         // Use the Stardbi service account token instead of the SwipeLab JWT
         HttpEntity<Void> entity = new HttpEntity<>(createAuthHeaders(getServiceAccountToken()));
         

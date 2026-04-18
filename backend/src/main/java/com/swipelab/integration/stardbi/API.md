@@ -15,14 +15,49 @@ Tokens are obtained from `POST /auth/get_token/` with `{"username": ..., "passwo
 
 | Role | Who | Used by |
 |------|-----|---------|
-| **Modifier** | A Django user with `ExperimentParties.modifier = True` for the requested experiment | Crop metadata, crop image |
+| **Any party** | A Django user with any `ExperimentParties` record | Experiment list |
+| **Modifier** | A Django user with `ExperimentParties.modifier = True` for the requested experiment | Crop metadata, crop image, bulk download |
 | **SwipeLab server** | The dedicated `swipe_lab` service account | Post label, taxonomy |
 
 ---
 
 ## Endpoints
 
-### 1. Crop Metadata List
+### 1. Experiment List
+
+```
+GET /swipe_lab/experiments/
+```
+
+Returns all experiments the authenticated user has any party role in (modifier, contributor, identifier, or bounding box modifier). Superusers receive all experiments.
+
+**Auth:** Any authenticated user with at least one `ExperimentParties` record.
+
+**Response `200 OK`**
+
+```json
+[
+  {
+    "id": 24,
+    "name": "a very long name for exp",
+    "start_date": "2023-06-19",
+    "end_date": "2023-06-19",
+    "notes": "b"
+  }
+]
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | integer | Experiment ID — use this in all other endpoints |
+| `name` | string | Display name |
+| `start_date` | date | Experiment start |
+| `end_date` | date | Experiment end |
+| `notes` | string | Free-text notes |
+
+---
+
+### 3. Crop Metadata List
 
 ```
 GET /swipe_lab/crops/?experiment=<id>
@@ -65,7 +100,42 @@ Array of objects, one per bounding box:
 
 ---
 
-### 2. Crop Image
+### 5. Bulk Crop Download
+
+```
+GET /swipe_lab/crops/download/?experiment=<id>
+```
+
+Downloads all bounding box crops for an experiment as a single ZIP file. Each crop is computed on the fly from the full trap image. Files are named `<image_id>_<box_id>.jpeg`. Each source image is opened only once regardless of how many boxes it contains.
+
+**Auth:** Modifier in the requested experiment.
+
+**Query parameters**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `experiment` | integer | Yes | Experiment ID |
+
+**Response `200 OK`**
+
+```
+Content-Type: application/zip
+Content-Disposition: attachment; filename="experiment_<id>_crops.zip"
+```
+
+Binary ZIP body — streamed in 8 KB chunks. Files inside: `<image_id>_<box_id>.jpeg` for every bounding box in the experiment. Boxes whose source image file is missing on disk are silently skipped.
+
+**Errors**
+
+| Status | Condition |
+|--------|-----------|
+| `400` | `experiment` parameter missing |
+| `403` | Authenticated user is not a modifier in this experiment |
+| `404` | Experiment not found |
+
+---
+
+### 4. Crop Image
 
 ```
 GET /swipe_lab/crops/<box_id>/image/
@@ -101,7 +171,7 @@ Binary JPEG body — the cropped region `img[y : y+h, x : x+w]`.
 
 ---
 
-### 3. Post Label
+### 6. Post Label
 
 ```
 POST /swipe_lab/labels/
@@ -119,7 +189,7 @@ Records a SwipeLab user's identification of a bounding box. If the same user has
   "box_id":            39475,
   "image_id":          922,
   "species_id":        1,
-  "swipe_lab_user_id": 42,
+  "swipe_lab_user_id": "user_abc",
   "user_grade":        3
 }
 ```
@@ -129,7 +199,7 @@ Records a SwipeLab user's identification of a bounding box. If the same user has
 | `box_id` | integer | Bounding box being labelled |
 | `image_id` | integer | Expected parent image of the box — validated server-side |
 | `species_id` | integer | Species assigned by the user |
-| `swipe_lab_user_id` | integer | SwipeLab's own user ID (auto-created in `SwipeLabUser` on first appearance) |
+| `swipe_lab_user_id` | string | SwipeLab's own user identifier, max 100 chars (auto-created in `SwipeLabUser` on first appearance) |
 | `user_grade` | integer | Current grade of the user — updated only if it differs from the stored value |
 
 All fields are required.
@@ -158,7 +228,7 @@ All fields are required.
 
 ---
 
-### 4. Taxonomy List
+### 7. Taxonomy List
 
 ```
 GET /swipe_lab/taxonomy/
