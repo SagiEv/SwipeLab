@@ -11,14 +11,13 @@ import SwipeButtons from '../../components/user/SwipeButtons';
 import SwipeCard, { SwipeCardHandle } from '../../components/user/SwipeCard';
 import useResponsive from '../../hooks/useResponsive';
 import { useThemeStore } from '../../stores/themeStore';
+import { useSwipeStore } from '../../stores/swipeStore';
 import { SwipeDirection } from '../../types';
 
 
 export default function SwipeScreen() {
   const [showReference, setShowReference] = useState(false);
-
-  const [dataBatch, setDataBatch] = useState<any[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const { dataBatch, currentIndex, setBatch, nextCard } = useSwipeStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,11 +36,11 @@ export default function SwipeScreen() {
 
   useEffect(() => {
     if (initialBatch && initialBatch.images) {
-      setDataBatch(initialBatch.images);
+      setBatch(initialBatch.images);
     } else if (initialBatch && Array.isArray(initialBatch)) {
-      setDataBatch(initialBatch); // fallback
+      setBatch(initialBatch); // fallback
     }
-  }, [initialBatch]);
+  }, [initialBatch, setBatch]);
 
   const fetchNextBatch = async () => {
     setLoading(true);
@@ -51,8 +50,7 @@ export default function SwipeScreen() {
       if (res.ok) {
         const json = await res.json();
         const newImages = json.images || [];
-        setDataBatch(newImages);
-        setCurrentIndex(0);
+        setBatch(newImages);
         // Cache the new batch 
         queryClient.setQueryData(QUERY_KEYS.swipeBatch(taskId), { images: newImages });
       } else {
@@ -88,7 +86,7 @@ export default function SwipeScreen() {
     }
 
     if (currentIndex + 1 < dataBatch.length) {
-      setCurrentIndex(prev => prev + 1);
+      nextCard();
       setShowReference(false);
     } else {
       fetchNextBatch();
@@ -119,7 +117,7 @@ export default function SwipeScreen() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [loading, dataBatch, currentIndex]);
 
-  if ((loading && dataBatch.length === 0) || isQueryLoading) {
+  if (loading || isQueryLoading) {
     return (
       <View style={[styles.container, styles.centerElements, { backgroundColor: themeColors.background }]}>
         <ActivityIndicator size="large" color={themeColors.tint} />

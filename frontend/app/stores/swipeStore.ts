@@ -1,66 +1,33 @@
 import { create } from 'zustand';
-import { ImageService } from '../services/imageService';
-import { Question, SwipeDirection, SwipeResult } from '../types';
 
 interface SwipeStore {
-  questions: Question[];
+  dataBatch: any[];
   currentIndex: number;
-  results: SwipeResult[];
-  isLoading: boolean;
-  
-  fetchQuestions: () => Promise<void>;
-  submitSwipe: (direction: SwipeDirection) => Promise<void>;
-  getCurrentQuestion: () => Question | null;
-  reset: () => void;
+
+  setBatch: (items: any[]) => void;
+  nextCard: () => void;
+  clearBatch: () => void;
+  getCurrentImage: () => any | null;
 }
 
 export const useSwipeStore = create<SwipeStore>((set, get) => ({
-  questions: [],
+  dataBatch: [],
   currentIndex: 0,
-  results: [],
-  isLoading: false,
 
-  fetchQuestions: async () => {
-    set({ isLoading: true });
-    try {
-      const questions = await ImageService.fetchImages();
-      set({ questions, currentIndex: 0 });
-    } catch (error) {
-      console.error('Failed to fetch questions:', error);
-    } finally {
-      set({ isLoading: false });
-    }
+  setBatch: (items: any[]) => {
+    set({ dataBatch: items, currentIndex: 0 });
   },
 
-  submitSwipe: async (direction: SwipeDirection) => {
-    const { questions, currentIndex } = get();
-    const currentQuestion = questions[currentIndex];
-
-    if (!currentQuestion) return;
-
-    const result: SwipeResult = {
-      questionId: currentQuestion.id,
-      answer: direction,
-      timestamp: new Date(),
-    };
-
-    try {
-      await ImageService.submitAnswer(result);
-      set((state) => ({
-        results: [...state.results, result],
-        currentIndex: state.currentIndex + 1,
-      }));
-    } catch (error) {
-      console.error('Failed to submit answer:', error);
-    }
+  nextCard: () => {
+    set((state) => ({ currentIndex: state.currentIndex + 1 }));
   },
 
-  getCurrentQuestion: () => {
-    const { questions, currentIndex } = get();
-    return questions[currentIndex] || null;
+  clearBatch: () => {
+    set({ dataBatch: [], currentIndex: 0 });
   },
 
-  reset: () => {
-    set({ questions: [], currentIndex: 0, results: [] });
+  getCurrentImage: () => {
+    const { dataBatch, currentIndex } = get();
+    return dataBatch[currentIndex] || null;
   },
 }));
