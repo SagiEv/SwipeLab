@@ -31,6 +31,12 @@ public class StardbiClient {
     private java.time.Instant tokenExpiration;
 
     private synchronized String getServiceAccountToken() {
+        if (serviceAccountUsername == null || serviceAccountUsername.isEmpty() || 
+            serviceAccountPassword == null || serviceAccountPassword.isEmpty()) {
+            log.error("Stardbi service account credentials are not configured properly! Check properties.");
+            throw new IllegalStateException("Missing Stardbi service account credentials. Cannot authenticate.");
+        }
+
         if (serviceAccountToken == null || java.time.Instant.now().isAfter(tokenExpiration)) {
             StardbiAuthResponseDto dto = login(new StardbiAuthRequestDto(serviceAccountUsername, serviceAccountPassword));
             this.serviceAccountToken = dto.getAccess();

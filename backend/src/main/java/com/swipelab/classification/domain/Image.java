@@ -21,8 +21,8 @@ public class Image {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Use src_path as requested, mapped to image_url for consistency or rename
-    @Column(name = "src_path", nullable = false)
+    // Use src_path mapped as TEXT to store full Base64 strings safely.
+    @Column(name = "src_path", nullable = false, columnDefinition = "TEXT")
     private String srcPath;
 
     @Column(name = "thumbnail_url")
@@ -32,6 +32,9 @@ public class Image {
 
     @Column(name = "parent_image_id")
     private Long parentImageId;
+
+    @Column(name = "external_box_id", unique = true)
+    private Long externalBoxId;
 
     @Column(name = "experiment_id")
     private Long experimentId;

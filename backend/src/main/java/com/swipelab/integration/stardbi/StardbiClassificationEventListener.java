@@ -83,7 +83,7 @@ public class StardbiClassificationEventListener {
             ExternalLabelDto label = ExternalLabelDto.builder()
                     .swipeLabUserId(event.getUsername()) // Mapping natively as a string
                     .userGrade(event.isCorrect() ? 3 : 1)
-                    .boxId(image.getId()) // The specific crop bounding box ID
+                    .boxId(image.getExternalBoxId()) // Use external box ID instead of local DB sequence ID
                     .imageId(image.getParentImageId()) // The original full-resolution parent image ID
                     .speciesId(resolveSpeciesId(event.getSpecies())) 
                     .build();
