@@ -30,6 +30,9 @@ public class Image {
 
     private String caption;
 
+    @Column(name = "parent_image_id")
+    private Long parentImageId;
+
     @Column(name = "experiment_id")
     private Long experimentId;
 

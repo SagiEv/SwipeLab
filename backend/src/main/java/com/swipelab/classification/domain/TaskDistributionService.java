@@ -3,11 +3,13 @@ package com.swipelab.classification.domain;
 import com.swipelab.classification.infrastructure.ClassificationRepository;
 import com.swipelab.classification.infrastructure.ImageRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -19,10 +21,6 @@ public class TaskDistributionService {
     // Gold image insertion ratio: 1 gold image per 15 regular images
     private static final int GOLD_IMAGE_FREQUENCY = 15;
 
-    // Session-based tracking for gold image insertion
-    // In production, this should be stored in Redis or database per user session
-    private final Map<String, Integer> userClassificationCount = new HashMap<>();
-
     /**
      * Get the next image for a user to classify.
      * Implements:
@@ -32,97 +30,62 @@ public class TaskDistributionService {
      */
     @Transactional(readOnly = true)
     public Optional<Image> getNextImageForUser(String username, Long taskId) {
-        // Get user's classification count for this session
-        String sessionKey = username + "_" + taskId;
-        int count = userClassificationCount.getOrDefault(sessionKey, 0);
+        // Get user's classification count using database to avoid stateful memory leaks
+        Long count = classificationRepository.countByUsernameAndTaskId(username, taskId);
+        if (count == null) {
+            count = 0L;
+        }
 
         // Determine if this should be a gold image (every 15th image)
         boolean shouldBeGold = (count > 0) && (count % GOLD_IMAGE_FREQUENCY == 0);
 
-        Optional<Image> nextImage;
         if (shouldBeGold) {
-            nextImage = getNextGoldImage(username, taskId);
-            // If no gold images available, fall back to regular images
-            if (nextImage.isEmpty()) {
-                nextImage = getNextRegularImage(username, taskId);
+            Optional<Image> nextImage = getNextGoldImage(username, taskId);
+            // If gold images are available, return it. Otherwise fall through to regular images.
+            if (nextImage.isPresent()) {
+                return nextImage;
             }
-        } else {
-            nextImage = getNextRegularImage(username, taskId);
         }
-
-        // Increment count for next call
-        if (nextImage.isPresent()) {
-            userClassificationCount.put(sessionKey, count + 1);
-        }
-
-        return nextImage;
+        
+        return getNextRegularImage(username, taskId);
     }
 
     /**
      * Get next gold standard image that user hasn't classified yet
      */
     private Optional<Image> getNextGoldImage(String username, Long taskId) {
-        List<Image> goldImages = imageRepository.findGoldStandardImagesByTaskId(taskId);
-
-        // Filter out images already classified by this user
-        List<Image> unclassifiedGold = goldImages.stream()
-                .filter(image -> !classificationRepository.existsByUsernameAndImageId(username, image.getId()))
-                .collect(Collectors.toList());
+        List<Image> unclassifiedGold = imageRepository.findUnclassifiedGoldImages(username, taskId);
 
         if (unclassifiedGold.isEmpty()) {
             return Optional.empty();
         }
 
-        // Randomly select from available gold images
+        // Randomly select from available unclassified gold images
         Collections.shuffle(unclassifiedGold);
         return Optional.of(unclassifiedGold.get(0));
     }
 
     /**
      * Get next regular image with intelligent assignment.
-     * Prioritizes images with fewer classifications.
+     * Prioritizes images with fewer classifications, resolved optimally via database query.
      */
     private Optional<Image> getNextRegularImage(String username, Long taskId) {
-        List<Image> regularImages = imageRepository.findRegularImagesByTaskId(taskId);
-
-        // Filter out images already classified by this user
-        List<Image> unclassifiedRegular = regularImages.stream()
-                .filter(image -> !classificationRepository.existsByUsernameAndImageId(username, image.getId()))
-                .collect(Collectors.toList());
+        List<Image> unclassifiedRegular = imageRepository.findNextRegularImageCandidates(
+                username, taskId, PageRequest.of(0, 1));
 
         if (unclassifiedRegular.isEmpty()) {
             return Optional.empty();
         }
 
-        // Count classifications for each image
-        Map<Long, Long> classificationCounts = new HashMap<>();
-        for (Image image : unclassifiedRegular) {
-            long count = classificationRepository.countByImage_Id(image.getId());
-            classificationCounts.put(image.getId(), count);
-        }
-
-        // Sort by: 1) Priority (descending), 2) Classification count (ascending)
-        unclassifiedRegular.sort((img1, img2) -> {
-            // First compare by priority (higher priority first)
-            int priorityCompare = Integer.compare(img2.getPriority(), img1.getPriority());
-            if (priorityCompare != 0) {
-                return priorityCompare;
-            }
-            // Then by classification count (fewer classifications first)
-            return Long.compare(
-                    classificationCounts.getOrDefault(img1.getId(), 0L),
-                    classificationCounts.getOrDefault(img2.getId(), 0L));
-        });
-
         return Optional.of(unclassifiedRegular.get(0));
     }
 
     /**
-     * Reset classification count for a user session (useful for testing or session
-     * management)
+     * Reset classification count for a user session
+     * (No-op now since we compute classifications directly from the database)
      */
     public void resetUserSession(String username, Long taskId) {
-        String sessionKey = username + "_" + taskId;
-        userClassificationCount.remove(sessionKey);
+        // No-op because state is no longer kept in memory map
+        // Method kept to maintain API contract
     }
 }

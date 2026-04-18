@@ -140,8 +140,24 @@ public class StardbiClient {
 
     public void postLabel(ExternalLabelDto label) {
         String url = baseUrl + "/swipe_lab/labels/";
-        HttpEntity<ExternalLabelDto> entity = new HttpEntity<>(label, createAuthHeaders(getServiceAccountToken()));
         
-        restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
+        try {
+            HttpEntity<ExternalLabelDto> entity = new HttpEntity<>(label, createAuthHeaders(getServiceAccountToken()));
+            restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            if (e.getStatusCode() == HttpStatus.UNAUTHORIZED || e.getStatusCode() == HttpStatus.FORBIDDEN) {
+                log.warn("Stardbi API returned {} for postLabel, forcing token refresh and retrying...", e.getStatusCode());
+                // Force a token refresh by resetting the token so getServiceAccountToken() will fetch a new one immediately
+                synchronized(this) {
+                    this.serviceAccountToken = null;
+                }
+                
+                // Retry the request once with the new token
+                HttpEntity<ExternalLabelDto> retryEntity = new HttpEntity<>(label, createAuthHeaders(getServiceAccountToken()));
+                restTemplate.exchange(url, HttpMethod.POST, retryEntity, Void.class);
+            } else {
+                throw e;
+            }
+        }
     }
 }
