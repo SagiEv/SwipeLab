@@ -11,6 +11,7 @@ import com.swipelab.tasks.domain.Task;
 import com.swipelab.tasks.domain.TaskMapper;
 import com.swipelab.tasks.domain.TaskStatus;
 import com.swipelab.tasks.infrastructure.TaskRepository;
+import com.swipelab.integration.stardbi.StardbiSyncService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +31,7 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final RecipientGroupRepository recipientGroupRepository;
     private final TaskMapper taskMapper;
+    private final StardbiSyncService stardbiSyncService;
 
     // =========================
     // User Operations
@@ -124,7 +127,12 @@ public class TaskService {
         // TODO: Validate author (admin)
         Task task = taskMapper.toEntity(request);
         task.setStatus(TaskStatus.ACTIVE);
-        return mapToResponse(taskRepository.save(task));
+        task = taskRepository.save(task);
+        
+        // Trigger a background sync in case the new task includes external experiments
+        CompletableFuture.runAsync(stardbiSyncService::syncExperiments);
+        
+        return mapToResponse(task);
     }
 
     @Transactional
@@ -157,6 +165,10 @@ public class TaskService {
         // We focus on fields here.
 
         taskMapper.updateEntity(task, request);
+        
+        // Trigger a background sync in case task external experiments were added
+        CompletableFuture.runAsync(stardbiSyncService::syncExperiments);
+        
         return mapToResponse(task);
     }
 
