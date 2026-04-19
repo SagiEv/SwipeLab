@@ -152,6 +152,7 @@ public class MockDataSeeder implements CommandLineRunner {
 
             Task task = Task.builder()
                     .title("Mock Identification Task")
+                    .name("mock_identification_task")
                     .description("Identify animals in these mock images")
                     .querySpecies("Mammals")
                     .question("Is this a Cat?")
