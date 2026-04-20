@@ -14,6 +14,11 @@ import { useThemeStore } from '../../stores/themeStore';
 import { useSwipeStore } from '../../stores/swipeStore';
 import { SwipeDirection } from '../../types';
 
+const BACKEND_BASE_URL = process.env.EXPO_PUBLIC_API_URL ||
+  (Platform.OS === 'web' ? 'http://localhost:8080' : 'http://192.168.1.133:8080');
+
+
+
 
 export default function SwipeScreen() {
   const [showReference, setShowReference] = useState(false);
@@ -145,13 +150,16 @@ export default function SwipeScreen() {
   let imageUrl: string | null = null;
   if (rawImageData) {
     if (rawImageData.startsWith('http')) {
-      // Absolute URL - use directly
+      // Already a full HTTP URL
       imageUrl = rawImageData;
+    } else if (rawImageData.startsWith('/')) {
+      // Relative server path — prepend backend base URL
+      imageUrl = `${BACKEND_BASE_URL}${rawImageData}`;
     } else if (rawImageData.startsWith('data:image')) {
-      // Already a properly prefixed Data URI
+      // Already a correctly-formed Data URI
       imageUrl = rawImageData;
     } else {
-      // Raw Base64 — force the Data URI prefix
+      // Raw Base64 bytes — build Data URI
       const contentType = currentImage?.image?.contentType || 'image/jpeg';
       imageUrl = `data:${contentType};base64,${rawImageData}`;
     }
