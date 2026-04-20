@@ -57,7 +57,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
             <View style={styles.contentRow}>
                 <Text style={[styles.label, { color: themeColors.textSecondary }]}>Species: </Text>
                 <View style={styles.speciesContainer}>
-                    {species.map((s, index) => (
+                    {(species || []).map((s, index) => (
                         <View key={index} style={styles.speciesItem}>
                             <Text style={[styles.speciesText, { color: themeColors.text }]}>{s}</Text>
                             <Ionicons name="image-outline" size={14} color={themeColors.icon} />

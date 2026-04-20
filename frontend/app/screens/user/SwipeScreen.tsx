@@ -17,7 +17,7 @@ import { SwipeDirection } from '../../types';
 
 export default function SwipeScreen() {
   const [showReference, setShowReference] = useState(false);
-  const { dataBatch, currentIndex, setBatch, nextCard } = useSwipeStore();
+  const { dataBatch, currentIndex, setBatch, nextCard, clearBatch } = useSwipeStore();
   const [loading, setLoading] = useState(false); // only true during manual fetchNextBatch
   const [error, setError] = useState<string | null>(null);
 
@@ -34,10 +34,17 @@ export default function SwipeScreen() {
   const queryClient = useQueryClient();
   const { data: initialBatch, isLoading: isQueryLoading, error: queryError } = useSwipeBatch(taskId);
 
+  // Clear any stale batch from a previous session on mount
   useEffect(() => {
-    if (initialBatch && initialBatch.images) {
+    clearBatch();
+  }, []);
+
+  useEffect(() => {
+    if (initialBatch?.images?.length > 0) {
+      console.log('[SwipeScreen] Batch loaded, first image keys:', Object.keys(initialBatch.images[0]));
+      console.log('[SwipeScreen] First image.image keys:', initialBatch.images[0]?.image ? Object.keys(initialBatch.images[0].image) : 'no image object');
       setBatch(initialBatch.images);
-    } else if (initialBatch && Array.isArray(initialBatch)) {
+    } else if (Array.isArray(initialBatch) && initialBatch.length > 0) {
       setBatch(initialBatch); // fallback
     }
   }, [initialBatch, setBatch]);
