@@ -26,6 +26,11 @@ export interface StepExperimentsProps extends StepProps {
   optionsLoading: boolean;
 }
 
+export interface StepSpeciesProps extends StepProps {
+  availableSpecies?: MultiSelectOption[];
+  optionsLoading?: boolean;
+}
+
 export interface StepConfirmProps extends StepProps {
   onSubmit: () => void;
   loading: boolean;
