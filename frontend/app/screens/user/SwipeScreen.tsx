@@ -18,7 +18,7 @@ import { SwipeDirection } from '../../types';
 export default function SwipeScreen() {
   const [showReference, setShowReference] = useState(false);
   const { dataBatch, currentIndex, setBatch, nextCard } = useSwipeStore();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // only true during manual fetchNextBatch
   const [error, setError] = useState<string | null>(null);
 
   const route = useRoute<any>();

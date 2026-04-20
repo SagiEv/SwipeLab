@@ -116,13 +116,13 @@ export default function TaskDetailsScreen({ route, navigation }: Props) {
 
       {/* Target Species */}
       <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Target Species</Text>
-      {task.targetSpecies.map((species: any) => (
-        <View key={species.name} style={[styles.speciesCard, { backgroundColor: themeColors.card }]}>
+      {(task.targetSpecies || []).map((species: any) => (
+        <View key={species.name || species.commonName} style={[styles.speciesCard, { backgroundColor: themeColors.card }]}>
           <Text style={[styles.speciesName, { color: themeColors.text }]}>
-            {species.commonName} ({species.name})
+            {species.commonName || species.name} {species.commonName && species.name ? `(${species.name})` : ''}
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
-            {species.referenceImages.map((img: any, idx: number) => (
+            {(species.referenceImages || []).map((img: any, idx: number) => (
               <View key={idx} style={styles.imageCard}>
                 <Image
                   source={{ uri: `data:${img.contentType};base64,${img.data}` }}
