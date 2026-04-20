@@ -26,6 +26,9 @@ public class MetadataController {
         try {
             // Retrieves target species taxonomy directly from Stardbi
             List<ExternalTaxonomyDto> taxonomy = stardbiClient.getTaxonomy();
+            if (taxonomy != null && !taxonomy.isEmpty()) {
+                log.info("Sample Species DTO from STARdbi: {}", taxonomy.get(0));
+            }
             return ResponseEntity.ok(taxonomy);
         } catch (Exception e) {
             log.error("SEVERE: Failed to fetch species metadata", e);
