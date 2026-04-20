@@ -66,8 +66,8 @@ export default function UserMyTasksScreen() {
     let totalImages = 0;
     let totalClassified = 0;
     tasks.forEach((t: any) => {
-        totalImages += t.totalImages;
-        totalClassified += t.imagesClassified;
+        totalImages += t.progress?.totalImages ?? t.totalImages ?? 0;
+        totalClassified += t.progress?.imagesClassified ?? t.imagesClassified ?? 0;
     });
     const completionPercent = totalImages > 0 ? Math.round((totalClassified / totalImages) * 100) : 0;
 
@@ -105,15 +105,17 @@ export default function UserMyTasksScreen() {
 
                 {tasks.map((task: any) => {
                     // Calculate progress
-                    const progress = task.totalImages ? Math.round((task.imagesClassified / task.totalImages) * 100) : 0;
+                    const totalImages = task.progress?.totalImages ?? task.totalImages ?? 0;
+                    const imagesClassified = task.progress?.imagesClassified ?? task.imagesClassified ?? 0;
+                    const progress = totalImages > 0 ? Math.round((imagesClassified / totalImages) * 100) : 0;
 
                     return (
                         <TaskCard
                             key={task.taskId}
                             title={task.name}
                             description={task.description}
-                            species={task.species ? task.species.map((s: any) => s.name) : []}
-                            imagesClassified={task.imagesClassified}
+                            species={Array.isArray(task.targetSpecies) ? task.targetSpecies.map((s: any) => s.name ?? s) : []}
+                            imagesClassified={imagesClassified}
                             progress={progress}
                             onPlay={() => handlePlayTask(task.taskId)}
                             onPress={() => handleTaskPress(task)}
@@ -128,15 +130,17 @@ export default function UserMyTasksScreen() {
 
                 {availableTasks.map((task: any) => {
                     // Calculate progress
-                    const progress = task.totalImages ? Math.round((task.imagesClassified / task.totalImages) * 100) : 0;
+                    const totalImages = task.progress?.totalImages ?? task.totalImages ?? 0;
+                    const imagesClassified = task.progress?.imagesClassified ?? task.imagesClassified ?? 0;
+                    const progress = totalImages > 0 ? Math.round((imagesClassified / totalImages) * 100) : 0;
 
                     return (
                         <TaskCard
                             key={task.taskId}
                             title={task.name}
                             description={task.description}
-                            species={task.species ? task.species.map((s: any) => s.name) : []}
-                            imagesClassified={task.imagesClassified}
+                            species={Array.isArray(task.targetSpecies) ? task.targetSpecies.map((s: any) => s.name ?? s) : []}
+                            imagesClassified={imagesClassified}
                             progress={progress}
                             onPlay={() => handleAddTask(task.taskId)}
                             onPress={() => handleTaskPress(task)}

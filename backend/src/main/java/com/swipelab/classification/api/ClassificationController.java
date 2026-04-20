@@ -9,6 +9,7 @@ import com.swipelab.classification.domain.ImageService;
 import com.swipelab.users.application.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/classifications")
 @RequiredArgsConstructor
@@ -67,10 +69,15 @@ public class ClassificationController {
                         @PathVariable Long taskId,
                         @RequestParam(defaultValue = "10") int count,
                         @AuthenticationPrincipal UserDetails userDetails) {
-                // For now, this is stateless and directly returns the first batch.
-                // In the future, this can be expanded to initialize a user session for tracking.
-                return ResponseEntity
-                                .ok(imageService.getNextBatchForApi(taskId, userDetails.getUsername(), count));
+                log.info("Entered play endpoint for task: {}, user: {}", taskId, userDetails.getUsername());
+                try {
+                        NextBatchResponse response = imageService.getNextBatchForApi(taskId, userDetails.getUsername(), count);
+                        log.info("Play endpoint returning {} images for task: {}", response.getImages().size(), taskId);
+                        return ResponseEntity.ok(response);
+                } catch (Exception e) {
+                        log.error("Fatal error in play endpoint for task {}: ", taskId, e);
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                }
         }
 
         @PostMapping("/tasks/{taskId}/batch")
