@@ -141,12 +141,19 @@ export default function SwipeScreen() {
   }
 
   const currentImage = dataBatch[currentIndex];
-  let imageUrl = null;
-  if (currentImage?.image?.data) {
-    if (currentImage.image.data.startsWith('http')) {
-      imageUrl = currentImage.image.data;
+  const rawImageData = currentImage?.image?.data;
+  let imageUrl: string | null = null;
+  if (rawImageData) {
+    if (rawImageData.startsWith('http')) {
+      // Absolute URL - use directly
+      imageUrl = rawImageData;
+    } else if (rawImageData.startsWith('data:image')) {
+      // Already a properly prefixed Data URI
+      imageUrl = rawImageData;
     } else {
-      imageUrl = `data:${currentImage.image.contentType || 'image/jpeg'};base64,${currentImage.image.data}`;
+      // Raw Base64 — force the Data URI prefix
+      const contentType = currentImage?.image?.contentType || 'image/jpeg';
+      imageUrl = `data:${contentType};base64,${rawImageData}`;
     }
   }
 
