@@ -73,7 +73,7 @@ public class ImageService {
 
         private BatchImageDto mapToBatchDto(Image image, Task task) {
                 String src = getProvidedImagePath(image.getSrcPath());
-                String contentType = (image.getSrcPath() != null && image.getSrcPath().startsWith("http")) ? "url" : "image/jpeg";
+                String contentType = "image/jpeg"; // always a valid MIME type; HTTP/base64 distinction is handled by the 'data' value itself
                 
                 return BatchImageDto.builder()
                                 .imageId(image.getId())
