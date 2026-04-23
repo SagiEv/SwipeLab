@@ -42,7 +42,8 @@ public class ClassificationController {
                                 .ok(imageService.getNextBatchForApi(effectiveTaskId, userDetails.getUsername(), count));
         }
 
-        // 2.2 Submit Classification — frontend calls POST /api/v1/classifications/submit
+        // 2.2 Submit Classification — frontend calls POST
+        // /api/v1/classifications/submit
         @PostMapping("/submit")
         public ResponseEntity<NextBatchResponse> submitClassificationDirect(
                         @AuthenticationPrincipal UserDetails userDetails,
@@ -94,7 +95,8 @@ public class ClassificationController {
                         @AuthenticationPrincipal UserDetails userDetails) {
                 log.info("Entered play endpoint for task: {}, user: {}", taskId, userDetails.getUsername());
                 try {
-                        NextBatchResponse response = imageService.getNextBatchForApi(taskId, userDetails.getUsername(), count);
+                        NextBatchResponse response = imageService.getNextBatchForApi(taskId, userDetails.getUsername(),
+                                        count);
                         log.info("Play endpoint returning {} images for task: {}", response.getImages().size(), taskId);
                         return ResponseEntity.ok(response);
                 } catch (Exception e) {
