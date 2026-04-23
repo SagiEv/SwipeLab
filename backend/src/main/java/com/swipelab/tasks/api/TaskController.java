@@ -9,6 +9,7 @@ import com.swipelab.integration.stardbi.dto.ExternalExperimentDto;
 import com.swipelab.tasks.application.TaskService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/tasks")
 @RequiredArgsConstructor
@@ -38,6 +40,22 @@ public class TaskController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(taskService.getTasksForUser(userDetails.getUsername(), pageable));
+    }
+
+    @GetMapping("/available-tasks")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<TaskPageResponse> getAvailableTasks(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PageableDefault(size = 20) Pageable pageable) {
+        log.info("Entered getAvailableTasks controller method for user: {}", userDetails.getUsername());
+        try {
+            TaskPageResponse response = taskService.getTasksForUser(userDetails.getUsername(), pageable);
+            log.info("getAvailableTasks returning {} tasks for user: {}", response.getTasks().size(), userDetails.getUsername());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Fatal error in available-tasks endpoint: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @GetMapping("/my-tasks/{taskId}")

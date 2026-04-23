@@ -9,6 +9,7 @@ import com.swipelab.classification.domain.ImageService;
 import com.swipelab.users.application.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/classifications")
 @RequiredArgsConstructor
@@ -40,24 +42,49 @@ public class ClassificationController {
                                 .ok(imageService.getNextBatchForApi(effectiveTaskId, userDetails.getUsername(), count));
         }
 
-        // 2.2 Submit Classification
-        // Path: /api/v1/classifications/submit
+        // 2.2 Submit Classification — frontend calls POST
+        // /api/v1/classifications/submit
         @PostMapping("/submit")
-        public ResponseEntity<NextBatchResponse> submitClassification(
+        public ResponseEntity<NextBatchResponse> submitClassificationDirect(
                         @AuthenticationPrincipal UserDetails userDetails,
                         @Valid @RequestBody SubmitClassificationRequest request) {
+                log.info("Entered submit endpoint for imageId: {}, taskId: {}, decision: {}",
+                                request.getImageId(), request.getTaskId(), request.getDecision());
+                try {
+                        String role = userDetails.getAuthorities().stream()
+                                        .findFirst()
+                                        .map(a -> a.getAuthority())
+                                        .orElse("USER");
+                        Double credibility = userService.getUserCredibility(userDetails.getUsername());
+                        NextBatchResponse response = classificationService.submitClassification(
+                                        userDetails.getUsername(), role, credibility, request);
+                        return ResponseEntity.ok(response);
+                } catch (Exception e) {
+                        log.error("Fatal error in submit endpoint: ", e);
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                }
+        }
 
-                String role = userDetails.getAuthorities().stream()
-                                .findFirst()
-                                .map(a -> a.getAuthority())
-                                .orElse("USER");
-
-                Double credibility = userService.getUserCredibility(userDetails.getUsername());
-
-                NextBatchResponse response = classificationService.submitClassification(
-                                userDetails.getUsername(), role, credibility, request);
-
-                return ResponseEntity.ok(response);
+        // 2.2b Submit Classification — legacy path with classificationId path variable
+        @PostMapping("/{classificationId}/submit")
+        public ResponseEntity<NextBatchResponse> submitClassification(
+                        @PathVariable Long classificationId,
+                        @AuthenticationPrincipal UserDetails userDetails,
+                        @Valid @RequestBody SubmitClassificationRequest request) {
+                log.info("Entered submit (legacy) endpoint for classificationId: {}", classificationId);
+                try {
+                        String role = userDetails.getAuthorities().stream()
+                                        .findFirst()
+                                        .map(a -> a.getAuthority())
+                                        .orElse("USER");
+                        Double credibility = userService.getUserCredibility(userDetails.getUsername());
+                        NextBatchResponse response = classificationService.submitClassification(
+                                        userDetails.getUsername(), role, credibility, request);
+                        return ResponseEntity.ok(response);
+                } catch (Exception e) {
+                        log.error("Fatal error in submit (legacy) endpoint: ", e);
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                }
         }
 
         // 2.3 Play Task (Initialize Session)
@@ -66,10 +93,16 @@ public class ClassificationController {
                         @PathVariable Long taskId,
                         @RequestParam(defaultValue = "10") int count,
                         @AuthenticationPrincipal UserDetails userDetails) {
-                // For now, this is stateless and directly returns the first batch.
-                // In the future, this can be expanded to initialize a user session for tracking.
-                return ResponseEntity
-                                .ok(imageService.getNextBatchForApi(taskId, userDetails.getUsername(), count));
+                log.info("Entered play endpoint for task: {}, user: {}", taskId, userDetails.getUsername());
+                try {
+                        NextBatchResponse response = imageService.getNextBatchForApi(taskId, userDetails.getUsername(),
+                                        count);
+                        log.info("Play endpoint returning {} images for task: {}", response.getImages().size(), taskId);
+                        return ResponseEntity.ok(response);
+                } catch (Exception e) {
+                        log.error("Fatal error in play endpoint for task {}: ", taskId, e);
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                }
         }
 
         @PostMapping("/tasks/{taskId}/batch")

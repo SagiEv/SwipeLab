@@ -11,15 +11,19 @@ import SwipeButtons from '../../components/user/SwipeButtons';
 import SwipeCard, { SwipeCardHandle } from '../../components/user/SwipeCard';
 import useResponsive from '../../hooks/useResponsive';
 import { useThemeStore } from '../../stores/themeStore';
+import { useSwipeStore } from '../../stores/swipeStore';
 import { SwipeDirection } from '../../types';
+
+const BACKEND_BASE_URL = process.env.EXPO_PUBLIC_API_URL ||
+  (Platform.OS === 'web' ? 'http://localhost:8080' : 'http://192.168.1.133:8080');
+
+
 
 
 export default function SwipeScreen() {
   const [showReference, setShowReference] = useState(false);
-
-  const [dataBatch, setDataBatch] = useState<any[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const { dataBatch, currentIndex, setBatch, nextCard, clearBatch } = useSwipeStore();
+  const [loading, setLoading] = useState(false); // only true during manual fetchNextBatch
   const [error, setError] = useState<string | null>(null);
 
   const route = useRoute<any>();
@@ -35,13 +39,20 @@ export default function SwipeScreen() {
   const queryClient = useQueryClient();
   const { data: initialBatch, isLoading: isQueryLoading, error: queryError } = useSwipeBatch(taskId);
 
+  // Clear any stale batch from a previous session on mount
   useEffect(() => {
-    if (initialBatch && initialBatch.images) {
-      setDataBatch(initialBatch.images);
-    } else if (initialBatch && Array.isArray(initialBatch)) {
-      setDataBatch(initialBatch); // fallback
+    clearBatch();
+  }, []);
+
+  useEffect(() => {
+    if (initialBatch?.images?.length > 0) {
+      console.log('[SwipeScreen] Batch loaded, first image keys:', Object.keys(initialBatch.images[0]));
+      console.log('[SwipeScreen] First image.image keys:', initialBatch.images[0]?.image ? Object.keys(initialBatch.images[0].image) : 'no image object');
+      setBatch(initialBatch.images);
+    } else if (Array.isArray(initialBatch) && initialBatch.length > 0) {
+      setBatch(initialBatch); // fallback
     }
-  }, [initialBatch]);
+  }, [initialBatch, setBatch]);
 
   const fetchNextBatch = async () => {
     setLoading(true);
@@ -51,8 +62,7 @@ export default function SwipeScreen() {
       if (res.ok) {
         const json = await res.json();
         const newImages = json.images || [];
-        setDataBatch(newImages);
-        setCurrentIndex(0);
+        setBatch(newImages);
         // Cache the new batch 
         queryClient.setQueryData(QUERY_KEYS.swipeBatch(taskId), { images: newImages });
       } else {
@@ -88,7 +98,7 @@ export default function SwipeScreen() {
     }
 
     if (currentIndex + 1 < dataBatch.length) {
-      setCurrentIndex(prev => prev + 1);
+      nextCard();
       setShowReference(false);
     } else {
       fetchNextBatch();
@@ -119,7 +129,7 @@ export default function SwipeScreen() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [loading, dataBatch, currentIndex]);
 
-  if ((loading && dataBatch.length === 0) || isQueryLoading) {
+  if (loading || isQueryLoading) {
     return (
       <View style={[styles.container, styles.centerElements, { backgroundColor: themeColors.background }]}>
         <ActivityIndicator size="large" color={themeColors.tint} />
@@ -136,12 +146,22 @@ export default function SwipeScreen() {
   }
 
   const currentImage = dataBatch[currentIndex];
-  let imageUrl = null;
-  if (currentImage?.image?.data) {
-    if (currentImage.image.data.startsWith('http')) {
-      imageUrl = currentImage.image.data;
+  const rawImageData = currentImage?.image?.data;
+  let imageUrl: string | null = null;
+  if (rawImageData) {
+    if (rawImageData.startsWith('http')) {
+      // Already a full HTTP URL
+      imageUrl = rawImageData;
+    } else if (rawImageData.startsWith('/')) {
+      // Relative server path — prepend backend base URL
+      imageUrl = `${BACKEND_BASE_URL}${rawImageData}`;
+    } else if (rawImageData.startsWith('data:image')) {
+      // Already a correctly-formed Data URI
+      imageUrl = rawImageData;
     } else {
-      imageUrl = `data:${currentImage.image.contentType || 'image/jpeg'};base64,${currentImage.image.data}`;
+      // Raw Base64 bytes — build Data URI
+      const contentType = currentImage?.image?.contentType || 'image/jpeg';
+      imageUrl = `data:${contentType};base64,${rawImageData}`;
     }
   }
 

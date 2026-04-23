@@ -34,16 +34,22 @@ export default function TaskDetailsScreen() {
 
                 <View style={[styles.statsRow, { backgroundColor: themeColors.card, shadowColor: themeColors.text }]}>
                     <View style={styles.statItem}>
-                        <Text style={styles.statValue}>{task.imagesClassified}</Text>
+                        <Text style={styles.statValue}>{task.progress?.imagesClassified ?? task.imagesClassified ?? 0}</Text>
                         <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>Classified</Text>
                     </View>
                     <View style={styles.statItem}>
                         {/* Approximate pending based on total */}
-                        <Text style={styles.statValue}>{task.totalImages - task.imagesClassified}</Text>
+                        <Text style={styles.statValue}>
+                            {(task.progress?.totalImages ?? task.totalImages ?? 0) - (task.progress?.imagesClassified ?? task.imagesClassified ?? 0)}
+                        </Text>
                         <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>Pending</Text>
                     </View>
                     <View style={styles.statItem}>
-                        <Text style={styles.statValue}>{task.totalImages ? Math.round((task.imagesClassified / task.totalImages) * 100) : 0}%</Text>
+                        <Text style={styles.statValue}>
+                            {(task.progress?.totalImages ?? task.totalImages)
+                                ? Math.round(((task.progress?.imagesClassified ?? task.imagesClassified ?? 0) / (task.progress?.totalImages ?? task.totalImages)) * 100)
+                                : 0}%
+                        </Text>
                         <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>Progress</Text>
                     </View>
                 </View>
@@ -60,13 +66,13 @@ export default function TaskDetailsScreen() {
                 <View style={styles.section}>
                     <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Target Species</Text>
                     <View style={styles.speciesList}>
-                        {(task.species || []).map((s: any, index: number) => (
+                        {(task.targetSpecies || []).map((s: any, index: number) => (
                             <View key={index} style={[styles.speciesCard, { backgroundColor: themeColors.card }]}>
                                 {/* Placeholder image for species */}
                                 <View style={[styles.speciesImagePlaceholder, { backgroundColor: themeColors.background }]}>
                                     <Ionicons name="image" size={30} color={themeColors.icon} />
                                 </View>
-                                <Text style={[styles.speciesName, { color: themeColors.text }]}>{s.name}</Text>
+                                <Text style={[styles.speciesName, { color: themeColors.text }]}>{s.name ?? s}</Text>
                             </View>
                         ))}
                     </View>

@@ -35,6 +35,7 @@ export default function AddTaskScreen({ navigation }: any) {
 
   const [availableOptions, setAvailableOptions] = useState<{ id: string; label: string }[]>([]);
   const [availableExperiments, setAvailableExperiments] = useState<{ id: string; label: string }[]>([]);
+  const [availableSpecies, setAvailableSpecies] = useState<{ id: string; label: string }[]>([]);
   const [optionsLoading, setOptionsLoading] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -42,10 +43,11 @@ export default function AddTaskScreen({ navigation }: any) {
     const fetchOptions = async () => {
       setOptionsLoading(true);
       try {
-        const [groupsRes, usersRes, experimentsRes] = await Promise.all([
+        const [groupsRes, usersRes, experimentsRes, speciesRes] = await Promise.all([
           apiFetch(API_ENDPOINTS.ADMIN.RECIPIENTS),
           apiFetch(API_ENDPOINTS.USERS.GET_ALL),
-          apiFetch(API_ENDPOINTS.TASKS.EXPERIMENTS)
+          apiFetch(API_ENDPOINTS.TASKS.EXPERIMENTS),
+          apiFetch('/api/v1/metadata/species')
         ]);
 
         let loaded: { id: string, label: string }[] = [];
@@ -60,6 +62,10 @@ export default function AddTaskScreen({ navigation }: any) {
         if (experimentsRes.ok) {
           const exps = await experimentsRes.json();
           setAvailableExperiments(exps.map((e: any) => ({ id: String(e.id), label: e.name || `Experiment ${e.id}` })));
+        }
+        if (speciesRes.ok) {
+          const sps = await speciesRes.json();
+          setAvailableSpecies(sps.map((s: any) => ({ id: String(s.id), label: String(s.label) })));
         }
         setAvailableOptions(loaded);
       } catch (error) {
@@ -97,7 +103,7 @@ export default function AddTaskScreen({ navigation }: any) {
       name: formData.name,
       description: formData.description,
       experiments: formData.selectedExperiments.map(Number),
-      targetSpecies: formData.speciesList.map((s) => ({ commonName: s.trim() })),
+      targetSpecies: formData.speciesList.map((s) => ({ name: s })),
       isPublic: formData.isPublic,
       recipientGroups: formData.selectedRecipients.filter(id => id.startsWith("G-")).map(id => Number(id.replace("G-", ""))),
       assignedUsernames: formData.selectedRecipients.filter(id => id.startsWith("U-")).map(id => id.replace("U-", "")),
@@ -145,7 +151,16 @@ export default function AddTaskScreen({ navigation }: any) {
           />
         );
       case 3:
-        return <StepSpecies formData={formData} onUpdate={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        return (
+          <StepSpecies
+            formData={formData}
+            onUpdate={updateFormData}
+            onNext={nextStep}
+            onBack={prevStep}
+            availableSpecies={availableSpecies}
+            optionsLoading={optionsLoading}
+          />
+        );
       case 4:
         return (
           <StepRecipients

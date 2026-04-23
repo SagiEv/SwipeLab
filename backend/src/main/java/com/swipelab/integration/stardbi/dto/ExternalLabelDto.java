@@ -22,7 +22,7 @@ public class ExternalLabelDto {
     private Long speciesId;
 
     @JsonProperty("swipe_lab_user_id")
-    private Long swipeLabUserId;
+    private String swipeLabUserId;
 
     @JsonProperty("user_grade")
     private Integer userGrade;

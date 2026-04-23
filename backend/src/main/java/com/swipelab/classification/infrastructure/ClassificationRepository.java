@@ -70,4 +70,9 @@ public interface ClassificationRepository extends JpaRepository<Classification, 
     @Query("SELECT COUNT(c) FROM Classification c WHERE c.image.id = :imageId")
     long countByImageId(@Param("imageId") Long imageId);
 
+    /**
+     * Count total classifications by a user for a specific task
+     */
+    @Query("SELECT COUNT(c) FROM Classification c WHERE c.username = :username AND c.taskId = :taskId")
+    Long countByUsernameAndTaskId(@Param("username") String username, @Param("taskId") Long taskId);
 }

@@ -31,6 +31,12 @@ public class StardbiClient {
     private java.time.Instant tokenExpiration;
 
     private synchronized String getServiceAccountToken() {
+        if (serviceAccountUsername == null || serviceAccountUsername.isEmpty() || 
+            serviceAccountPassword == null || serviceAccountPassword.isEmpty()) {
+            log.error("Stardbi service account credentials are not configured properly! Check properties.");
+            throw new IllegalStateException("Missing Stardbi service account credentials. Cannot authenticate.");
+        }
+
         if (serviceAccountToken == null || java.time.Instant.now().isAfter(tokenExpiration)) {
             StardbiAuthResponseDto dto = login(new StardbiAuthRequestDto(serviceAccountUsername, serviceAccountPassword));
             this.serviceAccountToken = dto.getAccess();
@@ -106,7 +112,7 @@ public class StardbiClient {
     // ======================================
 
     public List<ExternalCropDto> getUnclassifiedImageIds(Long experimentId) {
-        String url = baseUrl + "/swipe_lab/crops/download/?experiment=" + experimentId;
+        String url = baseUrl + "/swipe_lab/crops/?experiment=" + experimentId;
         // Use the Stardbi service account token instead of the SwipeLab JWT
         HttpEntity<Void> entity = new HttpEntity<>(createAuthHeaders(getServiceAccountToken()));
         
@@ -145,8 +151,24 @@ public class StardbiClient {
 
     public void postLabel(ExternalLabelDto label) {
         String url = baseUrl + "/swipe_lab/labels/";
-        HttpEntity<ExternalLabelDto> entity = new HttpEntity<>(label, createAuthHeaders(getServiceAccountToken()));
         
-        restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
+        try {
+            HttpEntity<ExternalLabelDto> entity = new HttpEntity<>(label, createAuthHeaders(getServiceAccountToken()));
+            restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            if (e.getStatusCode() == HttpStatus.UNAUTHORIZED || e.getStatusCode() == HttpStatus.FORBIDDEN) {
+                log.warn("Stardbi API returned {} for postLabel, forcing token refresh and retrying...", e.getStatusCode());
+                // Force a token refresh by resetting the token so getServiceAccountToken() will fetch a new one immediately
+                synchronized(this) {
+                    this.serviceAccountToken = null;
+                }
+                
+                // Retry the request once with the new token
+                HttpEntity<ExternalLabelDto> retryEntity = new HttpEntity<>(label, createAuthHeaders(getServiceAccountToken()));
+                restTemplate.exchange(url, HttpMethod.POST, retryEntity, Void.class);
+            } else {
+                throw e;
+            }
+        }
     }
 }

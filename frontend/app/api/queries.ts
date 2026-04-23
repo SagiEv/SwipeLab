@@ -59,7 +59,10 @@ export const useMyTasks = () => {
 export const useAvailableTasks = () => {
   return useQuery({
     queryKey: QUERY_KEYS.availableTasks,
-    queryFn: () => fetchJson(API_ENDPOINTS.TASKS.AVAILABLE_TASKS).catch(() => []),
+    queryFn: async () => {
+      const data = await fetchJson(API_ENDPOINTS.TASKS.AVAILABLE_TASKS).catch(() => ({ tasks: [] }));
+      return data.tasks || [];
+    },
     staleTime: 5 * 60 * 1000,
   });
 };

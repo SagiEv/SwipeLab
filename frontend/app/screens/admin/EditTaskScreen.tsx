@@ -31,11 +31,12 @@ export default function EditTaskScreen({ route, navigation }: Props) {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [targetSpecies, setTargetSpecies] = useState("");
+  const [targetSpecies, setTargetSpecies] = useState<string[]>([]);
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [selectedExperiments, setSelectedExperiments] = useState<string[]>([]);
   const [availableOptions, setAvailableOptions] = useState<{ id: string; label: string }[]>([]);
   const [availableExperiments, setAvailableExperiments] = useState<{ id: string; label: string }[]>([]);
+  const [availableSpecies, setAvailableSpecies] = useState<{ id: string; label: string }[]>([]);
   const [optionsLoading, setOptionsLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
@@ -46,10 +47,11 @@ export default function EditTaskScreen({ route, navigation }: Props) {
     const fetchOptions = async () => {
       setOptionsLoading(true);
       try {
-        const [groupsRes, usersRes, experimentsRes] = await Promise.all([
+        const [groupsRes, usersRes, experimentsRes, speciesRes] = await Promise.all([
           apiFetch(API_ENDPOINTS.ADMIN.RECIPIENTS),
           apiFetch(API_ENDPOINTS.USERS.GET_ALL),
-          apiFetch(API_ENDPOINTS.TASKS.EXPERIMENTS)
+          apiFetch(API_ENDPOINTS.TASKS.EXPERIMENTS),
+          apiFetch('/api/v1/metadata/species')
         ]);
 
         let loaded: { id: string, label: string }[] = [];
@@ -64,6 +66,10 @@ export default function EditTaskScreen({ route, navigation }: Props) {
         if (experimentsRes.ok) {
           const exps = await experimentsRes.json();
           setAvailableExperiments(exps.map((e: any) => ({ id: String(e.id), label: e.name || `Experiment ${e.id}` })));
+        }
+        if (speciesRes.ok) {
+          const sps = await speciesRes.json();
+          setAvailableSpecies(sps.map((s: any) => ({ id: String(s.id), label: String(s.label) })));
         }
         setAvailableOptions(loaded);
       } catch (error) {
@@ -86,8 +92,7 @@ export default function EditTaskScreen({ route, navigation }: Props) {
 
         setTargetSpecies(
           data.targetSpecies
-            ?.map((s: any) => s.name)
-            .join(", ")
+            ?.map((s: any) => String(s.name)) || []
         );
 
         setSelectedExperiments(data.experiments?.map((id: number) => String(id)) || []);
@@ -114,12 +119,10 @@ export default function EditTaskScreen({ route, navigation }: Props) {
       name,
       description,
       experiments: selectedExperiments.map(Number),
-      targetSpecies: targetSpecies
-        .split(",")
-        .map((s) => ({
-          name: s.trim(),
-          referenceImages: [],
-        })),
+      targetSpecies: targetSpecies.map((s) => ({
+        name: s,
+        referenceImages: [],
+      })),
       isPublic,
       recipientGroups: selectedRecipients.filter(id => id.startsWith("G-")).map(id => Number(id.replace("G-", ""))),
       assignedUsernames: selectedRecipients.filter(id => id.startsWith("U-")).map(id => id.replace("U-", "")),
@@ -183,13 +186,18 @@ export default function EditTaskScreen({ route, navigation }: Props) {
         />
 
         <Text style={[styles.label, { color: themeColors.text }]}>
-          Target Species (comma-separated)
+          Target Species
         </Text>
-        <TextInput
-          style={[styles.input, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
-          value={targetSpecies}
-          onChangeText={setTargetSpecies}
-          placeholderTextColor={themeColors.textSecondary}
+        <MultiSelect
+          options={availableSpecies}
+          selectedIds={targetSpecies}
+          onToggle={(id) => {
+            setTargetSpecies((prev) =>
+              prev.includes(id as string) ? prev.filter((sid) => sid !== id) : [...prev, id as string]
+            );
+          }}
+          placeholder="Search species..."
+          loading={optionsLoading}
         />
 
         <Text style={[styles.label, { color: themeColors.text }]}>Experiments</Text>

@@ -8,16 +8,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.data.domain.PageRequest;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -49,30 +46,25 @@ class TaskDistributionServiceTest {
 
         goldImage = new Image();
         goldImage.setId(3L);
-        
-        taskDistributionService.resetUserSession("testuser", 1L);
     }
 
     @Test
     void getNextImageForUser_ShouldReturnRegularImage() {
-        when(imageRepository.findRegularImagesByTaskId(1L)).thenReturn(Arrays.asList(regularImage1, regularImage2));
-        when(classificationRepository.existsByUsernameAndImageId("testuser", 1L)).thenReturn(false);
-        when(classificationRepository.existsByUsernameAndImageId("testuser", 2L)).thenReturn(false);
-        when(classificationRepository.countByImage_Id(anyLong())).thenReturn(0L);
+        when(classificationRepository.countByUsernameAndTaskId("testuser", 1L)).thenReturn(0L);
+        when(imageRepository.findNextRegularImageCandidates(eq("testuser"), eq(1L), eq(PageRequest.of(0, 1))))
+                .thenReturn(Collections.singletonList(regularImage2));
 
         Optional<Image> result = taskDistributionService.getNextImageForUser("testuser", 1L);
 
         assertTrue(result.isPresent());
-        assertEquals(2L, result.get().getId()); // priority 2 is higher than 1
+        assertEquals(2L, result.get().getId());
     }
 
     @Test
     void getNextImageForUser_ShouldReturnGoldImage_WhenCountIs15() {
-        Map<String, Integer> userClassificationCount = (Map<String, Integer>) ReflectionTestUtils.getField(taskDistributionService, "userClassificationCount");
-        userClassificationCount.put("testuser_1", 15);
-
-        when(imageRepository.findGoldStandardImagesByTaskId(1L)).thenReturn(Collections.singletonList(goldImage));
-        when(classificationRepository.existsByUsernameAndImageId("testuser", 3L)).thenReturn(false);
+        when(classificationRepository.countByUsernameAndTaskId("testuser", 1L)).thenReturn(15L);
+        when(imageRepository.findUnclassifiedGoldImages("testuser", 1L))
+                .thenReturn(Collections.singletonList(goldImage));
 
         Optional<Image> result = taskDistributionService.getNextImageForUser("testuser", 1L);
 
@@ -82,13 +74,11 @@ class TaskDistributionServiceTest {
 
     @Test
     void getNextImageForUser_ShouldFallbackToRegularImage_WhenNoGoldAvailable() {
-        Map<String, Integer> userClassificationCount = (Map<String, Integer>) ReflectionTestUtils.getField(taskDistributionService, "userClassificationCount");
-        userClassificationCount.put("testuser_1", 15);
-
-        when(imageRepository.findGoldStandardImagesByTaskId(1L)).thenReturn(Collections.emptyList());
-        when(imageRepository.findRegularImagesByTaskId(1L)).thenReturn(Collections.singletonList(regularImage1));
-        when(classificationRepository.existsByUsernameAndImageId("testuser", 1L)).thenReturn(false);
-        when(classificationRepository.countByImage_Id(1L)).thenReturn(0L);
+        when(classificationRepository.countByUsernameAndTaskId("testuser", 1L)).thenReturn(15L);
+        when(imageRepository.findUnclassifiedGoldImages("testuser", 1L))
+                .thenReturn(Collections.emptyList());
+        when(imageRepository.findNextRegularImageCandidates(eq("testuser"), eq(1L), eq(PageRequest.of(0, 1))))
+                .thenReturn(Collections.singletonList(regularImage1));
 
         Optional<Image> result = taskDistributionService.getNextImageForUser("testuser", 1L);
 
@@ -97,12 +87,10 @@ class TaskDistributionServiceTest {
     }
 
     @Test
-    void resetUserSession_ShouldRemoveSessionFromMap() {
-        Map<String, Integer> userClassificationCount = (Map<String, Integer>) ReflectionTestUtils.getField(taskDistributionService, "userClassificationCount");
-        userClassificationCount.put("testuser_1", 15);
-
+    void resetUserSession_ShouldBeNoOp() {
+        // Just verify it runs without throwing exceptions since it's a no-op now
         taskDistributionService.resetUserSession("testuser", 1L);
-
-        assertEquals(0, userClassificationCount.size());
+        verifyNoInteractions(classificationRepository);
+        verifyNoInteractions(imageRepository);
     }
 }
