@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, StyleSheet, View, Text } from "react-native";
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../constants/theme';
 import { API_ENDPOINTS } from "../../api/apiEndpoints";
 import { apiFetch } from "../../api/apiFetch";
@@ -18,7 +19,7 @@ import StepExperiments from "../../components/admin/addTask/StepExperiments";
 
 const STEPS = ["Name", "Description", "Experiments", "Species", "Recipients", "Confirm"];
 
-export default function AddTaskScreen({ navigation }: any) {
+export default function AddTaskScreen({ route, navigation }: any) {
   const { theme } = useThemeStore();
   const themeColors = Colors[theme as keyof typeof Colors];
   const queryClient = useQueryClient();
@@ -28,7 +29,7 @@ export default function AddTaskScreen({ navigation }: any) {
     name: "",
     description: "",
     selectedExperiments: [],
-    speciesList: [],
+    speciesList: route?.params?.initialSpecies || [],
     isPublic: false,
     selectedRecipients: [],
   });
@@ -65,7 +66,11 @@ export default function AddTaskScreen({ navigation }: any) {
         }
         if (speciesRes.ok) {
           const sps = await speciesRes.json();
-          setAvailableSpecies(sps.map((s: any) => ({ id: String(s.id), label: String(s.label) })));
+          setAvailableSpecies(sps.map((s: any) => ({ 
+            id: String(s.id), 
+            label: String(s.label),
+            searchTerms: String(s.searchTerms || "") 
+          })));
         }
         setAvailableOptions(loaded);
       } catch (error) {
@@ -204,6 +209,16 @@ export default function AddTaskScreen({ navigation }: any) {
         {/* Step Progress Indicator */}
         <StepIndicator steps={STEPS} currentStep={currentStep} />
 
+        {/* Selected Species Banner */}
+        {formData.speciesList.length > 0 && currentStep < 3 && (
+          <View style={[styles.banner, { backgroundColor: themeColors.card, borderColor: '#10B981' }]}>
+            <Ionicons name="leaf" size={20} color="#10B981" />
+            <Text style={[styles.bannerText, { color: themeColors.text }]}>
+              {formData.speciesList.length} species selected for this task
+            </Text>
+          </View>
+        )}
+
         {/* Current Step Content */}
         <View style={styles.contentContainer}>
           {renderStepContent()}
@@ -221,5 +236,19 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingBottom: 16,
+  },
+  banner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 8,
+  },
+  bannerText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
