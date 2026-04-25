@@ -47,6 +47,12 @@ export async function apiFetch(
   });
 
   if (response.status === 401) {
+    // Do not intercept 401s for login or refresh endpoints to allow normal error handling
+    const urlString = input.toString();
+    if (urlString.includes('/login') || urlString.includes('/refresh')) {
+      return response;
+    }
+
     let refreshToken;
     let authProvider;
     if (Platform.OS === 'web') {
@@ -134,13 +140,11 @@ export async function apiFetch(
 
     // If no refresh token or refresh failed, we must logout
     const { useAuthStore } = require("../stores/authStore");
-    useAuthStore.getState().logout();
-    // Optional: show "Session expired" message via an event dispatcher or local alert
-    try {
-      if (Platform.OS === 'web') {
-        alert("Session expired. Please log in again.");
-      }
-    } catch (e) { }
+    useAuthStore.getState().setSessionExpiredMessage(true);
+    setTimeout(() => {
+      useAuthStore.getState().logout();
+      useAuthStore.getState().setSessionExpiredMessage(false);
+    }, 2000);
   }
 
   return response;

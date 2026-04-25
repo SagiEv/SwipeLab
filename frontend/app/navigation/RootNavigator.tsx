@@ -3,7 +3,7 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, View, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // stores
@@ -18,10 +18,20 @@ import UserNavigator from "./UserNavigator";
 import LoginScreen from "../screens/shared/LoginScreen";
 
 export default function RootNavigator() {
-  const { token, role, isLoading } = useAuthStore();       // "USER" | "ADMIN" | null
+  const { token, role, isLoading, sessionExpiredMessage } = useAuthStore();       // "USER" | "ADMIN" | null
   const { mode } = useModeStore();              // "USER" | "ADMIN"
   const Stack = createNativeStackNavigator();
 
+  if (sessionExpiredMessage) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: '#fff' }}>
+        <Text style={{ fontSize: 16, color: '#000', textAlign: 'center', marginHorizontal: 20 }}>
+          Session expired, please login again. Redirecting to login...
+        </Text>
+        <ActivityIndicator size="large" color="#000" style={{ marginTop: 20 }} />
+      </View>
+    );
+  }
 
   if (isLoading) {
     return (

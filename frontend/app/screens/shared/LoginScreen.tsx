@@ -59,7 +59,12 @@ export default function LoginScreen() {
       });
 
       if (!res.ok) {
-        setError("Invalid username or password");
+        try {
+          const errorData = await res.json();
+          setError(errorData.message || "Invalid username or password");
+        } catch {
+          setError(`Login failed: ${res.status}`);
+        }
         return;
       }
 
