@@ -5,6 +5,7 @@ import { create } from "zustand";
 import { apiFetch } from "../api/apiFetch";
 import { useModeStore } from "./modeStore";
 import { API_ENDPOINTS } from '../api/apiEndpoints';
+import { jwtDecode } from "jwt-decode";
 
 
 type Role = "USER" | "ADMIN" | null;
@@ -18,6 +19,8 @@ interface AuthState {
   setExternalAuth: (token: string, refreshToken: string, lifetime: number, username: string) => Promise<void>;
   logout: () => Promise<void>;
   initialize: () => Promise<void>;
+  sessionExpiredMessage: boolean;
+  setSessionExpiredMessage: (show: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -25,6 +28,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   role: null,
   authProvider: null,
   isLoading: true,
+  sessionExpiredMessage: false,
+  setSessionExpiredMessage: (show) => set({ sessionExpiredMessage: show }),
 
   setAuth: async (token, role, refreshToken) => {
     set({ token, role, authProvider: "LOCAL" });
@@ -133,12 +138,42 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
 
       if (token) {
-        set({ token, role, authProvider });
+        let isExpired = false;
+        try {
+          const decoded = jwtDecode<{ exp?: number }>(token);
+          if (decoded.exp && Date.now() >= decoded.exp * 1000) {
+            isExpired = true;
+          }
+        } catch (e) {
+          console.error("Invalid token on boot:", e);
+          isExpired = true;
+        }
 
-        if (role === "ADMIN") {
-          useModeStore.getState().setMode("ADMIN");
+        if (isExpired) {
+          console.log("[authStore] Token expired on boot. Clearing state.");
+          set({ sessionExpiredMessage: true });
+          setTimeout(async () => {
+            if (Platform.OS === 'web') {
+              localStorage.removeItem("token");
+              localStorage.removeItem("role");
+              localStorage.removeItem("refreshToken");
+              localStorage.removeItem("authProvider");
+            } else {
+              await SecureStore.deleteItemAsync("token");
+              await SecureStore.deleteItemAsync("role");
+              await SecureStore.deleteItemAsync("refreshToken");
+              await SecureStore.deleteItemAsync("authProvider");
+            }
+            set({ token: null, role: null, authProvider: null, sessionExpiredMessage: false });
+          }, 2000);
         } else {
-          useModeStore.getState().setMode("USER");
+          set({ token, role, authProvider });
+
+          if (role === "ADMIN") {
+            useModeStore.getState().setMode("ADMIN");
+          } else {
+            useModeStore.getState().setMode("USER");
+          }
         }
       }
     } catch (e) {
