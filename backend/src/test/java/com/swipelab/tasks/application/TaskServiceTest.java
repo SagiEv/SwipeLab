@@ -12,6 +12,7 @@ import com.swipelab.tasks.domain.Task;
 import com.swipelab.tasks.domain.TaskMapper;
 import com.swipelab.tasks.domain.TaskStatus;
 import com.swipelab.tasks.infrastructure.TaskRepository;
+import com.swipelab.classification.infrastructure.LabelRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,7 +43,13 @@ class TaskServiceTest {
     private RecipientGroupRepository recipientGroupRepository;
 
     @Mock
+    private LabelRepository labelRepository;
+
+    @Mock
     private TaskMapper taskMapper;
+
+    @Mock
+    private com.swipelab.integration.stardbi.StardbiSyncService stardbiSyncService;
 
     @InjectMocks
     private TaskService taskService;
@@ -154,10 +161,10 @@ class TaskServiceTest {
         when(taskRepository.save(task)).thenReturn(task);
         when(taskMapper.toResponse(task, false)).thenReturn(taskResponse);
 
-        TaskResponse response = taskService.createTask(request);
+        TaskResponse response = taskService.createTask(request, "admin_mock", null, null);
 
         assertNotNull(response);
-        assertEquals(TaskStatus.ACTIVE, task.getStatus());
+        assertEquals(TaskStatus.PROCESSING, task.getStatus());
         verify(taskRepository, times(1)).save(task);
     }
 

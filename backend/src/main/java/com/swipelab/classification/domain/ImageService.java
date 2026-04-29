@@ -39,30 +39,30 @@ public class ImageService {
                 Task task = taskRepository.findById(taskId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Task not found: " + taskId));
 
-                List<BatchImageDto> batchImages = new ArrayList<>();
+                // Build the list of species names for this task
+                List<String> taskSpecies = task.getTargetSpecies() == null ? List.of() :
+                        task.getTargetSpecies().stream()
+                                .map(com.swipelab.classification.domain.Label::getName)
+                                .collect(Collectors.toList());
 
-                // Retry mechanism to find available images properly
+                List<BatchImageDto> batchImages = new ArrayList<>();
                 int attempt = 0;
                 int found = 0;
 
-                // Very basic loop. In production, we'd bulk fetch.
-                // Re-using taskDistributionService but it's designed for single fetch with
-                // state.
-                // We will loop. State update in taskDist might be redundant or messy if we call
-                // it multiple times.
-                // But let's use it for now as it handles logic.
+                while (found < count && attempt < count * 3) {
+                        Optional<TaskDistributionService.ImageSpeciesPair> pairOpt =
+                                taskDistributionService.getNextImageForUser(username, taskId, taskSpecies);
+                        if (pairOpt.isEmpty()) break;
 
-                while (found < count && attempt < count * 2) {
-                        Optional<Image> imageOpt = taskDistributionService.getNextImageForUser(username, taskId);
-                        if (imageOpt.isEmpty()) {
-                                break;
-                        }
-                        Image image = imageOpt.get();
+                        TaskDistributionService.ImageSpeciesPair pair = pairOpt.get();
 
-                        // Avoid duplicates in this batch if any (TaskDist might give different ones,
-                        // hopefully)
-                        if (batchImages.stream().noneMatch(b -> b.getImageId().equals(image.getId()))) {
-                                batchImages.add(mapToBatchDto(image, task));
+                        // Deduplicate within this batch on image+species
+                        boolean alreadyInBatch = batchImages.stream()
+                                .anyMatch(b -> b.getImageId().equals(pair.image().getId())
+                                        && b.getQuestion() != null
+                                        && b.getQuestion().contains(pair.species() != null ? pair.species() : ""));
+                        if (!alreadyInBatch) {
+                                batchImages.add(mapToBatchDto(pair.image(), task, pair.species()));
                                 found++;
                         }
                         attempt++;
@@ -71,39 +71,66 @@ public class ImageService {
                 return NextBatchResponse.builder().images(batchImages).build();
         }
 
-        private BatchImageDto mapToBatchDto(Image image, Task task) {
+
+        private BatchImageDto mapToBatchDto(Image image, Task task, String species) {
                 String src = getProvidedImagePath(image.getSrcPath());
-                String contentType = "image/jpeg"; // always a valid MIME type; HTTP/base64 distinction is handled by the 'data' value itself
-                
+                String contentType = "image/jpeg";
+
+                // Build question from the explicitly selected species for this image
+                String question;
+                if (task.getQuestion() != null && !task.getQuestion().isBlank()) {
+                        question = task.getQuestion();
+                } else if (species != null && !species.isBlank()) {
+                        question = "Is this a " + species + "?";
+                } else {
+                        question = "Classify this image";
+                }
+
                 return BatchImageDto.builder()
                                 .imageId(image.getId())
                                 .taskId(task.getId())
-                                .question(task.getQuestion() != null ? task.getQuestion() : "Classify this image")
+                                .question(question)
                                 .image(ImageDataDto.builder()
                                                 .contentType(contentType)
                                                 .data(src)
                                                 .build())
-                                .referenceImages(List.of()) // Placeholder
+                                .referenceImages(List.of())
                                 .build();
         }
 
         private String getProvidedImagePath(String path) {
-                if (path != null && path.startsWith("http")) {
-                        return path;
-                }
-                
-                // Real test of the mock server!
-                try {
-                        org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
-                        org.springframework.http.ResponseEntity<byte[]> response = restTemplate.getForEntity("http://localhost:8080/swipelab/bounding_boxes/" + path + "/", byte[].class);
-                        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                                return java.util.Base64.getEncoder().encodeToString(response.getBody());
-                        }
-                } catch (Exception e) {
-                        // ignore and use fallback
+                if (path == null) {
+                        return getFallbackImage();
                 }
 
-                // Fallback to a 1x1 white jpeg
+                // Already a full HTTP URL — return as-is
+                if (path.startsWith("http")) {
+                        return path;
+                }
+
+                // Local file path — read from disk and return as base64
+                try {
+                        java.io.File file = new java.io.File(path);
+                        if (file.exists() && file.isFile()) {
+                                byte[] bytes = java.nio.file.Files.readAllBytes(file.toPath());
+                                return java.util.Base64.getEncoder().encodeToString(bytes);
+                        }
+                } catch (Exception e) {
+                        // log and fall through to fallback
+                        org.slf4j.LoggerFactory.getLogger(ImageService.class)
+                                .warn("Could not read image from path: {}", path, e);
+                }
+
+                // Already raw base64 or data URI
+                if (path.startsWith("data:image") || path.startsWith("/9j") || path.startsWith("iVBOR")) {
+                        return path;
+                }
+
+                return getFallbackImage();
+        }
+
+        private String getFallbackImage() {
+                // 1x1 white JPEG
                 return "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=";
         }
 

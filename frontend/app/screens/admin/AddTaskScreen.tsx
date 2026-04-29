@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, View, Text } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../constants/theme';
 import { API_ENDPOINTS } from "../../api/apiEndpoints";
@@ -12,6 +12,7 @@ import { useThemeStore } from '../../stores/themeStore';
 import { AddTaskFormData } from "../../components/admin/addTask/addTaskTypes";
 import StepConfirm from "../../components/admin/addTask/StepConfirm";
 import StepDescription from "../../components/admin/addTask/StepDescription";
+import { useAuthStore } from "../../stores/authStore";
 import StepName from "../../components/admin/addTask/StepName";
 import StepRecipients from "../../components/admin/addTask/StepRecipients";
 import StepSpecies from "../../components/admin/addTask/StepSpecies";
@@ -25,6 +26,7 @@ export default function AddTaskScreen({ route, navigation }: any) {
   const queryClient = useQueryClient();
 
   const [currentStep, setCurrentStep] = useState(0);
+  const [createdTaskId, setCreatedTaskId] = useState<string | null>(null);
   const [formData, setFormData] = useState<AddTaskFormData>({
     name: "",
     description: "",
@@ -116,20 +118,34 @@ export default function AddTaskScreen({ route, navigation }: any) {
 
     try {
       setLoading(true);
+
+      const authState = useAuthStore.getState();
+      const isStardbi = authState.authProvider === "STARDBI";
+      let headers: any = { "Content-Type": "application/json" };
+      
+      if (isStardbi && authState.token) {
+        headers["X-Stardbi-Access-Token"] = authState.token;
+        if (Platform.OS === 'web') {
+          headers["X-Stardbi-Refresh-Token"] = localStorage.getItem("refreshToken") || "";
+        }
+        // In React Native environment, getting SecureStore synchronously is tricky,
+        // but typically refreshToken is stored securely. For web, localStorage is fast.
+      }
+
       const res = await apiFetch(API_ENDPOINTS.TASKS.CREATE_TASK, {
         method: "POST",
         body: JSON.stringify(payload),
-        headers: { "Content-Type": "application/json" },
+        headers,
       });
 
       if (!res.ok) {
         throw new Error("Failed response");
       }
 
+      const resData = await res.json();
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
 
-      Alert.alert("Success", "Task created successfully!");
-      navigation.navigate("Tasks Management"); // go back to tasks list
+      setCreatedTaskId(resData.taskId);
     } catch (err) {
       console.error("Error creating task:", err);
       Alert.alert("Error", "Failed to create task");
@@ -139,6 +155,43 @@ export default function AddTaskScreen({ route, navigation }: any) {
   };
 
   const renderStepContent = () => {
+    if (createdTaskId) {
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 16 }}>
+          <Ionicons name="checkmark-circle" size={80} color="#10B981" />
+          <Text style={{ fontSize: 24, fontWeight: 'bold', color: themeColors.text }}>Task Created!</Text>
+          <Text style={{ fontSize: 16, color: themeColors.text, opacity: 0.8, textAlign: 'center' }}>
+            Your task has been successfully added to the system.
+          </Text>
+          <View style={{ flexDirection: 'row', gap: 12, marginTop: 24 }}>
+            <TouchableOpacity 
+              style={{ paddingHorizontal: 20, paddingVertical: 12, backgroundColor: themeColors.card, borderRadius: 8, borderWidth: 1, borderColor: themeColors.border }}
+              onPress={() => {
+                setCreatedTaskId(null);
+                setCurrentStep(0);
+                setFormData({
+                  name: "",
+                  description: "",
+                  selectedExperiments: [],
+                  speciesList: [],
+                  isPublic: false,
+                  selectedRecipients: [],
+                });
+              }}
+            >
+              <Text style={{ color: themeColors.text, fontWeight: '600' }}>Create Another</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={{ paddingHorizontal: 20, paddingVertical: 12, backgroundColor: themeColors.tint, borderRadius: 8 }}
+              onPress={() => navigation.navigate("TasksManagement")}
+            >
+              <Text style={{ color: '#fff', fontWeight: 'bold' }}>Go to Tasks</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      );
+    }
+
     switch (currentStep) {
       case 0:
         return <StepName formData={formData} onUpdate={updateFormData} onNext={nextStep} />;
@@ -207,7 +260,7 @@ export default function AddTaskScreen({ route, navigation }: any) {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         {/* Step Progress Indicator */}
-        <StepIndicator steps={STEPS} currentStep={currentStep} />
+        {!createdTaskId && <StepIndicator steps={STEPS} currentStep={currentStep} />}
 
         {/* Selected Species Banner */}
         {formData.speciesList.length > 0 && currentStep < 3 && (
