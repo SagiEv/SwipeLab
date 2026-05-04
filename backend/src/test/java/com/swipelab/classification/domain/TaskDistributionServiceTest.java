@@ -27,6 +27,9 @@ class TaskDistributionServiceTest {
     @Mock
     private ClassificationRepository classificationRepository;
 
+    @Mock
+    private GoldImagePolicy goldImagePolicy;
+
     @InjectMocks
     private TaskDistributionService taskDistributionService;
 
@@ -52,7 +55,7 @@ class TaskDistributionServiceTest {
 
     @Test
     void getNextImageForUser_ShouldReturnRegularImage() {
-        when(classificationRepository.countByUsernameAndTaskId("testuser", 1L)).thenReturn(0L);
+        when(goldImagePolicy.shouldServeGoldImage("testuser", 1L)).thenReturn(false);
         when(imageRepository.findRegularImageCandidatesForUser(eq("testuser"), eq(1L), eq(1), any(PageRequest.class)))
                 .thenReturn(List.of(regularImage2));
         when(classificationRepository.findQueriedSpeciesByUsernameAndImageId("testuser", 2L))
@@ -67,8 +70,8 @@ class TaskDistributionServiceTest {
     }
 
     @Test
-    void getNextImageForUser_ShouldReturnGoldImage_WhenCountIs15() {
-        when(classificationRepository.countByUsernameAndTaskId("testuser", 1L)).thenReturn(15L);
+    void getNextImageForUser_ShouldReturnGoldImage_WhenPolicySaysGold() {
+        when(goldImagePolicy.shouldServeGoldImage("testuser", 1L)).thenReturn(true);
         when(imageRepository.findUnclassifiedGoldImages("testuser", 1L))
                 .thenReturn(List.of(goldImage));
         when(classificationRepository.findQueriedSpeciesByUsernameAndImageId("testuser", 3L))
@@ -84,7 +87,7 @@ class TaskDistributionServiceTest {
 
     @Test
     void getNextImageForUser_ShouldFallbackToRegularImage_WhenNoGoldAvailable() {
-        when(classificationRepository.countByUsernameAndTaskId("testuser", 1L)).thenReturn(15L);
+        when(goldImagePolicy.shouldServeGoldImage("testuser", 1L)).thenReturn(true);
         when(imageRepository.findUnclassifiedGoldImages("testuser", 1L))
                 .thenReturn(Collections.emptyList());
         when(imageRepository.findRegularImageCandidatesForUser(eq("testuser"), eq(1L), eq(1), any(PageRequest.class)))
