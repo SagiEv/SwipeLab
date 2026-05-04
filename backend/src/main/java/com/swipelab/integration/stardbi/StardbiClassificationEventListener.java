@@ -11,7 +11,8 @@ import com.swipelab.users.domain.User;
 import com.swipelab.users.infrastructure.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
@@ -60,7 +61,8 @@ public class StardbiClassificationEventListener {
             maxAttempts = 3,
             backoff = @Backoff(delay = 2000, multiplier = 2)
     )
-    @KafkaListener(topics = "classification-events", groupId = "stardbi-integration-group")
+    @Async
+    @EventListener
     @Transactional(readOnly = true)
     public void handleClassificationEvent(ClassificationSubmittedEvent event) {
         log.info("Received classification event for task {}", event.getTaskId());

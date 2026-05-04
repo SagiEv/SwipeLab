@@ -2,7 +2,7 @@ package com.swipelab.gamification.domain;
 
 import com.swipelab.gamification.infrastructure.GamificationRepository;
 import com.swipelab.gamification.events.GamificationUpdatedEvent;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.context.ApplicationEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,7 @@ import java.util.Set;
 public class BadgeService {
 
     private final GamificationRepository gamificationRepository;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final ApplicationEventPublisher eventPublisher;
 
     private static final String BADGE_FIRST_SWIPE = "First Swipe";
     private static final String BADGE_10_SWIPES = "10 Swipes";
@@ -78,7 +78,7 @@ public class BadgeService {
                 .badges(gamification.getBadge())
                 .rank(gamification.getRank())
                 .build();
-        kafkaTemplate.send("gamification-events", gamification.getUsername(), event);
+        eventPublisher.publishEvent(event);
     }
 
     private void awardBadge(Gamification gamification, String badgeName) {

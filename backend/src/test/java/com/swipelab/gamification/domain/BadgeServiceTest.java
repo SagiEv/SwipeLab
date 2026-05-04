@@ -8,7 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.Optional;
 
@@ -24,7 +24,7 @@ class BadgeServiceTest {
     private GamificationRepository gamificationRepository;
 
     @Mock
-    private KafkaTemplate<String, Object> kafkaTemplate;
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private BadgeService badgeService;
@@ -47,7 +47,7 @@ class BadgeServiceTest {
         badgeService.checkForBadges("testuser", 1);
 
         verify(gamificationRepository, times(1)).save(argThat(g -> g.getBadge().contains("First Swipe")));
-        verify(kafkaTemplate, times(1)).send(eq("gamification-events"), eq("testuser"), any(GamificationUpdatedEvent.class));
+        verify(eventPublisher, times(1)).publishEvent(any(GamificationUpdatedEvent.class));
     }
 
     @Test

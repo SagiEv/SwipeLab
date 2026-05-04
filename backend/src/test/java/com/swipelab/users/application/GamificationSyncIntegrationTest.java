@@ -8,8 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.concurrent.TimeUnit;
@@ -30,16 +29,13 @@ import static org.awaitility.Awaitility.await;
  */
 @SpringBootTest
 @ActiveProfiles("integration")
-@EmbeddedKafka(partitions = 1, topics = { "classification-events", "gamification-events", "fraud-events",
-        "user-events" }, brokerProperties = {
-                "auto.create.topics.enable=true"
-        })
+
 class GamificationSyncIntegrationTest {
 
     private static final String SYNC_USER = "gamification_sync_user";
 
     @Autowired
-    private KafkaTemplate<String, Object> kafkaTemplate;
+    private ApplicationEventPublisher eventPublisher;
 
     @Autowired
     private UserRepository userRepository;
@@ -72,7 +68,7 @@ class GamificationSyncIntegrationTest {
                 .rank("BRONZE")
                 .build();
 
-        kafkaTemplate.send("gamification-events", event);
+        eventPublisher.publishEvent(event);
 
         await()
                 .atMost(10, TimeUnit.SECONDS)
@@ -99,7 +95,7 @@ class GamificationSyncIntegrationTest {
                 .rank("GOLD")
                 .build();
 
-        kafkaTemplate.send("gamification-events", event);
+        eventPublisher.publishEvent(event);
 
         await()
                 .atMost(10, TimeUnit.SECONDS)
@@ -123,15 +119,23 @@ class GamificationSyncIntegrationTest {
     @DisplayName("Two GamificationUpdatedEvents in sequence → latest values are in DB")
     void whenMultipleGamificationUpdatesPublished_thenLatestValuesAreSynced() {
         // First event
-        kafkaTemplate.send("gamification-events", GamificationUpdatedEvent.builder()
+        eventPublisher.publishEvent(GamificationUpdatedEvent.builder()
                 .username(SYNC_USER)
                 .score(100L)
                 .badges("Beginner")
                 .rank("BRONZE")
                 .build());
 
+        await()
+                .atMost(10, TimeUnit.SECONDS)
+                .pollInterval(500, TimeUnit.MILLISECONDS)
+                .untilAsserted(() -> {
+                    User updated = userRepository.findById(SYNC_USER).orElseThrow();
+                    assertThat(updated.getScore()).isEqualTo(100L);
+                });
+
         // Second event with higher values
-        kafkaTemplate.send("gamification-events", GamificationUpdatedEvent.builder()
+        eventPublisher.publishEvent(GamificationUpdatedEvent.builder()
                 .username(SYNC_USER)
                 .score(750L)
                 .badges("Beginner,Intermediate")
@@ -167,7 +171,7 @@ class GamificationSyncIntegrationTest {
                 .build();
 
         // Should not throw — listener uses ifPresent()
-        kafkaTemplate.send("gamification-events", event);
+        eventPublisher.publishEvent(event);
 
         // Give the listener time to process; verify no data corruption
         await()

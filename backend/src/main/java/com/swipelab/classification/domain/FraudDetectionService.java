@@ -1,7 +1,7 @@
 package com.swipelab.classification.domain;
 
 import com.swipelab.users.events.FraudDetectedEvent;
-import com.swipelab.eventing.kafka.KafkaEventPublisher;
+import org.springframework.context.ApplicationEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class FraudDetectionService {
 
-    private final KafkaEventPublisher eventPublisher;
+    private final ApplicationEventPublisher eventPublisher;
 
     private static final String FRAUD_EVENTS_TOPIC = "fraud-events";
 
@@ -43,7 +43,7 @@ public class FraudDetectionService {
         log.info("Flagging user {} for fraud. Reason: {}", username, reason);
 
         // Publish Fraud Detected Event
-        eventPublisher.publish(FRAUD_EVENTS_TOPIC,
+        eventPublisher.publishEvent(
                 FraudDetectedEvent.builder()
                         .username(username)
                         .reason(reason)

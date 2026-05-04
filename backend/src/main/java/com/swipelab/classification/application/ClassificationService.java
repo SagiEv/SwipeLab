@@ -12,7 +12,7 @@ import com.swipelab.classification.infrastructure.ImageRepository;
 
 import com.swipelab.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +27,7 @@ public class ClassificationService {
         private final ImageRepository imageRepository;
         private final GoldImageRepository goldImageRepository;
         private final CredibilityRepository credibilityRepository;
-        private final KafkaTemplate<String, Object> kafkaTemplate;
+        private final ApplicationEventPublisher eventPublisher;
 
         private final FraudDetectionService fraudDetectionService;
         private final ImageService imageService;
@@ -79,7 +79,7 @@ public class ClassificationService {
                                         .userCredibility(userCredibility)
                                         .build();
 
-                        kafkaTemplate.send("classification-events", event);
+                        eventPublisher.publishEvent(event);
 
                 } else {
                         Classification classification = Classification.builder()
@@ -106,7 +106,7 @@ public class ClassificationService {
                                         .userCredibility(userCredibility)
                                         .build();
 
-                        kafkaTemplate.send("classification-events", event);
+                        eventPublisher.publishEvent(event);
                 }
 
                 // 3. Return Next Batch
@@ -156,7 +156,7 @@ public class ClassificationService {
                                                 .userCredibility(null) // Not available in batch yet
                                                 .build();
 
-                                kafkaTemplate.send("classification-events", event);
+                                eventPublisher.publishEvent(event);
 
                         } else {
                                 Classification classification = Classification.builder()
@@ -182,7 +182,7 @@ public class ClassificationService {
                                                 .userCredibility(null)
                                                 .build();
 
-                                kafkaTemplate.send("classification-events", event);
+                                eventPublisher.publishEvent(event);
                         }
                 }
         }

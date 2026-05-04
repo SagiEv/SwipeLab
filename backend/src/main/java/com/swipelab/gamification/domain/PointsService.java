@@ -6,14 +6,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.swipelab.gamification.events.GamificationUpdatedEvent;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.context.ApplicationEventPublisher;
 
 @Service
 @RequiredArgsConstructor
 public class PointsService {
 
     private final GamificationRepository gamificationRepository;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void addPoints(String username, int amount) {
@@ -65,6 +65,6 @@ public class PointsService {
                 .badges(gamification.getBadge())
                 .rank(gamification.getRank())
                 .build();
-        kafkaTemplate.send("gamification-events", gamification.getUsername(), event);
+        eventPublisher.publishEvent(event);
     }
 }

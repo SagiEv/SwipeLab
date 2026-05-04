@@ -22,7 +22,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.Collections;
 import java.util.List;
@@ -49,7 +49,7 @@ class ClassificationServiceTest {
     private CredibilityRepository credibilityRepository;
 
     @Mock
-    private KafkaTemplate<String, Object> kafkaTemplate;
+    private ApplicationEventPublisher eventPublisher;
 
     @Mock
     private FraudDetectionService fraudDetectionService;
@@ -107,7 +107,7 @@ class ClassificationServiceTest {
         verify(classificationRepository, never()).save(any());
 
         ArgumentCaptor<ClassificationSubmittedEvent> eventCaptor = ArgumentCaptor.forClass(ClassificationSubmittedEvent.class);
-        verify(kafkaTemplate, times(1)).send(eq("classification-events"), eventCaptor.capture());
+        verify(eventPublisher, times(1)).publishEvent(eventCaptor.capture());
 
         ClassificationSubmittedEvent event = eventCaptor.getValue();
         assertTrue(event.isCorrect());
@@ -132,7 +132,7 @@ class ClassificationServiceTest {
         verify(classificationRepository, times(1)).save(any());
 
         ArgumentCaptor<ClassificationSubmittedEvent> eventCaptor = ArgumentCaptor.forClass(ClassificationSubmittedEvent.class);
-        verify(kafkaTemplate, times(1)).send(eq("classification-events"), eventCaptor.capture());
+        verify(eventPublisher, times(1)).publishEvent(eventCaptor.capture());
 
         ClassificationSubmittedEvent event = eventCaptor.getValue();
         assertFalse(event.isCorrect());
@@ -155,6 +155,6 @@ class ClassificationServiceTest {
         classificationService.submitBatchResponses("testuser", "USER", 1L, responses);
 
         verify(classificationRepository, times(1)).save(any(Classification.class));
-        verify(kafkaTemplate, times(1)).send(eq("classification-events"), any(ClassificationSubmittedEvent.class));
+        verify(eventPublisher, times(1)).publishEvent(any(ClassificationSubmittedEvent.class));
     }
 }

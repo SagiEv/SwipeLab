@@ -1,7 +1,7 @@
 package com.swipelab.classification.application;
 
 import com.swipelab.classification.domain.FraudDetectionService;
-import com.swipelab.eventing.kafka.KafkaEventPublisher;
+import org.springframework.context.ApplicationEventPublisher;
 import com.swipelab.users.events.FraudDetectedEvent;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +19,7 @@ import static org.mockito.Mockito.*;
 class FraudDetectionServiceTest {
 
     @Mock
-    private KafkaEventPublisher eventPublisher;
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private FraudDetectionService fraudDetectionService;
@@ -29,7 +29,7 @@ class FraudDetectionServiceTest {
         fraudDetectionService.analyzeClassification("testuser", 200L); // threshold is 500L
         
         ArgumentCaptor<FraudDetectedEvent> captor = ArgumentCaptor.forClass(FraudDetectedEvent.class);
-        verify(eventPublisher, times(1)).publish(eq("fraud-events"), captor.capture());
+        verify(eventPublisher, times(1)).publishEvent(captor.capture());
         
         assertEquals("testuser", captor.getValue().getUsername());
         assertEquals("Non-human response speed: 200ms", captor.getValue().getReason());
@@ -38,6 +38,6 @@ class FraudDetectionServiceTest {
     @Test
     void analyzeClassification_ShouldNotFlagUser_WhenResponseTimeIsNormal() {
         fraudDetectionService.analyzeClassification("normaluser", 1500L); // threshold is 500L
-        verify(eventPublisher, never()).publish(anyString(), any(FraudDetectedEvent.class));
+        verify(eventPublisher, never()).publishEvent(any(FraudDetectedEvent.class));
     }
 }
