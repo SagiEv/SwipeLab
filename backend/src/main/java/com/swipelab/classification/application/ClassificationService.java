@@ -1,15 +1,15 @@
 package com.swipelab.classification.application;
 
-import com.swipelab.classification.domain.*;
+import com.swipelab.classification.domain.Classification;
+import com.swipelab.classification.domain.FraudDetectionService;
+import com.swipelab.classification.domain.Image;
+import com.swipelab.classification.domain.ImageService;
 import com.swipelab.classification.dto.UserClassification;
 import com.swipelab.classification.dto.api.NextBatchResponse;
 import com.swipelab.classification.dto.api.SubmitClassificationRequest;
 import com.swipelab.classification.events.ClassificationSubmittedEvent;
 import com.swipelab.classification.infrastructure.ClassificationRepository;
-import com.swipelab.classification.infrastructure.CredibilityRepository;
-import com.swipelab.classification.infrastructure.GoldImageRepository;
 import com.swipelab.classification.infrastructure.ImageRepository;
-
 import com.swipelab.classification.application.port.out.TaskProvider;
 import com.swipelab.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +17,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,170 +25,129 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ClassificationService {
 
-        private final ClassificationRepository classificationRepository;
-        private final ImageRepository imageRepository;
-        private final GoldImageRepository goldImageRepository;
-        private final CredibilityRepository credibilityRepository;
-        private final ApplicationEventPublisher eventPublisher;
+    private final ClassificationRepository classificationRepository;
+    private final ImageRepository imageRepository;
+    private final ApplicationEventPublisher eventPublisher;
+    private final FraudDetectionService fraudDetectionService;
+    private final ImageService imageService;
+    private final TaskProvider taskProvider;
+    private final GoldImageEvaluatorService goldImageEvaluatorService;
 
-        private final FraudDetectionService fraudDetectionService;
-        private final ImageService imageService;
-        private final TaskProvider taskProvider;
+    @Transactional
+    public NextBatchResponse submitClassification(String username, String userRole, Double userCredibility,
+            SubmitClassificationRequest request) {
 
-        @Transactional
-        public NextBatchResponse submitClassification(String username, String userRole, Double userCredibility,
-                        SubmitClassificationRequest request) {
-                // 1. Analyze Fraud (Response Time)
-                if (request.getResponseTimeMs() != null) {
-                        fraudDetectionService.analyzeClassification(username, request.getResponseTimeMs());
-                }
-
-                // 2. Process Classification
-                Image image = imageRepository.findById(request.getImageId())
-                                .orElseThrow(() -> new ResourceNotFoundException(
-                                                "Image not found: " + request.getImageId()));
-
-                Optional<GoldImage> goldImageOpt = goldImageRepository.findByImageId(image.getId());
-
-                TaskProvider.TaskInfo taskInfo = taskProvider.getTaskInfo(request.getTaskId());
-                String species = taskInfo.querySpecies();
-                if (goldImageOpt.isPresent() && species == null) {
-                        species = goldImageOpt.get().getSpecies();
-                }
-
-                if (goldImageOpt.isPresent()) {
-                        GoldImage goldImage = goldImageOpt.get();
-                        boolean isCorrect = goldImage.getCorrectAnswer().name()
-                                        .equals(request.getDecision().name());
-
-                        credibilityRepository.save(CredibilityRecord.builder()
-                                        .username(username)
-                                        .taskId(request.getTaskId())
-                                        .goldImage(goldImage)
-                                        .querySpecies(goldImage.getSpecies())
-                                        .userResponse(request.getDecision())
-                                        .correctAnswer(goldImage.getCorrectAnswer())
-                                        .build());
-
-                        ClassificationSubmittedEvent event = ClassificationSubmittedEvent.builder()
-                                        .username(username)
-                                        .classificationId(null)
-                                        .imageId(image.getId())
-                                        .taskId(request.getTaskId())
-                                        .isCorrect(isCorrect)
-                                        .isGoldStandard(true)
-                                        .submittedAt(java.time.LocalDateTime.now())
-                                        .species(species)
-                                        .responseTimeMs(request.getResponseTimeMs())
-                                        .userCredibility(userCredibility)
-                                        .build();
-
-                        eventPublisher.publishEvent(event);
-
-                } else {
-                        Classification classification = Classification.builder()
-                                        .username(username)
-                                        .userRole(userRole)
-                                        .taskId(request.getTaskId())
-                                        .image(image)
-                                        .querySpecies(species)
-                                        .userResponse(request.getDecision())
-                                        .build();
-
-                        Classification saved = classificationRepository.save(classification);
-
-                        ClassificationSubmittedEvent event = ClassificationSubmittedEvent.builder()
-                                        .username(username)
-                                        .classificationId(saved.getId())
-                                        .imageId(image.getId())
-                                        .taskId(request.getTaskId())
-                                        .isCorrect(false)
-                                        .isGoldStandard(false)
-                                        .submittedAt(saved.getCreatedAt())
-                                        .species(species)
-                                        .responseTimeMs(request.getResponseTimeMs())
-                                        .userCredibility(userCredibility)
-                                        .build();
-
-                        eventPublisher.publishEvent(event);
-                }
-
-                // 3. Return Next Batch
-                return imageService.getNextBatchForApi(request.getTaskId(), username, 10);
+        // 1. Fraud Detection
+        if (request.getResponseTimeMs() != null) {
+            fraudDetectionService.analyzeClassification(username, request.getResponseTimeMs());
         }
 
-        @Transactional
-        public void submitBatchResponses(String username, String userRole, Long taskId,
-                        List<UserClassification> responses) {
-                // Kept for backward compatibility
-                for (UserClassification response : responses) {
-                        Image image = imageRepository.findById(response.getImageId())
-                                        .orElseThrow(() -> new ResourceNotFoundException(
-                                                        "Image not found: " + response.getImageId()));
+        // 2. Load Image
+        Image image = imageRepository.findById(request.getImageId())
+                .orElseThrow(() -> new ResourceNotFoundException("Image not found: " + request.getImageId()));
 
-                        TaskProvider.TaskInfo taskInfo = taskProvider.getTaskInfo(taskId);
-                        String species = taskInfo.querySpecies();
+        // 3. Evaluate (Gold or Regular) and publish event
+        Optional<GoldImageEvaluationResult> goldResult = goldImageEvaluatorService.evaluate(
+                image, request.getTaskId(), username, request.getDecision());
 
-                        Optional<GoldImage> goldImageOpt = goldImageRepository.findByImageId(image.getId());
+        ClassificationSubmittedEvent event;
+        if (goldResult.isPresent()) {
+            GoldImageEvaluationResult result = goldResult.get();
+            event = ClassificationSubmittedEvent.builder()
+                    .username(username)
+                    .classificationId(null)
+                    .imageId(image.getId())
+                    .taskId(request.getTaskId())
+                    .isCorrect(result.isCorrect())
+                    .isGoldStandard(true)
+                    .submittedAt(LocalDateTime.now())
+                    .species(result.species())
+                    .responseTimeMs(request.getResponseTimeMs())
+                    .userCredibility(userCredibility)
+                    .build();
+        } else {
+            String species = taskProvider.getTaskInfo(request.getTaskId()).querySpecies();
+            Classification classification = Classification.builder()
+                    .username(username)
+                    .userRole(userRole)
+                    .taskId(request.getTaskId())
+                    .image(image)
+                    .querySpecies(species)
+                    .userResponse(request.getDecision())
+                    .build();
+            Classification saved = classificationRepository.save(classification);
 
-                        if (goldImageOpt.isPresent() && species == null) {
-                                species = goldImageOpt.get().getSpecies();
-                        }
-
-                        if (goldImageOpt.isPresent()) {
-                                GoldImage goldImage = goldImageOpt.get();
-                                boolean isCorrect = goldImage.getCorrectAnswer().name()
-                                                .equals(response.getUserResponse().name());
-
-                                credibilityRepository.save(CredibilityRecord.builder()
-                                                .username(username)
-                                                .taskId(taskId)
-                                                .goldImage(goldImage)
-                                                .querySpecies(goldImage.getSpecies())
-                                                .userResponse(response.getUserResponse())
-                                                .correctAnswer(goldImage.getCorrectAnswer())
-                                                .build());
-
-                                ClassificationSubmittedEvent event = ClassificationSubmittedEvent.builder()
-                                                .username(username)
-                                                .classificationId(null)
-                                                .imageId(image.getId())
-                                                .taskId(taskId)
-                                                .isCorrect(isCorrect)
-                                                .isGoldStandard(true)
-                                                .submittedAt(java.time.LocalDateTime.now())
-                                                .species(species)
-                                                .userCredibility(null) // Not available in batch yet
-                                                .build();
-
-                                eventPublisher.publishEvent(event);
-
-                        } else {
-                                Classification classification = Classification.builder()
-                                                .username(username)
-                                                .userRole(userRole)
-                                                .taskId(taskId)
-                                                .image(image)
-                                                .querySpecies(species)
-                                                .userResponse(response.getUserResponse())
-                                                .build();
-
-                                Classification saved = classificationRepository.save(classification);
-
-                                ClassificationSubmittedEvent event = ClassificationSubmittedEvent.builder()
-                                                .username(username)
-                                                .classificationId(saved.getId())
-                                                .imageId(image.getId())
-                                                .taskId(taskId)
-                                                .isCorrect(false)
-                                                .isGoldStandard(false)
-                                                .submittedAt(saved.getCreatedAt())
-                                                .species(species)
-                                                .userCredibility(null)
-                                                .build();
-
-                                eventPublisher.publishEvent(event);
-                        }
-                }
+            event = ClassificationSubmittedEvent.builder()
+                    .username(username)
+                    .classificationId(saved.getId())
+                    .imageId(image.getId())
+                    .taskId(request.getTaskId())
+                    .isCorrect(false)
+                    .isGoldStandard(false)
+                    .submittedAt(saved.getCreatedAt())
+                    .species(species)
+                    .responseTimeMs(request.getResponseTimeMs())
+                    .userCredibility(userCredibility)
+                    .build();
         }
+
+        // 4. Publish Event
+        eventPublisher.publishEvent(event);
+
+        // 5. Return Next Batch
+        return imageService.getNextBatchForApi(request.getTaskId(), username, 10);
+    }
+
+    @Transactional
+    public void submitBatchResponses(String username, String userRole, Long taskId,
+            List<UserClassification> responses) {
+        for (UserClassification response : responses) {
+            Image image = imageRepository.findById(response.getImageId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Image not found: " + response.getImageId()));
+
+            Optional<GoldImageEvaluationResult> goldResult = goldImageEvaluatorService.evaluate(
+                    image, taskId, username, response.getUserResponse());
+
+            ClassificationSubmittedEvent event;
+            if (goldResult.isPresent()) {
+                GoldImageEvaluationResult result = goldResult.get();
+                event = ClassificationSubmittedEvent.builder()
+                        .username(username)
+                        .classificationId(null)
+                        .imageId(image.getId())
+                        .taskId(taskId)
+                        .isCorrect(result.isCorrect())
+                        .isGoldStandard(true)
+                        .submittedAt(LocalDateTime.now())
+                        .species(result.species())
+                        .userCredibility(null)
+                        .build();
+            } else {
+                String species = taskProvider.getTaskInfo(taskId).querySpecies();
+                Classification classification = Classification.builder()
+                        .username(username)
+                        .userRole(userRole)
+                        .taskId(taskId)
+                        .image(image)
+                        .querySpecies(species)
+                        .userResponse(response.getUserResponse())
+                        .build();
+                Classification saved = classificationRepository.save(classification);
+
+                event = ClassificationSubmittedEvent.builder()
+                        .username(username)
+                        .classificationId(saved.getId())
+                        .imageId(image.getId())
+                        .taskId(taskId)
+                        .isCorrect(false)
+                        .isGoldStandard(false)
+                        .submittedAt(saved.getCreatedAt())
+                        .species(species)
+                        .userCredibility(null)
+                        .build();
+            }
+
+            eventPublisher.publishEvent(event);
+        }
+    }
 }

@@ -2,7 +2,6 @@ package com.swipelab.classification.application;
 
 import com.swipelab.classification.domain.Classification;
 import com.swipelab.classification.domain.FraudDetectionService;
-import com.swipelab.classification.domain.GoldImage;
 import com.swipelab.classification.domain.Image;
 import com.swipelab.classification.domain.ImageService;
 import com.swipelab.classification.dto.UserClassification;
@@ -10,8 +9,6 @@ import com.swipelab.classification.dto.api.NextBatchResponse;
 import com.swipelab.classification.dto.api.SubmitClassificationRequest;
 import com.swipelab.classification.events.ClassificationSubmittedEvent;
 import com.swipelab.classification.infrastructure.ClassificationRepository;
-import com.swipelab.classification.infrastructure.CredibilityRepository;
-import com.swipelab.classification.infrastructure.GoldImageRepository;
 import com.swipelab.classification.infrastructure.ImageRepository;
 import com.swipelab.exception.ResourceNotFoundException;
 import com.swipelab.classification.application.port.out.TaskProvider;
@@ -46,10 +43,7 @@ class ClassificationServiceTest {
     private TaskProvider taskProvider;
 
     @Mock
-    private GoldImageRepository goldImageRepository;
-
-    @Mock
-    private CredibilityRepository credibilityRepository;
+    private GoldImageEvaluatorService goldImageEvaluatorService;
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
@@ -92,20 +86,18 @@ class ClassificationServiceTest {
 
     @Test
     void submitClassification_ShouldSaveCredibility_WhenGoldImageExists() {
-        GoldImage goldImage = new GoldImage();
-        goldImage.setCorrectAnswer(GoldImage.UserResponse.YES);
-        goldImage.setSpecies("Lion");
+        GoldImageEvaluationResult goldResult = new GoldImageEvaluationResult(true, "Lion");
 
         when(imageRepository.findById(1L)).thenReturn(Optional.of(image));
-        when(goldImageRepository.findByImageId(1L)).thenReturn(Optional.of(goldImage));
+        when(goldImageEvaluatorService.evaluate(any(), any(), any(), any()))
+                .thenReturn(Optional.of(goldResult));
         when(imageService.getNextBatchForApi(anyLong(), anyString(), anyInt()))
                 .thenReturn(NextBatchResponse.builder().build());
-        when(taskProvider.getTaskInfo(1L)).thenReturn(taskInfo);
 
         classificationService.submitClassification("testuser", "USER", 0.8, request);
 
         verify(fraudDetectionService, times(1)).analyzeClassification("testuser", 1500L);
-        verify(credibilityRepository, times(1)).save(any());
+        verify(goldImageEvaluatorService, times(1)).evaluate(any(), any(), any(), any());
         verify(classificationRepository, never()).save(any());
 
         ArgumentCaptor<ClassificationSubmittedEvent> eventCaptor = ArgumentCaptor.forClass(ClassificationSubmittedEvent.class);
@@ -119,7 +111,7 @@ class ClassificationServiceTest {
     @Test
     void submitClassification_ShouldSaveClassification_WhenRegularImage() {
         when(imageRepository.findById(1L)).thenReturn(Optional.of(image));
-        when(goldImageRepository.findByImageId(1L)).thenReturn(Optional.empty());
+        when(goldImageEvaluatorService.evaluate(any(), any(), any(), any())).thenReturn(Optional.empty());
         when(imageService.getNextBatchForApi(anyLong(), anyString(), anyInt()))
                 .thenReturn(NextBatchResponse.builder().build());
         when(taskProvider.getTaskInfo(1L)).thenReturn(taskInfo);
@@ -131,7 +123,7 @@ class ClassificationServiceTest {
         classificationService.submitClassification("testuser", "USER", 0.8, request);
 
         verify(fraudDetectionService, times(1)).analyzeClassification("testuser", 1500L);
-        verify(credibilityRepository, never()).save(any());
+        verify(goldImageEvaluatorService, times(1)).evaluate(any(), any(), any(), any());
         verify(classificationRepository, times(1)).save(any());
 
         ArgumentCaptor<ClassificationSubmittedEvent> eventCaptor = ArgumentCaptor.forClass(ClassificationSubmittedEvent.class);
@@ -152,7 +144,7 @@ class ClassificationServiceTest {
         savedClassification.setId(10L);
 
         when(imageRepository.findById(1L)).thenReturn(Optional.of(image));
-        when(goldImageRepository.findByImageId(1L)).thenReturn(Optional.empty());
+        when(goldImageEvaluatorService.evaluate(any(), any(), any(), any())).thenReturn(Optional.empty());
         when(taskProvider.getTaskInfo(1L)).thenReturn(taskInfo);
         when(classificationRepository.save(any(Classification.class))).thenReturn(savedClassification);
 
