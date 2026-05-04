@@ -2,7 +2,6 @@ package com.swipelab.classification.domain;
 
 import com.swipelab.classification.infrastructure.ClassificationRepository;
 import com.swipelab.classification.infrastructure.ImageRepository;
-import com.swipelab.tasks.domain.Task;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -18,9 +17,7 @@ public class TaskDistributionService {
 
     private final ImageRepository imageRepository;
     private final ClassificationRepository classificationRepository;
-
-    // Gold image insertion ratio: 1 gold image per 15 regular images
-    private static final int GOLD_IMAGE_FREQUENCY = 15;
+    private final GoldImagePolicy goldImagePolicy;
 
     /**
      * Holds the selected image and the species to query for that image.
@@ -34,13 +31,7 @@ public class TaskDistributionService {
      */
     @Transactional(readOnly = true)
     public Optional<ImageSpeciesPair> getNextImageForUser(String username, Long taskId, List<String> taskSpecies) {
-        // Get user's classification count for gold-image scheduling
-        Long count = classificationRepository.countByUsernameAndTaskId(username, taskId);
-        if (count == null) count = 0L;
-
-        boolean shouldBeGold = (count > 0) && (count % GOLD_IMAGE_FREQUENCY == 0);
-
-        if (shouldBeGold) {
+        if (goldImagePolicy.shouldServeGoldImage(username, taskId)) {
             Optional<ImageSpeciesPair> goldPair = getNextGoldImagePair(username, taskId, taskSpecies);
             if (goldPair.isPresent()) return goldPair;
         }
@@ -68,7 +59,6 @@ public class TaskDistributionService {
      */
     private Optional<ImageSpeciesPair> getNextRegularImagePair(String username, Long taskId, List<String> taskSpecies) {
         int speciesCount = taskSpecies == null || taskSpecies.isEmpty() ? 1 : taskSpecies.size();
-        // Fetch a larger pool so we can find one with an un-queried species
         List<Image> candidates = imageRepository.findRegularImageCandidatesForUser(
                 username, taskId, speciesCount, PageRequest.of(0, 20));
 
