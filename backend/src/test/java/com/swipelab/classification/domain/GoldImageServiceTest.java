@@ -5,7 +5,7 @@ import com.swipelab.classification.infrastructure.ImageRepository;
 import com.swipelab.dto.request.GoldImageRequest;
 import com.swipelab.dto.response.GoldImageResponse;
 import com.swipelab.exception.ResourceNotFoundException;
-import com.swipelab.tasks.domain.Task;
+import com.swipelab.classification.application.port.out.TaskProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,22 +31,24 @@ class GoldImageServiceTest {
     @Mock
     private ImageRepository imageRepository;
 
+    @Mock
+    private TaskProvider taskProvider;
+
     @InjectMocks
     private GoldImageService goldImageService;
 
     private Image image;
     private GoldImage goldImage;
     private GoldImageRequest request;
-    private Task task;
+    private TaskProvider.TaskInfo taskInfo;
 
     @BeforeEach
     void setUp() {
-        task = new Task();
-        task.setId(1L);
+        taskInfo = new TaskProvider.TaskInfo(1L, "Question", "Lion", Collections.emptyList());
 
         image = new Image();
         image.setId(1L);
-        image.setTask(task);
+        image.setTaskId(1L);
 
         goldImage = new GoldImage();
         goldImage.setId(1L);

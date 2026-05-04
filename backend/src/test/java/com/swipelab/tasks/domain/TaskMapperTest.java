@@ -1,11 +1,13 @@
 package com.swipelab.tasks.domain;
 
-import com.swipelab.classification.domain.Label;
+import com.swipelab.tasks.application.port.out.TargetSpeciesProvider;
 import com.swipelab.dto.request.CreateTaskRequest;
 import com.swipelab.dto.request.UpdateTaskRequest;
 import com.swipelab.dto.response.TaskResponse;
+import com.swipelab.dto.response.TargetSpeciesResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -16,10 +18,12 @@ import static org.junit.jupiter.api.Assertions.*;
 class TaskMapperTest {
 
     private TaskMapper taskMapper;
+    private TargetSpeciesProvider targetSpeciesProvider;
 
     @BeforeEach
     void setUp() {
-        taskMapper = new TaskMapper();
+        targetSpeciesProvider = Mockito.mock(TargetSpeciesProvider.class);
+        taskMapper = new TaskMapper(targetSpeciesProvider);
     }
 
     @Test
@@ -56,15 +60,16 @@ class TaskMapperTest {
 
     @Test
     void toResponse_ShouldMapTaskToTaskResponse() {
-        Label label = new Label();
-        label.setName("Dog");
-        
         Task task = new Task();
         task.setId(1L);
         task.setTitle("Title");
         task.setStatus(TaskStatus.ACTIVE);
-        task.setTargetSpecies(Collections.singletonList(label));
+        task.setTargetSpeciesIds(Collections.singletonList(2L));
         task.setCreatedAt(LocalDateTime.now());
+
+        TargetSpeciesResponse speciesResponse = TargetSpeciesResponse.builder().name("Dog").build();
+        Mockito.when(targetSpeciesProvider.getSpeciesByIds(Collections.singletonList(2L)))
+               .thenReturn(Collections.singletonList(speciesResponse));
 
         TaskResponse response = taskMapper.toResponse(task);
 

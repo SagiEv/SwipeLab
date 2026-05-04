@@ -177,13 +177,13 @@ public class MockDataSeeder implements CommandLineRunner {
 
             Image img1 = Image.builder()
                     .srcPath("101") // Mock Stardbi ID 101
-                    .task(task)
+                    .taskId(task.getId())
                     .priority(1)
                     .build();
 
             Image img2 = Image.builder()
                     .srcPath("102") // Mock Stardbi ID 102
-                    .task(task)
+                    .taskId(task.getId())
                     .priority(1)
                     .build();
 

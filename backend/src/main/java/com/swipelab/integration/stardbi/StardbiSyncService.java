@@ -80,7 +80,7 @@ public class StardbiSyncService {
                             String base64Image = Base64.getEncoder().encodeToString(imageBytes);
 
                             Image newImage = Image.builder()
-                                    .task(task)
+                                    .taskId(task.getId())
                                     .externalBoxId(crop.getBoxId())
                                     .parentImageId(crop.getImageId())
                                     .srcPath(base64Image)
@@ -156,7 +156,7 @@ public class StardbiSyncService {
                                     java.nio.file.Files.copy(zis, outputFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                                     
                                     Image newImage = Image.builder()
-                                            .task(task)
+                                            .taskId(task.getId())
                                             .externalBoxId(boxId)
                                             .parentImageId(extractImageIdFromFileName(fileName))
                                             .srcPath(outputFile.getAbsolutePath())

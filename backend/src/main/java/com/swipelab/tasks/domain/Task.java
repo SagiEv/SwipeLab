@@ -9,8 +9,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import com.swipelab.classification.domain.Label;
-import com.swipelab.classification.domain.Image;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -98,17 +96,14 @@ public class Task {
     private Boolean isPublic = false;
 
     @BatchSize(size = 20)
-    @ManyToMany
-    @JoinTable(name = "task_target_species", joinColumns = @JoinColumn(name = "task_id"), inverseJoinColumns = @JoinColumn(name = "label_id"))
+    @ElementCollection
+    @CollectionTable(name = "task_target_species", joinColumns = @JoinColumn(name = "task_id"))
+    @Column(name = "label_id")
     @Builder.Default
-    private List<Label> targetSpecies = new ArrayList<>();
+    private List<Long> targetSpeciesIds = new ArrayList<>();
 
     @Column(name = "created_by", nullable = false)
     private String createdBy;
-
-    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<Image> images = new ArrayList<>();
 
     // =========================
     // Status & Lifecycle

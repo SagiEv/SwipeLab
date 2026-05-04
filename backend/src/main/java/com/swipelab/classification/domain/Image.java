@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-import com.swipelab.tasks.domain.Task;
 
 import java.time.LocalDateTime;
 
@@ -64,9 +63,8 @@ public class Image {
      * private Label correctLabel;
      */
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "task_id", nullable = false)
-    private Task task;
+    @Column(name = "task_id", nullable = false)
+    private Long taskId;
 
     @CreationTimestamp
     @Column(updatable = false)

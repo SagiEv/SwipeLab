@@ -18,7 +18,7 @@ public interface ImageRepository extends JpaRepository<Image, Long> {
     Image findByExternalBoxId(Long externalBoxId);
 
     // Find all unclassified gold standard images for a specific task and user
-    @Query("SELECT i FROM Image i WHERE i.task.id = :taskId " +
+    @Query("SELECT i FROM Image i WHERE i.taskId = :taskId " +
             "AND i.id IN (SELECT g.image.id FROM GoldImage g) " +
             "AND NOT EXISTS (SELECT c FROM Classification c WHERE c.image.id = i.id AND c.username = :username)")
     List<Image> findUnclassifiedGoldImages(@Param("username") String username, @Param("taskId") Long taskId);
@@ -31,7 +31,7 @@ public interface ImageRepository extends JpaRepository<Image, Long> {
      * Prioritises images with fewer total classifications overall.
      */
     @Query("SELECT i FROM Image i " +
-            "WHERE i.task.id = :taskId " +
+            "WHERE i.taskId = :taskId " +
             "AND i.id NOT IN (SELECT g.image.id FROM GoldImage g) " +
             "AND (SELECT COUNT(DISTINCT c.querySpecies) FROM Classification c " +
             "     WHERE c.image.id = i.id AND c.username = :username) < :speciesCount " +

@@ -13,8 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.web.multipart.MultipartFile;
 import com.swipelab.infrastructure.FileStorageService;
-import com.swipelab.tasks.infrastructure.TaskRepository;
-import com.swipelab.tasks.domain.Task;
+import com.swipelab.classification.application.port.out.TaskProvider;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +22,7 @@ public class GoldImageService {
     private final GoldImageRepository goldImageRepository;
     private final ImageRepository imageRepository;
     private final FileStorageService fileStorageService;
-    private final TaskRepository taskRepository;
+    private final TaskProvider taskProvider;
 
     @Transactional
     public GoldImageResponse createGoldImage(GoldImageRequest request) {
@@ -51,12 +50,11 @@ public class GoldImageService {
             throw new IllegalArgumentException("Either file or imageUrl must be provided");
         }
 
-        Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new ResourceNotFoundException("Task not found: " + taskId));
+        TaskProvider.TaskInfo taskInfo = taskProvider.getTaskInfo(taskId);
 
         Image image = Image.builder()
                 .srcPath(srcPath)
-                .task(task)
+                .taskId(taskInfo.id())
                 .build();
         Image savedImage = imageRepository.save(image);
 
@@ -81,7 +79,7 @@ public class GoldImageService {
     public List<GoldImageResponse> getGoldImagesByTask(Long taskId) {
         // Assuming we want all gold images for images belonging to a task
         return goldImageRepository.findAll().stream()
-                .filter(g -> g.getImage().getTask().getId().equals(taskId))
+                .filter(g -> g.getImage().getTaskId().equals(taskId))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
