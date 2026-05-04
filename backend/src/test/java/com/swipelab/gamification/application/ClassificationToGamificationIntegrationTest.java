@@ -10,8 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -32,17 +31,13 @@ import static org.awaitility.Awaitility.await;
  */
 @SpringBootTest
 @ActiveProfiles("integration")
-@EmbeddedKafka(partitions = 1, topics = { "classification-events", "gamification-events", "fraud-events",
-                "user-events" }, brokerProperties = {
-                                "listeners=PLAINTEXT://localhost:${random.int[10000,19999]}",
-                                "auto.create.topics.enable=true"
-                })
+
 class ClassificationToGamificationIntegrationTest {
 
         private static final String TEST_USER = "gamification_test_user";
 
         @Autowired
-        private KafkaTemplate<String, Object> kafkaTemplate;
+        private ApplicationEventPublisher eventPublisher;
 
         @Autowired
         private UserRepository userRepository;
@@ -120,7 +115,7 @@ class ClassificationToGamificationIntegrationTest {
                                 .userCredibility(0.7)
                                 .build();
 
-                kafkaTemplate.send("classification-events", event);
+                eventPublisher.publishEvent(event);
 
                 // Wait up to 10 seconds for the consumer to process the message
                 await()
@@ -155,7 +150,7 @@ class ClassificationToGamificationIntegrationTest {
                                 .userCredibility(0.9)
                                 .build();
 
-                kafkaTemplate.send("classification-events", event);
+                eventPublisher.publishEvent(event);
 
                 // 10 base + 50 gold bonus = 60 points expected
                 await()
@@ -190,7 +185,7 @@ class ClassificationToGamificationIntegrationTest {
                                 .userCredibility(0.8)
                                 .build();
 
-                kafkaTemplate.send("classification-events", event);
+                eventPublisher.publishEvent(event);
 
                 await()
                                 .atMost(15, TimeUnit.SECONDS)

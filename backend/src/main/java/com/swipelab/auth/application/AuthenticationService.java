@@ -29,7 +29,7 @@ public class AuthenticationService {
     private final EmailService emailService;
     private final com.swipelab.auth.domain.AuthMapper authMapper;
     private final JwtService jwtService;
-    private final com.swipelab.eventing.kafka.KafkaEventPublisher eventPublisher;
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     @Value("${app.auto-verify-emails:false}")
     private boolean autoVerifyEmails;
@@ -69,7 +69,7 @@ public class AuthenticationService {
         User savedUser = userRepository.save(user);
 
         // Publish UserCreatedEvent
-        eventPublisher.publish(com.swipelab.eventing.kafka.KafkaConfig.USER_EVENTS_TOPIC,
+        eventPublisher.publishEvent(
                 com.swipelab.users.events.UserCreatedEvent.builder()
                         .username(savedUser.getUsername())
                         .email(savedUser.getEmail())

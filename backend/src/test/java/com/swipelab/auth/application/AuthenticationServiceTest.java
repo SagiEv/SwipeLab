@@ -5,7 +5,7 @@ import com.swipelab.dto.request.LoginRequest;
 import com.swipelab.dto.request.RegisterRequest;
 import com.swipelab.dto.request.ResetPasswordRequest;
 import com.swipelab.dto.response.AuthResponse;
-import com.swipelab.eventing.kafka.KafkaEventPublisher;
+import org.springframework.context.ApplicationEventPublisher;
 import com.swipelab.exception.EmailVerificationException;
 import com.swipelab.exception.PasswordResetException;
 import com.swipelab.exception.UnauthorizedException;
@@ -48,7 +48,7 @@ class AuthenticationServiceTest {
     private JwtService jwtService;
 
     @Mock
-    private KafkaEventPublisher eventPublisher;
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private AuthenticationService authenticationService;
@@ -103,7 +103,7 @@ class AuthenticationServiceTest {
         assertEquals("Registration successful! A verification link has been sent to your email.", result.get("message"));
 
         verify(emailService, times(1)).sendVerificationEmail(eq("test@swipelab.com"), anyString());
-        verify(eventPublisher, times(1)).publish(anyString(), any());
+        verify(eventPublisher, times(1)).publishEvent(any(com.swipelab.users.events.UserCreatedEvent.class));
     }
 
     @Test

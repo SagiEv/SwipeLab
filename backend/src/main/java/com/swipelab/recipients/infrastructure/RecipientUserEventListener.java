@@ -3,19 +3,19 @@ package com.swipelab.recipients.infrastructure;
 import com.swipelab.recipients.domain.RecipientUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.annotation.KafkaHandler;
-import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
-@KafkaListener(topics = "user-events", groupId = "recipient-group")
 public class RecipientUserEventListener {
 
     private final RecipientUserRepository recipientUserRepository;
 
-    @KafkaHandler
+    @Async
+    @EventListener
     public void handleUserCreated(com.swipelab.users.events.UserCreatedEvent event) {
         log.info("Received UserCreatedEvent for user: {}", event.getUsername());
 
@@ -31,7 +31,8 @@ public class RecipientUserEventListener {
         }
     }
 
-    @KafkaHandler
+    @Async
+    @EventListener
     public void handleUserStatusChanged(com.swipelab.users.events.UserStatusChangedEvent event) {
         log.info("Received UserStatusChangedEvent for user: {}", event.getUsername());
         recipientUserRepository.findById(event.getUsername()).ifPresent(user -> {
@@ -41,11 +42,5 @@ public class RecipientUserEventListener {
         });
     }
 
-    // Default handler to catch any other event types thrown onto the "user-events" topic
-    // without crashing the listener or throwing MessageConversionException
-    @KafkaHandler(isDefault = true)
-    public void handleUnknown(Object object) {
-        log.warn("Received unknown or unmapped event on user-events topic: {}", object.getClass().getName());
-    }
 }
 

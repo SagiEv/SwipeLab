@@ -8,7 +8,8 @@ import com.swipelab.users.domain.User;
 import com.swipelab.users.infrastructure.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +23,8 @@ public class GamificationOrchestratorService {
     private final BadgeService badgeService;
     private final UserRepository userRepository;
 
-    @KafkaListener(topics = "classification-events", groupId = "gamification-group")
+    @Async
+    @EventListener
     @Transactional
     public void onClassificationSubmitted(ClassificationSubmittedEvent event) {
         log.info("Processing gamification for classification submission: {}", event);

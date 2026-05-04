@@ -5,7 +5,8 @@ import com.swipelab.gamification.challenge.ChallengeEngine;
 import com.swipelab.gamification.challenge.MetricType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -15,7 +16,8 @@ public class ChallengeEventListener {
 
     private final ChallengeEngine challengeEngine;
 
-    @KafkaListener(topics = "classification-events", groupId = "gamification-challenges-group")
+    @Async
+    @EventListener
     public void handleClassificationSubmitted(ClassificationSubmittedEvent event) {
         log.debug("Processing ClassificationSubmittedEvent for challenges for user: {}", event.getUsername());
         

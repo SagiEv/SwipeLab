@@ -4,7 +4,8 @@ import com.swipelab.analytics.domain.*;
 import com.swipelab.analytics.infrastructure.*;
 import com.swipelab.classification.events.ClassificationSubmittedEvent;
 import lombok.RequiredArgsConstructor;
-import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +21,8 @@ public class AnalyticsEventListener {
     private final TaskDailyStatsRepository taskDailyStatsRepository;
     private final TaskSpeciesStatsRepository taskSpeciesStatsRepository;
 
-    @KafkaListener(topics = "classification-events", groupId = "analytics-service-group")
+    @Async
+    @EventListener
     @Transactional
     public void handleClassificationSubmitted(ClassificationSubmittedEvent event) {
         LocalDate today = LocalDate.now();

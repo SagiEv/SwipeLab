@@ -1,7 +1,6 @@
 package com.swipelab.users.application;
 
-import com.swipelab.eventing.kafka.KafkaConfig;
-import com.swipelab.eventing.kafka.KafkaEventPublisher;
+import org.springframework.context.ApplicationEventPublisher;
 import com.swipelab.users.domain.User;
 import com.swipelab.users.events.FraudDetectedEvent;
 import com.swipelab.users.events.UserStatusChangedEvent;
@@ -28,7 +27,7 @@ class UserEventListenerTest {
     private UserRepository userRepository;
 
     @Mock
-    private KafkaEventPublisher eventPublisher;
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private UserEventListener userEventListener;
@@ -55,7 +54,7 @@ class UserEventListenerTest {
                 u.getAccountLocked() && u.getCredibilityScore() == 40.0
         ));
 
-        verify(eventPublisher, times(1)).publish(eq(KafkaConfig.USER_EVENTS_TOPIC), any(UserStatusChangedEvent.class));
+        verify(eventPublisher, times(1)).publishEvent(any(UserStatusChangedEvent.class));
     }
     
     @Test

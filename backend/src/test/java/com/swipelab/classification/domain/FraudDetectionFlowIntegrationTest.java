@@ -8,8 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -35,17 +34,14 @@ import static org.awaitility.Awaitility.await;
  */
 @SpringBootTest
 @ActiveProfiles("integration")
-@EmbeddedKafka(partitions = 1, topics = { "classification-events", "gamification-events", "fraud-events",
-                "user-events" }, brokerProperties = {
-                                "auto.create.topics.enable=true"
-                })
+
 class FraudDetectionFlowIntegrationTest {
 
         private static final String FRAUD_USER = "fraud_test_user";
         private static final double INITIAL_CREDIBILITY = 80.0;
 
         @Autowired
-        private KafkaTemplate<String, Object> kafkaTemplate;
+        private ApplicationEventPublisher eventPublisher;
 
         @Autowired
         private UserRepository userRepository;
@@ -99,7 +95,7 @@ class FraudDetectionFlowIntegrationTest {
                                 .detectedAt(LocalDateTime.now())
                                 .build();
 
-                kafkaTemplate.send("fraud-events", event);
+                eventPublisher.publishEvent(event);
 
                 await()
                                 .atMost(15, TimeUnit.SECONDS)
@@ -126,7 +122,7 @@ class FraudDetectionFlowIntegrationTest {
                                 .detectedAt(LocalDateTime.now())
                                 .build();
 
-                kafkaTemplate.send("fraud-events", event);
+                eventPublisher.publishEvent(event);
 
                 await()
                                 .atMost(15, TimeUnit.SECONDS)
@@ -166,7 +162,7 @@ class FraudDetectionFlowIntegrationTest {
                                 .detectedAt(LocalDateTime.now())
                                 .build();
 
-                kafkaTemplate.send("fraud-events", event);
+                eventPublisher.publishEvent(event);
 
                 await()
                                 .atMost(15, TimeUnit.SECONDS)

@@ -4,11 +4,12 @@ import com.swipelab.users.domain.User;
 import com.swipelab.users.events.FraudDetectedEvent;
 import com.swipelab.users.events.UserStatusChangedEvent;
 import com.swipelab.users.infrastructure.UserRepository;
-import com.swipelab.eventing.kafka.KafkaEventPublisher;
-import com.swipelab.eventing.kafka.KafkaConfig;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.annotation.KafkaListener;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,9 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserEventListener {
 
     private final UserRepository userRepository;
-    private final KafkaEventPublisher eventPublisher;
+    private final ApplicationEventPublisher eventPublisher;
 
-    @KafkaListener(topics = "fraud-events", groupId = "user-service-group")
+    @Async
+    @EventListener
     @Transactional
     public void onFraudDetected(FraudDetectedEvent event) {
         log.info("Received FraudDetectedEvent for user: {}", event.getUsername());
@@ -39,7 +41,7 @@ public class UserEventListener {
         log.info("User {} flagged and penalized due to fraud detection.", event.getUsername());
 
         // Publish Status Change Event
-        eventPublisher.publish(KafkaConfig.USER_EVENTS_TOPIC,
+        eventPublisher.publishEvent(
                 UserStatusChangedEvent.builder()
                         .username(user.getUsername())
                         .active(false) // Locked means inactive/blocked for recipients
