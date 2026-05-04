@@ -11,8 +11,7 @@ import com.swipelab.tasks.domain.Task;
 import com.swipelab.tasks.domain.TaskMapper;
 import com.swipelab.tasks.domain.TaskStatus;
 import com.swipelab.tasks.infrastructure.TaskRepository;
-import com.swipelab.classification.domain.Label;
-import com.swipelab.classification.infrastructure.LabelRepository;
+import com.swipelab.tasks.application.port.out.TargetSpeciesProvider;
 import com.swipelab.integration.stardbi.StardbiSyncService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -33,7 +32,7 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final RecipientGroupRepository recipientGroupRepository;
-    private final LabelRepository labelRepository;
+    private final TargetSpeciesProvider targetSpeciesProvider;
     private final TaskMapper taskMapper;
     private final StardbiSyncService stardbiSyncService;
 
@@ -134,13 +133,11 @@ public class TaskService {
         task.setStatus(TaskStatus.PROCESSING);
         
         if (request.getTargetSpecies() != null && !request.getTargetSpecies().isEmpty()) {
-            List<Label> labels = new ArrayList<>();
-            for (com.swipelab.dto.request.TargetSpeciesRequest tsr : request.getTargetSpecies()) {
-                Label label = labelRepository.findByName(tsr.getName())
-                        .orElseGet(() -> labelRepository.save(Label.builder().name(tsr.getName()).build()));
-                labels.add(label);
-            }
-            task.setTargetSpecies(labels);
+            List<String> speciesNames = request.getTargetSpecies().stream()
+                    .map(com.swipelab.dto.request.TargetSpeciesRequest::getName)
+                    .collect(Collectors.toList());
+            List<Long> speciesIds = targetSpeciesProvider.getOrCreateSpeciesIds(speciesNames);
+            task.setTargetSpeciesIds(speciesIds);
         }
         
         task = taskRepository.save(task);
@@ -184,13 +181,11 @@ public class TaskService {
         taskMapper.updateEntity(task, request);
         
         if (request.getTargetSpecies() != null) {
-            List<Label> labels = new ArrayList<>();
-            for (com.swipelab.dto.request.TargetSpeciesRequest tsr : request.getTargetSpecies()) {
-                Label label = labelRepository.findByName(tsr.getName())
-                        .orElseGet(() -> labelRepository.save(Label.builder().name(tsr.getName()).build()));
-                labels.add(label);
-            }
-            task.setTargetSpecies(labels);
+            List<String> speciesNames = request.getTargetSpecies().stream()
+                    .map(com.swipelab.dto.request.TargetSpeciesRequest::getName)
+                    .collect(Collectors.toList());
+            List<Long> speciesIds = targetSpeciesProvider.getOrCreateSpeciesIds(speciesNames);
+            task.setTargetSpeciesIds(speciesIds);
         }
         
         // Trigger a background sync in case task external experiments were added

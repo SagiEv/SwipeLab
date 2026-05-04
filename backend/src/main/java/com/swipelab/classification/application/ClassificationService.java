@@ -10,6 +10,7 @@ import com.swipelab.classification.infrastructure.CredibilityRepository;
 import com.swipelab.classification.infrastructure.GoldImageRepository;
 import com.swipelab.classification.infrastructure.ImageRepository;
 
+import com.swipelab.classification.application.port.out.TaskProvider;
 import com.swipelab.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -31,6 +32,7 @@ public class ClassificationService {
 
         private final FraudDetectionService fraudDetectionService;
         private final ImageService imageService;
+        private final TaskProvider taskProvider;
 
         @Transactional
         public NextBatchResponse submitClassification(String username, String userRole, Double userCredibility,
@@ -47,7 +49,8 @@ public class ClassificationService {
 
                 Optional<GoldImage> goldImageOpt = goldImageRepository.findByImageId(image.getId());
 
-                String species = image.getTask() != null ? image.getTask().getQuerySpecies() : null;
+                TaskProvider.TaskInfo taskInfo = taskProvider.getTaskInfo(request.getTaskId());
+                String species = taskInfo.querySpecies();
                 if (goldImageOpt.isPresent() && species == null) {
                         species = goldImageOpt.get().getSpecies();
                 }
@@ -122,7 +125,8 @@ public class ClassificationService {
                                         .orElseThrow(() -> new ResourceNotFoundException(
                                                         "Image not found: " + response.getImageId()));
 
-                        String species = image.getTask() != null ? image.getTask().getQuerySpecies() : null;
+                        TaskProvider.TaskInfo taskInfo = taskProvider.getTaskInfo(taskId);
+                        String species = taskInfo.querySpecies();
 
                         Optional<GoldImage> goldImageOpt = goldImageRepository.findByImageId(image.getId());
 

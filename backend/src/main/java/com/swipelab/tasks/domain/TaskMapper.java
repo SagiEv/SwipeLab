@@ -6,16 +6,20 @@ import com.swipelab.dto.response.TaskProgressResponse;
 import com.swipelab.dto.response.TaskResponse;
 import com.swipelab.dto.response.TargetSpeciesResponse;
 
-import com.swipelab.classification.domain.Label;
+import com.swipelab.tasks.application.port.out.TargetSpeciesProvider;
 
 import org.springframework.stereotype.Component;
+import lombok.RequiredArgsConstructor;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class TaskMapper {
+
+    private final TargetSpeciesProvider targetSpeciesProvider;
 
     // =========================
     // REQUEST → ENTITY
@@ -103,13 +107,7 @@ public class TaskMapper {
                 .recipientGroups(task.getRecipientGroups())
                 .assignedUsernames(task.getAssignedUsernames())
                 .isPublic(task.getIsPublic())
-                .targetSpecies(
-                        task.getTargetSpecies() != null
-                                ? task.getTargetSpecies()
-                                        .stream()
-                                        .map(this::toTargetSpeciesResponse)
-                                        .collect(Collectors.toList())
-                                : Collections.emptyList())
+                .targetSpecies(targetSpeciesProvider.getSpeciesByIds(task.getTargetSpeciesIds()))
                 .progress(TaskProgressResponse.empty())
                 // New fields
                 .createdAt(task.getCreatedAt() != null
@@ -133,21 +131,6 @@ public class TaskMapper {
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
-
-    // =========================
-    // HELPERS
-    // =========================
-
-    private TargetSpeciesResponse toTargetSpeciesResponse(Label label) {
-        if (label == null) {
-            return null;
-        }
-
-        return TargetSpeciesResponse.builder()
-                .name(label.getName())
-                .commonName(label.getCommonName())
-                .referenceImages(Collections.emptyList()) // filled later if needed
-                .build();
-    }
-
 }
+
+

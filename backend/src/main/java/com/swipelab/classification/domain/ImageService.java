@@ -7,10 +7,9 @@ import com.swipelab.dto.response.ImageBatchResponse;
 import com.swipelab.dto.response.ImageResponse;
 import com.swipelab.exception.ResourceNotFoundException;
 
-import com.swipelab.tasks.domain.Task;
+import com.swipelab.classification.application.port.out.TaskProvider;
 import com.swipelab.classification.infrastructure.ImageRepository;
 import com.swipelab.classification.infrastructure.LabelRepository;
-import com.swipelab.tasks.infrastructure.TaskRepository;
 import com.swipelab.classification.infrastructure.ClassificationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,7 +27,7 @@ import java.util.stream.Collectors;
 public class ImageService {
 
         private final ImageRepository imageRepository;
-        private final TaskRepository taskRepository;
+        private final TaskProvider taskProvider;
         private final LabelRepository labelRepository;
         private final ClassificationRepository classificationRepository;
         private final GoldImageRepository goldImageRepository;
@@ -36,14 +35,8 @@ public class ImageService {
 
         @Transactional(readOnly = true)
         public NextBatchResponse getNextBatchForApi(Long taskId, String username, int count) {
-                Task task = taskRepository.findById(taskId)
-                                .orElseThrow(() -> new ResourceNotFoundException("Task not found: " + taskId));
-
-                // Build the list of species names for this task
-                List<String> taskSpecies = task.getTargetSpecies() == null ? List.of() :
-                        task.getTargetSpecies().stream()
-                                .map(com.swipelab.classification.domain.Label::getName)
-                                .collect(Collectors.toList());
+                TaskProvider.TaskInfo taskInfo = taskProvider.getTaskInfo(taskId);
+                List<String> taskSpecies = taskInfo.targetSpeciesNames();
 
                 List<BatchImageDto> batchImages = new ArrayList<>();
                 int attempt = 0;
@@ -62,7 +55,7 @@ public class ImageService {
                                         && b.getQuestion() != null
                                         && b.getQuestion().contains(pair.species() != null ? pair.species() : ""));
                         if (!alreadyInBatch) {
-                                batchImages.add(mapToBatchDto(pair.image(), task, pair.species()));
+                                batchImages.add(mapToBatchDto(pair.image(), taskInfo, pair.species()));
                                 found++;
                         }
                         attempt++;
@@ -72,14 +65,14 @@ public class ImageService {
         }
 
 
-        private BatchImageDto mapToBatchDto(Image image, Task task, String species) {
+        private BatchImageDto mapToBatchDto(Image image, TaskProvider.TaskInfo taskInfo, String species) {
                 String src = getProvidedImagePath(image.getSrcPath());
                 String contentType = "image/jpeg";
 
                 // Build question from the explicitly selected species for this image
                 String question;
-                if (task.getQuestion() != null && !task.getQuestion().isBlank()) {
-                        question = task.getQuestion();
+                if (taskInfo.question() != null && !taskInfo.question().isBlank()) {
+                        question = taskInfo.question();
                 } else if (species != null && !species.isBlank()) {
                         question = "Is this a " + species + "?";
                 } else {
@@ -88,7 +81,7 @@ public class ImageService {
 
                 return BatchImageDto.builder()
                                 .imageId(image.getId())
-                                .taskId(task.getId())
+                                .taskId(taskInfo.id())
                                 .question(question)
                                 .image(ImageDataDto.builder()
                                                 .contentType(contentType)
@@ -136,14 +129,12 @@ public class ImageService {
 
         @Transactional
         public ImageResponse uploadImage(ImageUploadRequest request) {
-                Task task = taskRepository.findById(request.getTaskId())
-                                .orElseThrow(() -> new ResourceNotFoundException(
-                                                "Task not found with id: " + request.getTaskId()));
+                TaskProvider.TaskInfo taskInfo = taskProvider.getTaskInfo(request.getTaskId());
 
                 Image image = Image.builder()
                                 .srcPath(request.getImageUrl())
                                 .caption(request.getCaption())
-                                .task(task)
+                                .taskId(taskInfo.id())
                                 .priority(request.getPriority())
                                 .build();
 
@@ -210,7 +201,7 @@ public class ImageService {
                                 .imageUrl(image.getSrcPath())
                                 .thumbnailUrl(image.getThumbnailUrl())
                                 .caption(image.getCaption())
-                                .taskId(image.getTask().getId())
+                                .taskId(image.getTaskId())
                                 .priority(image.getPriority())
                                 .isGoldStandard(isGold)
                                 .build();

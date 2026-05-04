@@ -14,7 +14,7 @@ import com.swipelab.classification.infrastructure.CredibilityRepository;
 import com.swipelab.classification.infrastructure.GoldImageRepository;
 import com.swipelab.classification.infrastructure.ImageRepository;
 import com.swipelab.exception.ResourceNotFoundException;
-import com.swipelab.tasks.domain.Task;
+import com.swipelab.classification.application.port.out.TaskProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,6 +43,9 @@ class ClassificationServiceTest {
     private ImageRepository imageRepository;
 
     @Mock
+    private TaskProvider taskProvider;
+
+    @Mock
     private GoldImageRepository goldImageRepository;
 
     @Mock
@@ -62,7 +65,7 @@ class ClassificationServiceTest {
 
     private SubmitClassificationRequest request;
     private Image image;
-    private Task task;
+    private TaskProvider.TaskInfo taskInfo;
 
     @BeforeEach
     void setUp() {
@@ -72,13 +75,11 @@ class ClassificationServiceTest {
         request.setDecision(Classification.UserResponse.YES);
         request.setResponseTimeMs(1500L);
 
-        task = new Task();
-        task.setId(1L);
-        task.setQuerySpecies("Lion");
+        taskInfo = new TaskProvider.TaskInfo(1L, "Question", "Lion", Collections.emptyList());
 
         image = new Image();
         image.setId(1L);
-        image.setTask(task);
+        image.setTaskId(1L);
     }
 
     @Test
@@ -99,6 +100,7 @@ class ClassificationServiceTest {
         when(goldImageRepository.findByImageId(1L)).thenReturn(Optional.of(goldImage));
         when(imageService.getNextBatchForApi(anyLong(), anyString(), anyInt()))
                 .thenReturn(NextBatchResponse.builder().build());
+        when(taskProvider.getTaskInfo(1L)).thenReturn(taskInfo);
 
         classificationService.submitClassification("testuser", "USER", 0.8, request);
 
@@ -120,6 +122,7 @@ class ClassificationServiceTest {
         when(goldImageRepository.findByImageId(1L)).thenReturn(Optional.empty());
         when(imageService.getNextBatchForApi(anyLong(), anyString(), anyInt()))
                 .thenReturn(NextBatchResponse.builder().build());
+        when(taskProvider.getTaskInfo(1L)).thenReturn(taskInfo);
 
         Classification savedClassification = new Classification();
         savedClassification.setId(10L);
@@ -150,6 +153,7 @@ class ClassificationServiceTest {
 
         when(imageRepository.findById(1L)).thenReturn(Optional.of(image));
         when(goldImageRepository.findByImageId(1L)).thenReturn(Optional.empty());
+        when(taskProvider.getTaskInfo(1L)).thenReturn(taskInfo);
         when(classificationRepository.save(any(Classification.class))).thenReturn(savedClassification);
 
         classificationService.submitBatchResponses("testuser", "USER", 1L, responses);

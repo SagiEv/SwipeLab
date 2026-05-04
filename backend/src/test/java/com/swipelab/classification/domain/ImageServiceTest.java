@@ -10,8 +10,7 @@ import com.swipelab.dto.request.ImageUploadRequest;
 import com.swipelab.dto.response.ImageBatchResponse;
 import com.swipelab.dto.response.ImageResponse;
 import com.swipelab.exception.ResourceNotFoundException;
-import com.swipelab.tasks.domain.Task;
-import com.swipelab.tasks.infrastructure.TaskRepository;
+import com.swipelab.classification.application.port.out.TaskProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,7 +35,7 @@ class ImageServiceTest {
     private ImageRepository imageRepository;
 
     @Mock
-    private TaskRepository taskRepository;
+    private TaskProvider taskProvider;
 
     @Mock
     private LabelRepository labelRepository;
@@ -53,25 +52,23 @@ class ImageServiceTest {
     @InjectMocks
     private ImageService imageService;
 
-    private Task task;
+    private TaskProvider.TaskInfo taskInfo;
     private Image image;
 
     @BeforeEach
     void setUp() {
-        task = new Task();
-        task.setId(1L);
-        task.setQuestion("Classify this image");
+        taskInfo = new TaskProvider.TaskInfo(1L, "Classify this image", "MAMMALS", Collections.emptyList());
 
         image = new Image();
         image.setId(1L);
         image.setSrcPath("http://example.com/img.jpg");
-        image.setTask(task);
+        image.setTaskId(1L);
         image.setPriority(1);
     }
 
     @Test
     void getNextBatchForApi_ShouldReturnImages() {
-        when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
+        when(taskProvider.getTaskInfo(1L)).thenReturn(taskInfo);
         // task has no targetSpecies so species list is empty → question comes from task.getQuestion()
         when(taskDistributionService.getNextImageForUser(anyString(), anyLong(), anyList()))
                 .thenReturn(Optional.of(new TaskDistributionService.ImageSpeciesPair(image, null)))
@@ -88,7 +85,7 @@ class ImageServiceTest {
 
     @Test
     void getNextBatchForApi_ShouldThrowException_WhenTaskNotFound() {
-        when(taskRepository.findById(1L)).thenReturn(Optional.empty());
+        when(taskProvider.getTaskInfo(1L)).thenThrow(new ResourceNotFoundException("Task not found: 1"));
 
         assertThrows(ResourceNotFoundException.class, () -> 
                 imageService.getNextBatchForApi(1L, "testuser", 5));
@@ -103,7 +100,7 @@ class ImageServiceTest {
         request.setPriority(1);
         request.setIsGoldStandard(false);
 
-        when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
+        when(taskProvider.getTaskInfo(1L)).thenReturn(taskInfo);
         when(imageRepository.save(any(Image.class))).thenReturn(image);
         when(goldImageRepository.existsByImageId(1L)).thenReturn(false);
 
@@ -127,7 +124,7 @@ class ImageServiceTest {
         label.setId(1L);
         label.setName("Lion");
 
-        when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
+        when(taskProvider.getTaskInfo(1L)).thenReturn(taskInfo);
         when(imageRepository.save(any(Image.class))).thenReturn(image);
         when(labelRepository.findById(1L)).thenReturn(Optional.of(label));
 
@@ -140,7 +137,7 @@ class ImageServiceTest {
     void getImageBatch_ShouldReturnUnclassifiedImages() {
         Image image2 = new Image();
         image2.setId(2L);
-        image2.setTask(task);
+        image2.setTaskId(1L);
 
         when(imageRepository.findByTaskId(1L)).thenReturn(Arrays.asList(image, image2));
         when(classificationRepository.existsByUsernameAndImageId("testuser", 1L)).thenReturn(true);
