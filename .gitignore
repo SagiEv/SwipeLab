@@ -21,3 +21,5 @@ secrets.properties
 backend/.env
 backend/env
 .env
+project_tree.txt
+LOCAL_SCRATCHPAD.md

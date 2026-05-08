@@ -1,0 +1,41 @@
+name: Frontend CI
+
+on:
+  # To enable automatic runs, uncomment the 4 lines below:
+  # pull_request:
+  #   branches: [ "main" ]
+  #   paths:
+  #     - 'frontend/**'
+  
+  # Allows manual triggering of the pipeline from the GitHub Actions tab:
+  workflow_dispatch: 
+
+jobs:
+  test:
+    name: Run Linter and Tests
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20' # Latest LTS version
+        cache: 'npm'
+        cache-dependency-path: './frontend/package-lock.json'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run Linter
+      run: npm run lint
+
+    - name: Run Unit Tests
+      # Runs Jest directly. Update if a different script is defined in package.json
+      run: npx jest
