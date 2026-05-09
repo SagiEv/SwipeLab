@@ -33,3 +33,19 @@ trigger: always_on
 * Investigation First: Perform RCA and propose a solution before modifying files.
 * Self-Healing: Retry failed terminal commands once after analyzing the error.
 * Cognitive Strategy: Use ### Thought Process for complex tasks, followed by a Red Team self-review.
+
+## 6. TESTING REQUIREMENTS (STRICT)
+* Test Coverage: Every time a new feature or code modification is added to the backend or frontend, tests MUST be added or updated along with the implementation.
+* Minimum Scenarios: Test coverage must include at least one **happy flow** (expected successful behavior) and at least one **edge case** (failure, validation error, or boundary condition) for the new code.
+
+## 7. ERROR HANDLING & LOGGING
+* Backend: Utilize centralized exception handling (e.g., `@ControllerAdvice` in Spring Boot) and maintain consistent API error responses. Avoid scattered try-catch blocks.
+* Frontend: Handle API failures gracefully with appropriate UI feedback (e.g., toasts, error boundaries). Avoid silent failures or unhandled promise rejections.
+
+## 8. SECURE CODING & SECRETS
+* Never hardcode API keys, credentials, or sensitive data in the code. Always rely on environment variables.
+* Ensure `.env` and other secret configuration files remain correctly excluded via `.gitignore`.
+
+## 9. CODE QUALITY & CLEANUP
+* Ensure all code strictly follows the outlined Hexagonal/DDD architecture before finalizing changes.
+* Always clean up temporary artifacts, `console.log`s, unused imports, and commented-out code.
