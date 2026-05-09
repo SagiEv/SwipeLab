@@ -6,6 +6,7 @@ Stack: Java 21 Spring Boot (Backend) and React Native Expo (Frontend).
 Architecture: Modular Hexagonal/DDD.
 
 ## Recent Milestones
+* CI/CD: Fixed backend GitHub Actions workflow by adding Maven Wrapper execution files (Issue #196).
 * Frontend/Backend: Fixed gold images page rendering issue by adding imageUrl to DTO and updating frontend parsing logic (Issue #177).
 * Frontend: Integrated pause and archive buttons with the backend task API (PR #207).
 * Backend: Decoupled gold image logic by creating GoldImagePolicy and GoldImageEvaluatorService.
