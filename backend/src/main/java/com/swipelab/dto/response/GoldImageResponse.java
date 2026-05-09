@@ -15,4 +15,5 @@ public class GoldImageResponse {
     private Long imageId;
     private String species;
     private GoldImage.UserResponse correctAnswer;
+    private String imageUrl;
 }

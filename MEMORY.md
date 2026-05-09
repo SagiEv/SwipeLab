@@ -6,6 +6,7 @@ Stack: Java 21 Spring Boot (Backend) and React Native Expo (Frontend).
 Architecture: Modular Hexagonal/DDD.
 
 ## Recent Milestones
+* Frontend/Backend: Fixed gold images page rendering issue by adding imageUrl to DTO and updating frontend parsing logic (Issue #177).
 * Frontend: Integrated pause and archive buttons with the backend task API (PR #207).
 * Backend: Decoupled gold image logic by creating GoldImagePolicy and GoldImageEvaluatorService.
 * Database: Schema migrations updated (V1-V8) including gamification and challenges.
@@ -13,7 +14,6 @@ Architecture: Modular Hexagonal/DDD.
 ## Current Focus (Active GitHub Issues)
 * Issue #204: Fix SwipeScreen showing mock task by default.
 * Issue #205: Fix logic causing same task to appear twice in Assigned/Explore.
-* Issue #177: Fix image rendering issues on the Gold Images page.
 * Issue #206: Update UI/UX for the Gold Images Upload screen.
 * Issue #201: Refactor Backend roles to include Researchers and Super Admin.
 * Issue #196: Implement CI/CD pipeline for unit tests on Pull Requests.

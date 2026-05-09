@@ -114,6 +114,7 @@ public class GoldImageService {
                 .imageId(goldImage.getImage().getId())
                 .species(goldImage.getSpecies())
                 .correctAnswer(goldImage.getCorrectAnswer())
+                .imageUrl(goldImage.getImage().getSrcPath())
                 .build();
     }
 

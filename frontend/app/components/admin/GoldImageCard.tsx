@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
     Image,
+    Platform,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -9,6 +10,9 @@ import {
 } from "react-native";
 import { Colors } from '../../../constants/theme';
 import { useThemeStore } from '../../stores/themeStore';
+
+const BACKEND_BASE_URL = process.env.EXPO_PUBLIC_API_URL ||
+  (Platform.OS === 'web' ? 'http://localhost:8080' : 'http://192.168.1.133:8080');
 
 type GoldImageData = {
     id: number;
@@ -26,12 +30,22 @@ export default function GoldImageCard({ goldImage, onDelete }: Props) {
     const { theme } = useThemeStore();
     const themeColors = Colors[theme as keyof typeof Colors];
 
+    let imageUrl = goldImage.imageUrl;
+    if (imageUrl) {
+        if (imageUrl.startsWith('/')) {
+            imageUrl = `${BACKEND_BASE_URL}${imageUrl}`;
+        } else if (/^[A-Za-z0-9+/]/.test(imageUrl) && !imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
+            imageUrl = `data:image/jpeg;base64,${imageUrl}`;
+        }
+    }
+    const finalUri = imageUrl || `https://via.placeholder.com/300/E2E8F0/64748B?text=${goldImage.species || 'Image'}`;
+
     return (
         <View style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
             {/* Image Thumbnail */}
             <View style={styles.imageContainer}>
                 <Image
-                    source={{ uri: goldImage.imageUrl || `https://via.placeholder.com/300/E2E8F0/64748B?text=${goldImage.species || 'Image'}` }}
+                    source={{ uri: finalUri }}
                     style={styles.thumbnail}
                     resizeMode="cover"
                 />
