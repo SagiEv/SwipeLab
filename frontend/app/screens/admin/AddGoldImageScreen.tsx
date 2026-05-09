@@ -1,5 +1,5 @@
 // admin screen for adding gold images
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Alert,
     ScrollView,
@@ -17,22 +17,46 @@ import ScreenHeaderLayout from "../../components/layout/ScreenHeaderLayout";
 import { useThemeStore } from '../../stores/themeStore';
 import { Colors } from '../../../constants/theme';
 import { API_ENDPOINTS } from '../../api/apiEndpoints';
+import { useQueryClient } from '@tanstack/react-query';
+import MultiSelect from '../../components/ui/MultiSelect';
 
 export default function AddGoldImageScreen({ navigation }: any) {
+    const queryClient = useQueryClient();
     const [uploadType, setUploadType] = useState<"url" | "file">("file");
     const [imageUrl, setImageUrl] = useState("");
     const [imageFile, setImageFile] = useState<ImagePicker.ImagePickerAsset | null>(null);
     const [correctAnswer, setCorrectAnswer] = useState<"YES" | "NO">("YES");
-    const [classValue, setClassValue] = useState("");
-    const [order, setOrder] = useState("");
-    const [family, setFamily] = useState("");
-    const [genus, setGenus] = useState("");
     const [species, setSpecies] = useState("");
     const [difficultyLevel, setDifficultyLevel] = useState("MEDIUM");
     const [loading, setLoading] = useState(false);
     const [statusMessage, setStatusMessage] = useState<{ type: 'error' | 'success', text: string } | null>(null);
     const { theme } = useThemeStore();
     const themeColors = Colors[theme as keyof typeof Colors];
+
+    const [availableSpecies, setAvailableSpecies] = useState<{ id: string; label: string }[]>([]);
+    const [optionsLoading, setOptionsLoading] = useState(false);
+
+    useEffect(() => {
+        const fetchOptions = async () => {
+            setOptionsLoading(true);
+            try {
+                const speciesRes = await apiFetch('/api/v1/metadata/species');
+                if (speciesRes.ok) {
+                    const sps = await speciesRes.json();
+                    setAvailableSpecies(sps.map((s: any) => ({ 
+                        id: String(s.id), 
+                        label: String(s.label),
+                        searchTerms: String(s.searchTerms || "") 
+                    })));
+                }
+            } catch (error) {
+                console.error("Failed to load species:", error);
+            } finally {
+                setOptionsLoading(false);
+            }
+        };
+        fetchOptions();
+    }, []);
 
     // For demo purposes, using taskId = 1. In production, this would come from navigation params
     const taskId = 1;
@@ -116,6 +140,9 @@ export default function AddGoldImageScreen({ navigation }: any) {
 
             const data = await res.json();
             console.log("AddGoldImage response:", data);
+
+            // Invalidate the cache for gold images so the list updates
+            queryClient.invalidateQueries({ queryKey: ['admin', 'goldImages'] });
 
             setStatusMessage({ type: 'success', text: "Gold image created successfully! Redirecting..." });
             
@@ -227,60 +254,24 @@ export default function AddGoldImageScreen({ navigation }: any) {
 
                 {/* Taxonomy Fields */}
                 <View style={styles.taxonomySection}>
-                    <View style={styles.fieldRow}>
-                        <Text style={[styles.label, { color: themeColors.textSecondary }]}>Class:</Text>
-                        <TextInput
-                            style={[styles.taxonomyInput, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
-                            value={classValue}
-                            onChangeText={setClassValue}
-                            placeholder="∨"
-                            placeholderTextColor={themeColors.textSecondary}
-                        />
-                    </View>
-
-                    <View style={styles.fieldRow}>
-                        <Text style={[styles.label, { color: themeColors.textSecondary }]}>Order:</Text>
-                        <TextInput
-                            style={[styles.taxonomyInput, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
-                            value={order}
-                            onChangeText={setOrder}
-                            placeholder="∨"
-                            placeholderTextColor={themeColors.textSecondary}
-                        />
-                    </View>
-
-                    <View style={styles.fieldRow}>
-                        <Text style={[styles.label, { color: themeColors.textSecondary }]}>Family:</Text>
-                        <TextInput
-                            style={[styles.taxonomyInput, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
-                            value={family}
-                            onChangeText={setFamily}
-                            placeholder="∨"
-                            placeholderTextColor={themeColors.textSecondary}
-                        />
-                    </View>
-
-                    <View style={styles.fieldRow}>
-                        <Text style={[styles.label, { color: themeColors.textSecondary }]}>Genus:</Text>
-                        <TextInput
-                            style={[styles.taxonomyInput, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
-                            value={genus}
-                            onChangeText={setGenus}
-                            placeholder="∨"
-                            placeholderTextColor={themeColors.textSecondary}
-                        />
-                    </View>
-
-                    <View style={styles.fieldRow}>
-                        <Text style={[styles.label, { color: themeColors.textSecondary }]}>Species:</Text>
-                        <TextInput
-                            style={[styles.taxonomyInput, { backgroundColor: themeColors.background, borderColor: themeColors.border, color: themeColors.text }]}
-                            value={species}
-                            onChangeText={setSpecies}
-                            placeholder="∨"
-                            placeholderTextColor={themeColors.textSecondary}
-                        />
-                    </View>
+                    <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Species</Text>
+                    <Text style={{ color: themeColors.textSecondary, marginBottom: 8, fontSize: 13 }}>
+                        Search and select the relevant species from the taxonomy.
+                    </Text>
+                    <MultiSelect
+                        options={availableSpecies}
+                        selectedIds={species ? [species] : []}
+                        onToggle={(id) => {
+                            if (species === id) {
+                                setSpecies(""); // deselect
+                            } else {
+                                setSpecies(id as string);
+                            }
+                        }}
+                        placeholder="Search for species..."
+                        loading={optionsLoading}
+                        emptyOnNoSearch={true}
+                    />
                 </View>
 
                 {/* Difficulty Level */}
@@ -410,23 +401,7 @@ const styles = StyleSheet.create({
     },
     taxonomySection: {
         marginBottom: 24,
-    },
-    fieldRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: 12,
-    },
-    label: {
-        fontSize: 14,
-        fontWeight: "500",
-        width: 80,
-    },
-    taxonomyInput: {
-        flex: 1,
-        borderWidth: 1,
-        borderRadius: 8,
-        padding: 10,
-        fontSize: 14,
+        zIndex: 10,
     },
     difficultySection: {
         marginBottom: 24,
