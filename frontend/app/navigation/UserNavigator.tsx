@@ -1,7 +1,7 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import WebAppShell from "../components/layout/WebAppShell";
+
 import SettingsScreen from "../screens/shared/SettingsScreen";
 import LeaderboardScreen from "../screens/user/LeaderboardScreen";
 import UserMyTasksScreen from "../screens/user/UserMyTasksScreen";
@@ -20,8 +20,7 @@ const Stack = createNativeStackNavigator();
 
 export default function UserNavigator() {
   return (
-    <WebAppShell variant="user">
-      <View style={styles.container}>
+    <View style={styles.container}>
         {/* Global TopBar for all user screens */}
         <TopBar />
 
@@ -52,7 +51,6 @@ export default function UserNavigator() {
           ]}
         />
       </View>
-    </WebAppShell>
   );
 }
 

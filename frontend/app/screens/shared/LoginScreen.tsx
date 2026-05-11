@@ -1,7 +1,7 @@
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Image, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View, ScrollView } from "react-native";
 import { API_ENDPOINTS } from '../../api/apiEndpoints';
 import { apiFetch } from "../../api/apiFetch";
 import { preloadAfterLogin } from "../../api/queries";
@@ -151,7 +151,7 @@ export default function LoginScreen() {
   const { isDesktop } = useResponsive();
 
   return (
-    <View style={[styles.screenContainer, isDesktop && styles.webScreenContainer]}>
+    <ScrollView style={styles.screenContainer} contentContainerStyle={[styles.scrollContent, isDesktop && styles.webScreenContainer]}>
       {/* LOGIN CARD */}
       <View style={[styles.container, isDesktop && styles.webCard, showRegister && { opacity: 0.75 }]}>
         <Image source={require("../../../assets/images/icon.png")} style={styles.logo} />
@@ -201,17 +201,19 @@ export default function LoginScreen() {
 
       {/* REGISTER FORM OVERLAY */}
       {showRegister && <RegisterForm onClose={() => setShowRegister(false)} />}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   screenContainer: { flex: 1, backgroundColor: '#fff' },
+  scrollContent: { flexGrow: 1 },
   // Web: center the card vertically on the page
   webScreenContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#fff',
+    flexGrow: 1,
   },
   container: {
     flex: 1,
@@ -220,18 +222,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingHorizontal: 20,
   },
-  // Web: contained card, shadow only for desktop feel
   webCard: {
     flex: 0,
     width: '100%',
     maxWidth: 460,
     borderRadius: 16,
     paddingVertical: 48,
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
   },
   logo: { width: 140, height: 140, resizeMode: "contain", marginBottom: 30 },
   title: { fontSize: 28, fontWeight: "bold", marginBottom: 6 },

@@ -1,0 +1,18 @@
+name: Backend CI Skip
+
+on:
+  pull_request:
+    branches: [ "main" ]
+    # Triggers this Action only if there are NO changes in the backend directory
+    paths-ignore:
+      - 'backend/**'
+
+jobs:
+  test:
+    # The name here MUST perfectly match the required status check name in the settings!
+    name: Run Unit and Integration Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Skip Backend Tests
+      run: echo "No backend changes detected. Skipping tests and returning a success status to unblock the PR."

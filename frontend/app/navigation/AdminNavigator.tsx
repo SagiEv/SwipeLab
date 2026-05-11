@@ -1,7 +1,7 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import WebAppShell from "../components/layout/WebAppShell";
+
 
 import BottomBar from "./components/BottomBar";
 import TopBar from "./components/TopBar";
@@ -28,8 +28,7 @@ const Stack = createNativeStackNavigator<AdminStackParamList>();
 
 export default function AdminNavigator() {
   return (
-    <WebAppShell variant="admin">
-      <View style={styles.container}>
+    <View style={styles.container}>
         <TopBar />
         {/* Middle Navigator */}
 
@@ -138,7 +137,6 @@ export default function AdminNavigator() {
           ]}
         />
       </View>
-    </WebAppShell>
   );
 }
 
