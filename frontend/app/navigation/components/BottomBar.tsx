@@ -2,6 +2,8 @@ import { useNavigation } from "@react-navigation/native";
 import React from "react";
 import { Image, ImageSourcePropType, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useThemeStore } from "../../stores/themeStore";
+import useResponsive from "../../hooks/useResponsive";
+import { Colors } from "../../../constants/theme";
 
 interface NavItem {
   label: string;
@@ -16,28 +18,19 @@ interface Props {
 export default function BottomBar({ items }: Props) {
   const navigation = useNavigation<any>();
   const { theme } = useThemeStore();
-
-  const isDarkMode = theme === 'dark';
-
-  const dynamicStyles = {
-    container: { backgroundColor: isDarkMode ? '#1f1f2e' : '#fff', borderColor: isDarkMode ? '#374151' : '#ddd' },
-    label: { color: isDarkMode ? '#9ca3af' : '#333' },
-  };
+  const { isDesktop } = useResponsive();
+  const themeColors = Colors[theme as keyof typeof Colors];
 
   return (
-    <View style={[styles.container, dynamicStyles.container]}>
-      {items.map((item) => (
+    <View style={[styles.container, { backgroundColor: themeColors.card, borderColor: themeColors.border, paddingVertical: isDesktop ? 8 : 10 }]}>
+      {items.map((item, idx) => (
         <TouchableOpacity
-          key={item.route}
-          style={styles.button}
+          key={idx}
+          style={[styles.button, { padding: isDesktop ? 4 : 6 }]}
           onPress={() => navigation.navigate(item.route)}
         >
-          <Image
-            source={item.icon}
-            style={[styles.icon, { tintColor: isDarkMode ? '#9ca3af' : undefined }]}
-            resizeMode="contain"
-          />
-          <Text style={[styles.label, dynamicStyles.label]}>{item.label}</Text>
+          <Image source={item.icon} style={[styles.icon, { tintColor: themeColors.text }]} />
+          <Text style={[styles.label, { color: themeColors.text, fontSize: isDesktop ? 12 : 14 }]}>{item.label}</Text>
         </TouchableOpacity>
       ))}
     </View>
@@ -48,10 +41,9 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     borderTopWidth: 1,
-    paddingVertical: 10,
     justifyContent: "space-around",
   },
-  button: { alignItems: "center", padding: 6 },
+  button: { alignItems: "center" },
   icon: { width: 22, height: 22, marginBottom: 2 },
-  label: { fontSize: 14, fontWeight: "600" },
+  label: { fontWeight: "600" },
 });
