@@ -4,6 +4,7 @@ import com.swipelab.dto.request.CreateTaskRequest;
 import com.swipelab.dto.request.UpdateTaskRequest;
 import com.swipelab.dto.response.TaskPageResponse;
 import com.swipelab.dto.response.TaskResponse;
+import com.swipelab.exception.DuplicateResourceException;
 import com.swipelab.exception.ResourceNotFoundException;
 import com.swipelab.recipients.domain.RecipientGroup;
 import com.swipelab.recipients.infrastructure.RecipientGroupRepository;
@@ -109,6 +110,57 @@ public class TaskService {
             throw new ResourceNotFoundException("Task not found or access denied");
         }
 
+        return taskMapper.toResponse(task, true);
+    }
+
+    @Transactional(readOnly = true)
+    public TaskPageResponse getExploreTasksForUser(String username, Pageable pageable) {
+        List<RecipientGroup> userGroups = recipientGroupRepository.findByUsers_Username(username);
+        Set<Long> groupIds = userGroups.stream()
+                .map(RecipientGroup::getId)
+                .collect(Collectors.toSet());
+
+        if (groupIds.isEmpty()) {
+            groupIds = Set.of(-1L);
+        }
+
+        Page<Task> taskPage = taskRepository.findPublicTasksExcludingAssignedUser(
+                TaskStatus.ACTIVE,
+                username,
+                groupIds,
+                pageable);
+
+        List<TaskResponse> taskResponses = taskPage.getContent().stream()
+                .map(task -> taskMapper.toResponse(task, false))
+                .collect(Collectors.toList());
+
+        return TaskPageResponse.builder()
+                .page(taskPage.getNumber() + 1)
+                .pageSize(taskPage.getSize())
+                .totalPages(taskPage.getTotalPages())
+                .totalTasks(taskPage.getTotalElements())
+                .tasks(taskResponses)
+                .build();
+    }
+
+    @Transactional
+    public TaskResponse assignTaskToUser(Long taskId, String username) {
+        Task task = getTask(taskId);
+
+        if (!task.isActive()) {
+            throw new ResourceNotFoundException("Task not found or not active");
+        }
+
+        if (!Boolean.TRUE.equals(task.getIsPublic())) {
+            throw new ResourceNotFoundException("Task not found or access denied");
+        }
+
+        // Idempotency guard — prevents duplicate rows in task_assigned_users
+        if (taskRepository.existsByIdAndAssignedUsernamesContaining(taskId, username)) {
+            throw new DuplicateResourceException("User '" + username + "' is already assigned to task " + taskId);
+        }
+
+        task.getAssignedUsernames().add(username);
         return taskMapper.toResponse(task, true);
     }
 

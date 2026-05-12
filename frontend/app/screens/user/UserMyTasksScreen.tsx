@@ -1,11 +1,9 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useCallback, useEffect, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { useMyTasks, useAvailableTasks, useStatistics, QUERY_KEYS } from "../../api/queries";
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback } from 'react';
+import { useMyTasks, useAvailableTasks, useStatistics, useAssignTask } from "../../api/queries";
+import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../../../constants/theme';
-import { API_ENDPOINTS } from '../../api/apiEndpoints';
-import { apiFetch } from '../../api/apiFetch';
+
 import ScreenHeaderLayout from '../../components/layout/ScreenHeaderLayout/ScreenHeaderLayout';
 import TaskCard from '../../components/user/TaskCard';
 import { useThemeStore } from '../../stores/themeStore';
@@ -16,7 +14,6 @@ export default function UserMyTasksScreen() {
     const navigation = useNavigation<any>();
     const { theme } = useThemeStore();
     const themeColors = Colors[theme as keyof typeof Colors];
-    const queryClient = useQueryClient();
     const { setActiveTaskId } = useSwipeStore();
 
     const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useStatistics();
@@ -31,14 +28,14 @@ export default function UserMyTasksScreen() {
         refetchAvailable();
     }, [refetchStats, refetchTasks, refetchAvailable]);
 
-    const handleAddTask = (taskId: number) => {
-        const taskToAdd = availableTasks.find((t: any) => t.taskId === taskId);
-        if (taskToAdd) {
-            queryClient.setQueryData(QUERY_KEYS.myTasks, (prev: any) => [...(prev || []), taskToAdd]);
-            queryClient.setQueryData(QUERY_KEYS.availableTasks, (prev: any) => 
-                (prev || []).filter((t: any) => t.taskId !== taskId)
-            );
-            console.log(`Added task ${taskId} to my tasks`);
+    const assignTask = useAssignTask();
+
+    const handleAddTask = async (taskId: number) => {
+        try {
+            await assignTask.mutateAsync(taskId);
+            // Cache is refreshed via onSuccess in useAssignTask; nothing more needed here.
+        } catch (err: any) {
+            Alert.alert('Could not add task', err?.message ?? 'An unexpected error occurred.');
         }
     };
 
@@ -46,22 +43,17 @@ export default function UserMyTasksScreen() {
         navigation.navigate('TaskDetails', { task });
     };
 
-    const handleRemoveTask = (taskId: number) => {
-        queryClient.setQueryData(QUERY_KEYS.myTasks, (prev: any) => 
-            (prev || []).filter((t: any) => t.taskId !== taskId)
-        );
-    };
 
     const handleLogout = () => {
-        // Navigate back to auth or reset stack
-        // For mock purposes:
-        console.log("Logout pressed");
-        // navigation.replace('Auth'); // If you have an Auth stack
-        // Or just go back if it's within a stack
         if (navigation.canGoBack()) {
             navigation.goBack();
         }
     };
+
+    // UI guard: filter explore list against assigned IDs as a second line of defense.
+    // The backend exclusion query is the primary guard; this prevents any stale-cache leakage.
+    const assignedTaskIds = new Set((tasks as any[]).map((t) => t.taskId));
+    const filteredExploreTasks = (availableTasks as any[]).filter((t) => !assignedTaskIds.has(t.taskId));
 
     // Calculate total completion
     const totalAssigned = tasks.length;
@@ -130,7 +122,7 @@ export default function UserMyTasksScreen() {
                     <Text style={[styles.sectionTitle, { color: '#0EA5E9' }]}>Explore Tasks</Text>
                 </View>
 
-                {availableTasks.map((task: any) => {
+                {filteredExploreTasks.map((task: any) => {
                     // Calculate progress
                     const totalImages = task.progress?.totalImages ?? task.totalImages ?? 0;
                     const imagesClassified = task.progress?.imagesClassified ?? task.imagesClassified ?? 0;
@@ -150,7 +142,7 @@ export default function UserMyTasksScreen() {
                         />
                     );
                 })}
-                {availableTasks.length === 0 && (
+                {filteredExploreTasks.length === 0 && (
                     <Text style={[styles.emptyState, { color: themeColors.textSecondary }]}>No public tasks available.</Text>
                 )}
 

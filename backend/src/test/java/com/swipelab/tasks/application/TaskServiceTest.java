@@ -4,6 +4,7 @@ import com.swipelab.dto.request.CreateTaskRequest;
 import com.swipelab.dto.request.UpdateTaskRequest;
 import com.swipelab.dto.response.TaskPageResponse;
 import com.swipelab.dto.response.TaskResponse;
+import com.swipelab.exception.DuplicateResourceException;
 import com.swipelab.exception.ResourceNotFoundException;
 import com.swipelab.recipients.domain.RecipientGroup;
 import com.swipelab.recipients.domain.RecipientUser;
@@ -236,5 +237,56 @@ class TaskServiceTest {
         taskService.updateTask(1L, request, "superadmin");
 
         verify(taskMapper, times(1)).updateEntity(task, request);
+    }
+
+    // ===================================================
+    // Issue #205 — Explore exclusion & assign guard tests
+    // ===================================================
+
+    @Test
+    void getExploreTasksForUser_ShouldExcludeAlreadyAssignedTasks() {
+        // group 100 is the user's group; the query is expected to exclude tasks the user can access
+        when(recipientGroupRepository.findByUsers_Username("testuser")).thenReturn(Collections.singletonList(group));
+
+        Pageable pageable = PageRequest.of(0, 20);
+        // Simulate the DB already filtering: result is an empty page (all public tasks were already assigned)
+        Page<Task> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
+        when(taskRepository.findPublicTasksExcludingAssignedUser(
+                eq(TaskStatus.ACTIVE), eq("testuser"), anySet(), eq(pageable)))
+                .thenReturn(emptyPage);
+
+        TaskPageResponse response = taskService.getExploreTasksForUser("testuser", pageable);
+
+        assertNotNull(response);
+        assertEquals(0, response.getTotalTasks());
+        verify(taskRepository).findPublicTasksExcludingAssignedUser(
+                eq(TaskStatus.ACTIVE), eq("testuser"), anySet(), eq(pageable));
+    }
+
+    @Test
+    void assignTaskToUser_ShouldThrowDuplicateException_WhenAlreadyAssigned() {
+        task.setIsPublic(true);
+        when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
+        // Simulate the user already being in task_assigned_users
+        when(taskRepository.existsByIdAndAssignedUsernamesContaining(1L, "testuser")).thenReturn(true);
+
+        assertThrows(DuplicateResourceException.class,
+                () -> taskService.assignTaskToUser(1L, "testuser"));
+
+        verify(taskRepository, never()).save(any());
+    }
+
+    @Test
+    void assignTaskToUser_ShouldAddUsername_WhenNotYetAssigned() {
+        task.setIsPublic(true);
+        task.setAssignedUsernames(new ArrayList<>());
+        when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
+        when(taskRepository.existsByIdAndAssignedUsernamesContaining(1L, "testuser")).thenReturn(false);
+        when(taskMapper.toResponse(task, true)).thenReturn(taskResponse);
+
+        TaskResponse response = taskService.assignTaskToUser(1L, "testuser");
+
+        assertNotNull(response);
+        assertTrue(task.getAssignedUsernames().contains("testuser"));
     }
 }

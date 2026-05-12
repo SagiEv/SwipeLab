@@ -17,11 +17,10 @@ Architecture: Modular Hexagonal/DDD.
 * Security/Validation: Implemented comprehensive input validation, stored XSS protection, and username normalization (Issue #227).
 * Frontend/Auth: Fixed a persistent navigation bug where `isSuperAdmin` state was lost on app refresh, causing the Users screen and toolbar option to disappear for Super Admins.
 * Frontend: Removed hardcoded mock task (id=1) from SwipeScreen; implemented 3-state Quick Start UI (active swipe / quick-start task picker / true empty state); aligned all task play entry points with swipeStore (Issue #204).
+* Backend/Frontend: Fixed task duplication bug — added `findPublicTasksExcludingAssignedUser` JPQL query, `getExploreTasksForUser` service method, `POST /tasks/{id}/assign` endpoint with duplicate guard (DuplicateResourceException → HTTP 409), and `useAssignTask` mutation in the frontend (Issue #205).
 * Frontend: Added search bar and filter logic to the admin UsersManagementScreen, along with Playwright tests (Issue #217).
 
 ## Current Focus (Active GitHub Issues)
-* Issue #205: Fix logic causing same task to appear twice in Assigned/Explore.
-* Issue #206: Update UI/UX for the Gold Images Upload screen.
 * Issue #201: Refactor Backend roles to include Researchers and Super Admin.
 * Issue #154: Add version support in API responses for frontend caching.
 * Issue #226: [Frontend] fix recipients list not deleting users.

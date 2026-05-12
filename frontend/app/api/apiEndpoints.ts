@@ -24,6 +24,7 @@ export const API_ENDPOINTS = {
         PAUSE_TASK: (taskId: string | number) => `/api/v1/tasks/${taskId}/pause`,
         ARCHIVE_TASK: (taskId: string | number) => `/api/v1/tasks/${taskId}/archive`,
         ACTIVATE_TASK: (taskId: string | number) => `/api/v1/tasks/${taskId}/activate`,
+        ASSIGN_TASK: (taskId: string | number) => `/api/v1/tasks/${taskId}/assign`,
     },
     CLASSIFICATIONS: {
         NEXT_BATCH: (taskId: string | number, count: number = 5) =>

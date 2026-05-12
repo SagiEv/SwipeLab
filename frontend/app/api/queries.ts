@@ -239,6 +239,27 @@ export const useUpdateTaskStatus = () => {
   });
 };
 
+export const useAssignTask = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (taskId: string | number) => {
+      const res = await apiFetch(API_ENDPOINTS.TASKS.ASSIGN_TASK(taskId), { method: 'POST' });
+      if (!res.ok) {
+        // 409 Conflict means already assigned — surface a meaningful error
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message ?? `Failed to assign task ${taskId}`);
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      // Refresh both lists so the task moves from Explore → Assigned
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.myTasks });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.availableTasks });
+    },
+  });
+};
+
 import { queryClient } from '../queryClient';
 
 export const preloadAfterLogin = async (role: string) => {
