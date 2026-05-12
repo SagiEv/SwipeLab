@@ -48,7 +48,7 @@ export const API_ENDPOINTS = {
         CHALLENGES: '/api/v1/gamification/challenges',
         MY_BADGES: '/api/v1/gamification/me/badges',
     },
-    ADMIN: {
+    researcher: {
         //ANALYTICS
         ANALYTICS_TASKS: (taskId: string | number) => `/api/v1/analytics/tasks/${taskId}`,
         ANALYTICS_EXPORTS: '/api/v1/analytics/exports',

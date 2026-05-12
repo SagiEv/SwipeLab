@@ -96,7 +96,7 @@ public class MockDataSeeder implements CommandLineRunner {
     }
 
     private void seedUsers() {
-        if (userRepository.count() == 0) {
+        if (!userRepository.existsById("admin_mock")) {
             String passwordHash = passwordEncoder.encode("password");
 
             User admin = User.builder()
@@ -105,7 +105,7 @@ public class MockDataSeeder implements CommandLineRunner {
                     .passwordHash(passwordHash)
                     .emailVerified(true)
                     .provider(AuthProvider.LOCAL)
-                    .role(UserRole.ADMIN)
+                    .role(UserRole.RESEARCHER)
                     .displayName("Mock Admin")
                     .active(true)
                     .build();

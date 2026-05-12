@@ -28,7 +28,7 @@ public class MetadataController {
     private final Environment environment;
 
     @GetMapping("/species")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('RESEARCHER') or @securityAuthorizationService.isSuperAdmin(authentication.name)")
     public ResponseEntity<?> getSpecies() {
         if (Arrays.asList(environment.getActiveProfiles()).contains("mock")) {
             List<Map<String, Object>> mockOptions = List.of(
