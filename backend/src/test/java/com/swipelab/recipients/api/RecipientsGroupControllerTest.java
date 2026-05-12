@@ -60,9 +60,10 @@ class RecipientsGroupControllerTest {
         request.setName("Group A");
         request.setUsernames(Arrays.asList("user1", "user2"));
 
-        when(recipientGroupService.createRecipientGroup(any(CreateRecipientGroupRequest.class))).thenReturn(response);
+        when(recipientGroupService.createRecipientGroup(any(CreateRecipientGroupRequest.class), eq("admin_mock"))).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/dashboard/recipients")
+                .principal(() -> "admin_mock")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())

@@ -74,8 +74,9 @@ export default function RecipientsListScreen() {
 
     const handleCreateGroup = async () => {
         setCreateErrorMsg('');
-        if (!newGroupName.trim()) {
-            setCreateErrorMsg("Please enter a group name");
+        const trimmedName = newGroupName.trim();
+        if (!trimmedName || trimmedName.length < 3 || trimmedName.length > 100) {
+            setCreateErrorMsg("Group name must be between 3 and 100 characters");
             return;
         }
 

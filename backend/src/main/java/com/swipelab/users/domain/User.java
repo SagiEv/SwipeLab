@@ -182,6 +182,8 @@ public class User {
         @Builder.Default
         private Boolean isFlagged = false;
 
+
+
         public Double getCredibilityScore() {
                 return credibilityScore;
         }

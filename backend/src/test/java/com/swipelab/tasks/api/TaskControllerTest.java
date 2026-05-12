@@ -119,6 +119,7 @@ class TaskControllerTest {
     void createTask_ShouldReturnCreated() throws Exception {
         CreateTaskRequest request = new CreateTaskRequest();
         request.setName("New Task");
+        request.setDescription("This is a valid task description");
 
         when(taskService.createTask(any(CreateTaskRequest.class), anyString(), any(), any())).thenReturn(taskResponse);
 

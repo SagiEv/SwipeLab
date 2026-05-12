@@ -7,7 +7,10 @@ import { StepProps } from './addTaskTypes';
 export default function StepName({ formData, onUpdate, onNext }: StepProps) {
   const { theme } = useThemeStore();
   const themeColors = Colors[theme as keyof typeof Colors];
-  const canProceed = formData.name.trim().length > 0;
+  const trimmedName = formData.name.trim();
+  const isValidLength = trimmedName.length >= 3 && trimmedName.length <= 100;
+  const showWarning = formData.name.length > 0 && !isValidLength;
+  const canProceed = isValidLength;
 
   return (
     <KeyboardAvoidingView
@@ -22,13 +25,18 @@ export default function StepName({ formData, onUpdate, onNext }: StepProps) {
       </Text>
 
       <TextInput
-        style={[styles.input, { backgroundColor: themeColors.card, borderColor: themeColors.border, color: themeColors.text }]}
+        style={[styles.input, { backgroundColor: themeColors.card, borderColor: showWarning ? '#EF4444' : themeColors.border, color: themeColors.text }]}
         value={formData.name}
         onChangeText={(text) => onUpdate({ name: text })}
         placeholder="e.g., Pollinator Identification Survey"
         placeholderTextColor={themeColors.textSecondary}
         autoFocus
       />
+      {showWarning && (
+        <Text style={{ color: '#EF4444', marginTop: 8, fontSize: 13, fontWeight: '500' }}>
+          Task name must be between 3 and 100 characters.
+        </Text>
+      )}
 
       <View style={styles.footer}>
         <TouchableOpacity

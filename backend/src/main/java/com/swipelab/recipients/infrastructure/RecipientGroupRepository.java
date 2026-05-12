@@ -13,5 +13,7 @@ public interface RecipientGroupRepository
 
     boolean existsByName(String name);
 
+    boolean existsByCreatedByAndName(String createdBy, String name);
+
     java.util.List<RecipientGroup> findByUsers_Username(String username);
 }

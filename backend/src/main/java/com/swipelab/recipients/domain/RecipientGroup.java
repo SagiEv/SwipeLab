@@ -15,7 +15,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "recipient_groups", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "name")
+        @UniqueConstraint(columnNames = {"created_by", "name"})
 })
 @Data
 @Builder
@@ -35,8 +35,11 @@ public class RecipientGroup {
     // Group Metadata
     // =========================
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String name;
+
+    @Column(name = "created_by")
+    private String createdBy;
 
     // =========================
     // Members
