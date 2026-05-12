@@ -76,7 +76,7 @@ class AuthControllerTest {
         RegisterRequest request = new RegisterRequest();
         request.setUsername("testuser");
         request.setEmail("test@swipelab.com");
-        request.setPassword("password123");
+        request.setPassword("Password123!");
         request.setDisplayName("Test User");
 
         Map<String, Object> authResponse = Map.of(
@@ -215,7 +215,7 @@ class AuthControllerTest {
     void resetPassword_ShouldReturn200() throws Exception {
         ResetPasswordRequest request = new ResetPasswordRequest();
         request.setToken("reset-token");
-        request.setNewPassword("newpassword");
+        request.setNewPassword("NewPassword123!");
 
         doNothing().when(authenticationService).resetPassword(any(ResetPasswordRequest.class));
 
@@ -226,5 +226,75 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.status").value("success"));
 
         verify(authenticationService, times(1)).resetPassword(any(ResetPasswordRequest.class));
+    }
+
+    @Test
+    void register_ShouldReturn400_WhenPasswordMissingUppercase() throws Exception {
+        RegisterRequest request = new RegisterRequest();
+        request.setUsername("testuser");
+        request.setEmail("test@swipelab.com");
+        request.setPassword("password123!");
+        request.setDisplayName("Test User");
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void register_ShouldReturn400_WhenPasswordMissingLowercase() throws Exception {
+        RegisterRequest request = new RegisterRequest();
+        request.setUsername("testuser");
+        request.setEmail("test@swipelab.com");
+        request.setPassword("PASSWORD123!");
+        request.setDisplayName("Test User");
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void register_ShouldReturn400_WhenPasswordMissingNumber() throws Exception {
+        RegisterRequest request = new RegisterRequest();
+        request.setUsername("testuser");
+        request.setEmail("test@swipelab.com");
+        request.setPassword("Password!!!");
+        request.setDisplayName("Test User");
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void register_ShouldReturn400_WhenPasswordMissingSpecialChar() throws Exception {
+        RegisterRequest request = new RegisterRequest();
+        request.setUsername("testuser");
+        request.setEmail("test@swipelab.com");
+        request.setPassword("Password123");
+        request.setDisplayName("Test User");
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void register_ShouldReturn400_WhenPasswordContainsWhitespace() throws Exception {
+        RegisterRequest request = new RegisterRequest();
+        request.setUsername("testuser");
+        request.setEmail("test@swipelab.com");
+        request.setPassword("Pass word123!");
+        request.setDisplayName("Test User");
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 }

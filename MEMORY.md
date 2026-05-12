@@ -14,6 +14,7 @@ Architecture: Modular Hexagonal/DDD.
 * Backend: Decoupled gold image logic by creating GoldImagePolicy and GoldImageEvaluatorService.
 * Database: Schema migrations updated (V1-V8) including gamification and challenges.
 * Frontend: Fixed frontend rendering for uploaded Gold Images by correcting the static path base parsing logic (Issue #216).
+* Security/Validation: Implemented comprehensive input validation, stored XSS protection, and username normalization (Issue #227).
 
 ## Current Focus (Active GitHub Issues)
 * Issue #204: Fix SwipeScreen showing mock task by default.
@@ -21,7 +22,6 @@ Architecture: Modular Hexagonal/DDD.
 * Issue #206: Update UI/UX for the Gold Images Upload screen.
 * Issue #201: Refactor Backend roles to include Researchers and Super Admin.
 * Issue #154: Add version support in API responses for frontend caching.
-* Issue #227: [System] add validation to input length, type etc.
 * Issue #226: [Frontend] fix recipients list not deleting users.
 * Issue #225: [System] fix refresh token for Researcher.
 * Issue #224: [Frontend] Mobile Vs. Web compatibility enhancement.

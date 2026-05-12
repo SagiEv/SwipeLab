@@ -51,6 +51,8 @@ class TaskServiceTest {
     @Mock
     private com.swipelab.integration.stardbi.StardbiSyncService stardbiSyncService;
 
+
+
     @InjectMocks
     private TaskService taskService;
 
@@ -157,6 +159,11 @@ class TaskServiceTest {
     @Test
     void createTask_ShouldSetStatusActiveAndSave() {
         CreateTaskRequest request = new CreateTaskRequest();
+        request.setName("New Task");
+        request.setDescription("Valid desc");
+        
+        when(taskRepository.existsByCreatedByAndName(anyString(), anyString())).thenReturn(false);
+
         when(taskMapper.toEntity(request)).thenReturn(task);
         when(taskRepository.save(task)).thenReturn(task);
         when(taskMapper.toResponse(task, false)).thenReturn(taskResponse);
@@ -166,6 +173,19 @@ class TaskServiceTest {
         assertNotNull(response);
         assertEquals(TaskStatus.PROCESSING, task.getStatus());
         verify(taskRepository, times(1)).save(task);
+    }
+
+
+    
+    @Test
+    void createTask_ShouldThrowException_WhenNameExists() {
+        CreateTaskRequest request = new CreateTaskRequest();
+        request.setName("New Task");
+        request.setDescription("Valid desc");
+        
+        when(taskRepository.existsByCreatedByAndName(anyString(), anyString())).thenReturn(true);
+
+        assertThrows(IllegalStateException.class, () -> taskService.createTask(request, "admin_mock", null, null));
     }
 
     @Test

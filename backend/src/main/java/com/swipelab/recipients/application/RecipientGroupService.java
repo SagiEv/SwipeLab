@@ -23,16 +23,17 @@ public class RecipientGroupService {
     private final com.swipelab.recipients.infrastructure.RecipientUserRepository recipientUserRepository;
 
     @Transactional
-    public RecipientGroupResponse createRecipientGroup(CreateRecipientGroupRequest request) {
-        if (recipientGroupRepository.existsByName(request.getName())) {
+    public RecipientGroupResponse createRecipientGroup(CreateRecipientGroupRequest request, String username) {
+        if (recipientGroupRepository.existsByCreatedByAndName(username, request.getName())) {
             throw new IllegalStateException(
-                    "Recipient group with name '" + request.getName() + "' already exists");
+                    "Recipient group with name '" + request.getName() + "' already exists for your account");
         }
 
         Set<RecipientUser> users = recipientUserRepository.findByUsernameIn(request.getUsernames());
 
         RecipientGroup group = RecipientGroup.builder()
                 .name(request.getName())
+                .createdBy(username)
                 .users(users)
                 .build();
 

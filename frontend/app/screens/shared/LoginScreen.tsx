@@ -159,14 +159,14 @@ export default function LoginScreen() {
         <Text style={styles.subtitle}>Swipe • Label • Improve Research</Text>
 
         <TextInput
-          placeholder="Username"
+          placeholder="Enter your username"
           value={username}
           onChangeText={setUsername}
           style={styles.input}
           placeholderTextColor="#888"
         />
         <TextInput
-          placeholder="Password"
+          placeholder="Enter your password"
           value={password}
           onChangeText={setPassword}
           style={styles.input}

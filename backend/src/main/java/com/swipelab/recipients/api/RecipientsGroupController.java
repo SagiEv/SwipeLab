@@ -22,8 +22,9 @@ public class RecipientsGroupController {
 
     @PostMapping
     public ResponseEntity<RecipientGroupResponse> createRecipientGroup(
-            @RequestBody CreateRecipientGroupRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(recipientGroupService.createRecipientGroup(request));
+            @RequestBody CreateRecipientGroupRequest request, java.security.Principal principal) {
+        String username = principal.getName();
+        return ResponseEntity.status(HttpStatus.CREATED).body(recipientGroupService.createRecipientGroup(request, username));
     }
 
     @PutMapping("/{groupId}")

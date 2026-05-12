@@ -36,6 +36,7 @@ public class TaskService {
     private final TaskMapper taskMapper;
     private final StardbiSyncService stardbiSyncService;
 
+
     // =========================
     // User Operations
     // =========================
@@ -127,8 +128,20 @@ public class TaskService {
 
     @Transactional
     public TaskResponse createTask(CreateTaskRequest request, String username, String stardbiAccessToken, String stardbiRefreshToken) {
+        // Validate uniqueness
+        if (taskRepository.existsByCreatedByAndName(username, request.getName().trim())) {
+            throw new IllegalStateException("Task name already exists for your account");
+        }
+
+
+
+        // Sanitize Description (Stored XSS prevention)
+        String sanitizedDescription = org.springframework.web.util.HtmlUtils.htmlEscape(request.getDescription().trim());
+
         // TODO: Validate author (admin)
         Task task = taskMapper.toEntity(request);
+        task.setName(request.getName().trim());
+        task.setDescription(sanitizedDescription);
         task.setCreatedBy(username);
         task.setStatus(TaskStatus.PROCESSING);
         

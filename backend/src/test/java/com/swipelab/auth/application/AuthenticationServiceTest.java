@@ -62,6 +62,7 @@ class AuthenticationServiceTest {
     void register_ShouldThrowException_WhenEmailExists() {
         RegisterRequest request = new RegisterRequest();
         request.setEmail("test@swipelab.com");
+        request.setUsername("testuser");
 
         when(userRepository.existsByEmail("test@swipelab.com")).thenReturn(true);
 
@@ -201,6 +202,32 @@ class AuthenticationServiceTest {
 
         assertNotNull(result);
         assertEquals("access", result.getAccessToken());
+    }
+
+    @Test
+    void login_ShouldNormalizeUsername_WhenUsernameHasUppercaseAndSpaces() {
+        LoginRequest request = new LoginRequest();
+        request.setUsername(" ValidUser ");
+        request.setPassword("password");
+
+        User user = new User();
+        user.setActive(true);
+        user.setAccountLocked(false);
+        user.setEmailVerified(true);
+        user.setPasswordHash("hashed-password");
+
+        when(userRepository.findByUsername("validuser")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password", "hashed-password")).thenReturn(true);
+        when(jwtService.generateAccessToken(user)).thenReturn("access");
+        when(jwtService.generateRefreshToken(user)).thenReturn("refresh");
+        
+        AuthResponse response = AuthResponse.builder().accessToken("access").build();
+        when(authMapper.toAuthResponse("access", "refresh", user)).thenReturn(response);
+
+        AuthResponse result = authenticationService.login(request);
+
+        assertNotNull(result);
+        verify(userRepository).findByUsername("validuser");
     }
 
     @Test
