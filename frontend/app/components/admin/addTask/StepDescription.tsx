@@ -7,7 +7,10 @@ import { StepProps } from './addTaskTypes';
 export default function StepDescription({ formData, onUpdate, onNext, onBack }: StepProps) {
   const { theme } = useThemeStore();
   const themeColors = Colors[theme as keyof typeof Colors];
-  const canProceed = formData.description.trim().length > 0;
+  const trimmedDesc = formData.description.trim();
+  const isValidLength = trimmedDesc.length >= 10 && trimmedDesc.length <= 2000;
+  const showWarning = formData.description.length > 0 && !isValidLength;
+  const canProceed = isValidLength;
 
   return (
     <KeyboardAvoidingView
@@ -22,7 +25,7 @@ export default function StepDescription({ formData, onUpdate, onNext, onBack }: 
       </Text>
 
       <TextInput
-        style={[styles.input, { backgroundColor: themeColors.card, borderColor: themeColors.border, color: themeColors.text }]}
+        style={[styles.input, { backgroundColor: themeColors.card, borderColor: showWarning ? '#EF4444' : themeColors.border, color: themeColors.text }]}
         value={formData.description}
         onChangeText={(text) => onUpdate({ description: text })}
         placeholder="e.g., Identify whether each image contains the target pollinator species..."
@@ -31,6 +34,9 @@ export default function StepDescription({ formData, onUpdate, onNext, onBack }: 
         numberOfLines={5}
         textAlignVertical="top"
       />
+      <Text style={{ color: showWarning ? '#EF4444' : themeColors.textSecondary, marginTop: 8, fontSize: 13, fontWeight: '500' }}>
+        Description must be between 10 and 2000 characters.
+      </Text>
 
       <View style={styles.footer}>
         <View style={styles.buttonRow}>

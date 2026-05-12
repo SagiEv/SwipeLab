@@ -36,6 +36,8 @@ public class AuthenticationService {
 
     @Transactional
     public java.util.Map<String, Object> register(RegisterRequest request) {
+        request.setUsername(request.getUsername().toLowerCase().trim());
+
         // Check if email already exists
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already registered");
@@ -54,6 +56,8 @@ public class AuthenticationService {
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setEmailVerificationToken(verificationToken);
         user.setVerificationTokenExpiry(LocalDateTime.now().plusHours(24)); // 24-hour expiry
+
+
 
         // Auto-verify emails in development environment
         if (autoVerifyEmails) {
@@ -162,8 +166,8 @@ public class AuthenticationService {
 
     @Transactional
     public AuthResponse login(LoginRequest request) {
-
-        User user = userRepository.findByUsername(request.getUsername())
+        String normalizedUsername = request.getUsername().toLowerCase().trim();
+        User user = userRepository.findByUsername(normalizedUsername)
                 .orElseThrow(() -> new UnauthorizedException("User not exists"));
 
         // Account state checks

@@ -61,11 +61,11 @@ class RecipientGroupServiceTest {
         request.setName("Group A");
         request.setUsernames(Arrays.asList("user1", "user2"));
 
-        when(recipientGroupRepository.existsByName("Group A")).thenReturn(false);
+        when(recipientGroupRepository.existsByCreatedByAndName("admin_mock", "Group A")).thenReturn(false);
         when(recipientUserRepository.findByUsernameIn(request.getUsernames())).thenReturn(initialUsers);
         when(recipientGroupRepository.save(any(RecipientGroup.class))).thenReturn(group);
 
-        RecipientGroupResponse response = recipientGroupService.createRecipientGroup(request);
+        RecipientGroupResponse response = recipientGroupService.createRecipientGroup(request, "admin_mock");
 
         assertNotNull(response);
         assertEquals("Group A", response.getName());
@@ -78,9 +78,9 @@ class RecipientGroupServiceTest {
         CreateRecipientGroupRequest request = new CreateRecipientGroupRequest();
         request.setName("Group A");
 
-        when(recipientGroupRepository.existsByName("Group A")).thenReturn(true);
+        when(recipientGroupRepository.existsByCreatedByAndName("admin_mock", "Group A")).thenReturn(true);
 
-        assertThrows(IllegalStateException.class, () -> recipientGroupService.createRecipientGroup(request));
+        assertThrows(IllegalStateException.class, () -> recipientGroupService.createRecipientGroup(request, "admin_mock"));
     }
 
     @Test

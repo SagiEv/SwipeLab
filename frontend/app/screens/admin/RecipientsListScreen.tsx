@@ -74,8 +74,9 @@ export default function RecipientsListScreen() {
 
     const handleCreateGroup = async () => {
         setCreateErrorMsg('');
-        if (!newGroupName.trim()) {
-            setCreateErrorMsg("Please enter a group name");
+        const trimmedName = newGroupName.trim();
+        if (!trimmedName || trimmedName.length < 3 || trimmedName.length > 100) {
+            setCreateErrorMsg("Group name must be between 3 and 100 characters");
             return;
         }
 
@@ -220,12 +221,15 @@ export default function RecipientsListScreen() {
                                     )}
 
                                     <TextInput
-                                        style={[styles.input, { color: themeColors.text, borderColor: themeColors.border, backgroundColor: themeColors.background }]}
-                                        placeholder="Group Name"
+                                        style={[styles.input, { color: themeColors.text, borderColor: themeColors.border, backgroundColor: themeColors.background, marginBottom: 4 }]}
+                                        placeholder="Enter a new group name"
                                         placeholderTextColor={themeColors.textSecondary}
                                         value={newGroupName}
                                         onChangeText={setNewGroupName}
                                     />
+                                    <Text style={{ fontSize: 12, color: themeColors.textSecondary, marginBottom: 16, marginLeft: 4 }}>
+                                        Group name must be between 3 and 100 characters.
+                                    </Text>
 
                                     <View style={styles.tabsContainer}>
                                         <TouchableOpacity

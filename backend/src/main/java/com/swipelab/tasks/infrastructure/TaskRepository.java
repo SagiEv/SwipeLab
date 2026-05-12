@@ -15,6 +15,10 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     List<Task> findByCreatedBy(String username);
 
+    boolean existsByCreatedByAndName(String createdBy, String name);
+
+    long countByCreatedByAndCreatedAtAfter(String createdBy, java.time.LocalDateTime createdAt);
+
     @org.springframework.data.jpa.repository.Query(
         "SELECT DISTINCT t FROM Task t " +
         "LEFT JOIN t.recipientGroups rg " +
