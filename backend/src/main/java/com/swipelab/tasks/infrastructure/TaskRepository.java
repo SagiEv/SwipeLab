@@ -24,7 +24,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
         "LEFT JOIN t.recipientGroups rg " +
         "LEFT JOIN t.assignedUsernames au " +
         "WHERE t.status = :status AND " +
-        "(t.isPublic = true OR au = :username OR rg IN :groupIds)"
+        "(au = :username OR rg IN :groupIds)"
     )
     org.springframework.data.domain.Page<Task> findAccessibleTasksForUser(
             @org.springframework.data.repository.query.Param("status") TaskStatus status,
