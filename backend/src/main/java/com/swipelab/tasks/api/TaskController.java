@@ -47,15 +47,7 @@ public class TaskController {
     public ResponseEntity<TaskPageResponse> getAvailableTasks(
             @AuthenticationPrincipal UserDetails userDetails,
             @PageableDefault(size = 20) Pageable pageable) {
-        log.info("Entered getAvailableTasks controller method for user: {}", userDetails.getUsername());
-        try {
-            TaskPageResponse response = taskService.getTasksForUser(userDetails.getUsername(), pageable);
-            log.info("getAvailableTasks returning {} tasks for user: {}", response.getTasks().size(), userDetails.getUsername());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Fatal error in available-tasks endpoint: ", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        return ResponseEntity.ok(taskService.getExploreTasksForUser(userDetails.getUsername(), pageable));
     }
 
     @GetMapping("/my-tasks/{taskId}")
@@ -64,6 +56,15 @@ public class TaskController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long taskId) {
         return ResponseEntity.ok(taskService.getTaskForUser(taskId, userDetails.getUsername()));
+    }
+
+    @PostMapping("/{taskId}/assign")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<TaskResponse> assignTask(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long taskId) {
+        TaskResponse response = taskService.assignTaskToUser(taskId, userDetails.getUsername());
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     // =========================

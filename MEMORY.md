@@ -16,10 +16,10 @@ Architecture: Modular Hexagonal/DDD.
 * Frontend: Fixed frontend rendering for uploaded Gold Images by correcting the static path base parsing logic (Issue #216).
 * Security/Validation: Implemented comprehensive input validation, stored XSS protection, and username normalization (Issue #227).
 * Frontend: Removed hardcoded mock task (id=1) from SwipeScreen; implemented 3-state Quick Start UI (active swipe / quick-start task picker / true empty state); aligned all task play entry points with swipeStore (Issue #204).
+* Backend/Frontend: Fixed task duplication bug — added `findPublicTasksExcludingAssignedUser` JPQL query, `getExploreTasksForUser` service method, `POST /tasks/{id}/assign` endpoint with duplicate guard (DuplicateResourceException → HTTP 409), and `useAssignTask` mutation in the frontend (Issue #205).
 * Frontend: Added search bar and filter logic to the admin UsersManagementScreen, along with Playwright tests (Issue #217).
 
 ## Current Focus (Active GitHub Issues)
-* Issue #205: Fix logic causing same task to appear twice in Assigned/Explore.
 * Issue #206: Update UI/UX for the Gold Images Upload screen.
 * Issue #201: Refactor Backend roles to include Researchers and Super Admin.
 * Issue #154: Add version support in API responses for frontend caching.

@@ -68,6 +68,21 @@ public class GlobalExceptionHandler {
                 return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
         }
 
+        @ExceptionHandler(DuplicateResourceException.class)
+        public ResponseEntity<ErrorResponse> handleDuplicateResourceException(
+                        DuplicateResourceException ex, HttpServletRequest request) {
+
+                ErrorResponse errorResponse = ErrorResponse.builder()
+                                .timestamp(LocalDateTime.now())
+                                .status(HttpStatus.CONFLICT.value())
+                                .error("Conflict")
+                                .message(ex.getMessage())
+                                .path(request.getRequestURI())
+                                .build();
+
+                return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+        }
+
         @ExceptionHandler({ EmailVerificationException.class, PasswordResetException.class,
                         IllegalArgumentException.class })
         public ResponseEntity<ErrorResponse> handleBadRequestExceptions(

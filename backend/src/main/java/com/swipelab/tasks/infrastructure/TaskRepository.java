@@ -32,4 +32,27 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @org.springframework.data.repository.query.Param("groupIds") java.util.Collection<Long> groupIds,
             org.springframework.data.domain.Pageable pageable);
 
+    /**
+     * Returns public ACTIVE tasks that the given user is NOT already assigned to
+     * (neither directly by username nor via a recipient group membership).
+     * Used exclusively by the "Explore Tasks" endpoint to prevent duplicates.
+     */
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT DISTINCT t FROM Task t " +
+        "WHERE t.status = :status AND t.isPublic = true " +
+        "AND t.id NOT IN (" +
+        "  SELECT DISTINCT t2.id FROM Task t2 " +
+        "  LEFT JOIN t2.assignedUsernames au2 " +
+        "  LEFT JOIN t2.recipientGroups rg2 " +
+        "  WHERE au2 = :username OR rg2 IN :groupIds" +
+        ")"
+    )
+    org.springframework.data.domain.Page<Task> findPublicTasksExcludingAssignedUser(
+            @org.springframework.data.repository.query.Param("status") TaskStatus status,
+            @org.springframework.data.repository.query.Param("username") String username,
+            @org.springframework.data.repository.query.Param("groupIds") java.util.Collection<Long> groupIds,
+            org.springframework.data.domain.Pageable pageable);
+
+    boolean existsByIdAndAssignedUsernamesContaining(Long id, String username);
+
 }
