@@ -16,7 +16,7 @@ Architecture: Modular Hexagonal/DDD.
 * Frontend: Fixed frontend rendering for uploaded Gold Images by correcting the static path base parsing logic (Issue #216).
 * Security/Validation: Implemented comprehensive input validation, stored XSS protection, and username normalization (Issue #227).
 * Frontend: Removed hardcoded mock task (id=1) from SwipeScreen; implemented 3-state Quick Start UI (active swipe / quick-start task picker / true empty state); aligned all task play entry points with swipeStore (Issue #204).
-* Frontend: Added search bar and filter logic to the admin UsersManagementScreen, along with Playwright tests (Issue #217).
+* Frontend: Added search bar + sort-by-credibility-score toggle to UsersManagementScreen; updated mock data (Issues #217, #218).
 
 ## Current Focus (Active GitHub Issues)
 * Issue #205: Fix logic causing same task to appear twice in Assigned/Explore.
@@ -31,7 +31,6 @@ Architecture: Modular Hexagonal/DDD.
 * Issue #221: [Frontend] adapt to changes of analytics new endpoints.
 * Issue #220: [Backend] improve and add analytics new endpoints.
 * Issue #219: [Frontend] Add to UsersScreen ONLY for Admin role control buttons.
-* Issue #218: [Frontend] adding sort by credibility score in UsersScreen.
 
 ## Architecture & Design Decisions
 * Backend: Strictly modular. No direct calls from API to Infrastructure. Use Application services.

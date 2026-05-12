@@ -1,9 +1,8 @@
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { FlatList, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Colors } from '../../../constants/theme';
-import { apiFetch } from "../../api/apiFetch";
 import ScreenHeaderLayout from "../../components/layout/ScreenHeaderLayout/ScreenHeaderLayout";
 import { AdminStackParamList } from "../../navigation/adminStack.types";
 import { useThemeStore } from '../../stores/themeStore';
@@ -12,9 +11,9 @@ import { useThemeStore } from '../../stores/themeStore';
 import addTaskImg from "../../../assets/images/add_task.png";
 import profileImg from "../../../assets/images/profile.png";
 import usersImg from "../../../assets/images/users.png";
-import { API_ENDPOINTS } from '../../api/apiEndpoints';
 import { useAdminUsers } from "../../api/queries";
 
+type SortOrder = 'default' | 'asc' | 'desc';
 
 type UsersManagementScreenNavigationProp = NativeStackNavigationProp<AdminStackParamList, 'UsersManagement'>;
 
@@ -24,6 +23,24 @@ interface User {
     score: number;
 }
 
+const SORT_ICONS: Record<SortOrder, string> = {
+    default: '⇅',
+    asc:     '↑',
+    desc:    '↓',
+};
+
+const NEXT_SORT: Record<SortOrder, SortOrder> = {
+    default: 'asc',
+    asc:     'desc',
+    desc:    'default',
+};
+
+const SORT_LABELS: Record<SortOrder, string> = {
+    default: 'Default',
+    asc:     'Score ↑',
+    desc:    'Score ↓',
+};
+
 export default function UsersManagementScreen() {
     const navigation = useNavigation<UsersManagementScreenNavigationProp>();
     const { theme } = useThemeStore();
@@ -31,10 +48,20 @@ export default function UsersManagementScreen() {
 
     const { data: users = [], isLoading: loading } = useAdminUsers();
     const [searchQuery, setSearchQuery] = useState('');
+    const [sortOrder, setSortOrder] = useState<SortOrder>('default');
 
-    const filteredUsers = users.filter(user => 
-        user.username.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const displayedUsers = useMemo(() => {
+        // 1. Filter
+        const filtered = users.filter((user: User) =>
+            user.username.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+
+        // 2. Sort
+        if (sortOrder === 'default') return filtered;
+        return [...filtered].sort((a: User, b: User) =>
+            sortOrder === 'asc' ? a.score - b.score : b.score - a.score
+        );
+    }, [users, searchQuery, sortOrder]);
 
     const renderItem = ({ item }: { item: User }) => (
         <TouchableOpacity style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
@@ -55,21 +82,33 @@ export default function UsersManagementScreen() {
             onRightPress={() => navigation.navigate('AddUser')}
         >
             <View style={[styles.container, { backgroundColor: themeColors.background }]}>
-                <TextInput
-                    style={[styles.searchInput, { color: themeColors.text, borderColor: themeColors.border, backgroundColor: themeColors.card }]}
-                    placeholder="Search users..."
-                    placeholderTextColor={themeColors.textSecondary}
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                />
+
+                {/* Search + Sort row */}
+                <View style={styles.controlsRow}>
+                    <TextInput
+                        style={[styles.searchInput, { color: themeColors.text, borderColor: themeColors.border, backgroundColor: themeColors.card }]}
+                        placeholder="Search users..."
+                        placeholderTextColor={themeColors.textSecondary}
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                    />
+                    <TouchableOpacity
+                        style={[styles.sortButton, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+                        onPress={() => setSortOrder(prev => NEXT_SORT[prev])}
+                        accessibilityLabel={`Sort by credibility score, current: ${SORT_LABELS[sortOrder]}`}
+                    >
+                        <Text style={[styles.sortIcon, { color: themeColors.text }]}>{SORT_ICONS[sortOrder]}</Text>
+                    </TouchableOpacity>
+                </View>
+
                 {loading ? (
                     <Text style={{ textAlign: 'center', marginTop: 20, color: themeColors.text }}>Loading...</Text>
-                ) : filteredUsers.length === 0 ? (
+                ) : displayedUsers.length === 0 ? (
                     <Text style={{ textAlign: 'center', marginTop: 20, color: themeColors.textSecondary }}>No users found.</Text>
                 ) : (
                     <FlatList
                         showsVerticalScrollIndicator={false}
-                        data={filteredUsers}
+                        data={displayedUsers}
                         renderItem={renderItem}
                         keyExtractor={item => item.id}
                         numColumns={3}
@@ -87,18 +126,36 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingHorizontal: 16,
     },
-    listContent: {
-        paddingTop: 16,
-        paddingBottom: 32,
+    controlsRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 16,
+        marginBottom: 8,
+        gap: 8,
     },
     searchInput: {
+        flex: 1,
         height: 40,
         borderWidth: 1,
         borderRadius: 8,
         paddingHorizontal: 12,
-        marginTop: 16,
-        marginBottom: 8,
         fontSize: 16,
+    },
+    sortButton: {
+        width: 40,
+        height: 40,
+        borderWidth: 1,
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    sortIcon: {
+        fontSize: 18,
+        fontWeight: '700',
+    },
+    listContent: {
+        paddingTop: 4,
+        paddingBottom: 32,
     },
     columnWrapper: {
         justifyContent: 'space-between',
@@ -109,7 +166,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         padding: 12,
         alignItems: 'center',
-        width: '30%', // Approx 1/3 minus spacing
+        width: '30%',
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
