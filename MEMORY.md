@@ -20,7 +20,6 @@ Architecture: Modular Hexagonal/DDD.
 * Frontend: Added search bar and filter logic to the admin UsersManagementScreen, along with Playwright tests (Issue #217).
 
 ## Current Focus (Active GitHub Issues)
-* Issue #206: Update UI/UX for the Gold Images Upload screen.
 * Issue #201: Refactor Backend roles to include Researchers and Super Admin.
 * Issue #154: Add version support in API responses for frontend caching.
 * Issue #226: [Frontend] fix recipients list not deleting users.
