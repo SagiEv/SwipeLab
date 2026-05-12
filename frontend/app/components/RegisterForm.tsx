@@ -42,6 +42,13 @@ export default function RegisterForm({ onClose }: Props) {
       return;
     }
 
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d\s])(?!.*\s).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      setError("Password does not meet complexity requirements.");
+      setLoading(false);
+      return;
+    }
+
     try {
       // TODO: replace with real API call
       // const token = "mock-jwt-token";
@@ -100,14 +107,14 @@ export default function RegisterForm({ onClose }: Props) {
             <Text style={styles.title}>Register</Text>
 
             <TextInput
-              placeholder="Username"
+              placeholder="Username (e.g., jdoe23)"
               value={username}
               onChangeText={setUsername}
               style={styles.input}
               placeholderTextColor="#888"
             />
             <TextInput
-              placeholder="Email"
+              placeholder="Email address"
               value={email}
               onChangeText={setEmail}
               style={styles.input}
@@ -116,22 +123,26 @@ export default function RegisterForm({ onClose }: Props) {
               placeholderTextColor="#888"
             />
             <TextInput
-              placeholder="Display Name"
+              placeholder="Display Name (e.g., John Doe)"
               value={displayName}
               onChangeText={setDisplayName}
               style={styles.input}
               placeholderTextColor="#888"
             />
             <TextInput
-              placeholder="Password"
+              placeholder="Create a strong password"
               value={password}
               onChangeText={setPassword}
               style={styles.input}
               secureTextEntry
               placeholderTextColor="#888"
             />
+            <Text style={{ fontSize: 12, color: "#666", marginBottom: 12, marginTop: -8, marginLeft: 4 }}>
+              Must be at least 8 chars, include an uppercase, a lowercase, a number, a special symbol, and no spaces.
+            </Text>
+            
             <TextInput
-              placeholder="Confirm Password"
+              placeholder="Confirm your password"
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               style={styles.input}

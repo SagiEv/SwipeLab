@@ -34,11 +34,9 @@ export default function StepDescription({ formData, onUpdate, onNext, onBack }: 
         numberOfLines={5}
         textAlignVertical="top"
       />
-      {showWarning && (
-        <Text style={{ color: '#EF4444', marginTop: 8, fontSize: 13, fontWeight: '500' }}>
-          Description must be between 10 and 2000 characters.
-        </Text>
-      )}
+      <Text style={{ color: showWarning ? '#EF4444' : themeColors.textSecondary, marginTop: 8, fontSize: 13, fontWeight: '500' }}>
+        Description must be between 10 and 2000 characters.
+      </Text>
 
       <View style={styles.footer}>
         <View style={styles.buttonRow}>

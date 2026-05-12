@@ -32,11 +32,9 @@ export default function StepName({ formData, onUpdate, onNext }: StepProps) {
         placeholderTextColor={themeColors.textSecondary}
         autoFocus
       />
-      {showWarning && (
-        <Text style={{ color: '#EF4444', marginTop: 8, fontSize: 13, fontWeight: '500' }}>
-          Task name must be between 3 and 100 characters.
-        </Text>
-      )}
+      <Text style={{ color: showWarning ? '#EF4444' : themeColors.textSecondary, marginTop: 8, fontSize: 13, fontWeight: '500' }}>
+        Task name must be between 3 and 100 characters.
+      </Text>
 
       <View style={styles.footer}>
         <TouchableOpacity
