@@ -13,7 +13,7 @@ import addTaskImg from "../../../assets/images/add_task.png";
 import profileImg from "../../../assets/images/profile.png";
 import usersImg from "../../../assets/images/users.png";
 import { API_ENDPOINTS } from '../../api/apiEndpoints';
-import { useAdminUsers, QUERY_KEYS } from "../../api/queries";
+import { useAdminUsers, QUERY_KEYS, useProfile } from "../../api/queries";
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 
 
@@ -33,6 +33,7 @@ export default function UsersManagementScreen() {
     const queryClient = useQueryClient();
 
     const { data: users = [], isLoading: loading } = useAdminUsers();
+    const { data: profile } = useProfile();
     const [searchQuery, setSearchQuery] = useState('');
 
     const filteredUsers = users.filter(user => 
@@ -59,12 +60,14 @@ export default function UsersManagementScreen() {
             <Text style={[styles.username, { color: themeColors.text }]}>{item.username}</Text>
             <Text style={[styles.score, { color: themeColors.textSecondary }]}>{item.score}</Text>
             
-            <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: item.active ? '#ff4d4f' : '#52c41a' }]}
-                onPress={() => toggleBanStatus.mutate({ username: item.username, isBanned: !item.active })}
-            >
-                <Text style={styles.actionButtonText}>{item.active ? 'Ban' : 'Unban'}</Text>
-            </TouchableOpacity>
+            {profile?.username !== item.username && (
+                <TouchableOpacity 
+                    style={[styles.actionButton, { backgroundColor: item.active ? '#ff4d4f' : '#52c41a' }]}
+                    onPress={() => toggleBanStatus.mutate({ username: item.username, isBanned: !item.active })}
+                >
+                    <Text style={styles.actionButtonText}>{item.active ? 'Ban' : 'Unban'}</Text>
+                </TouchableOpacity>
+            )}
         </TouchableOpacity>
     );
 

@@ -96,6 +96,10 @@ public class UserService {
 
     @Transactional
     public UserProfileResponse banUser(String username) {
+        User currentUser = getCurrentUser();
+        if (currentUser.getUsername().equalsIgnoreCase(username)) {
+            throw new IllegalArgumentException("You cannot ban yourself.");
+        }
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
         user.setActive(false);
@@ -106,6 +110,10 @@ public class UserService {
 
     @Transactional
     public UserProfileResponse unbanUser(String username) {
+        User currentUser = getCurrentUser();
+        if (currentUser.getUsername().equalsIgnoreCase(username)) {
+            throw new IllegalArgumentException("You cannot unban yourself.");
+        }
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
         user.setActive(true);
