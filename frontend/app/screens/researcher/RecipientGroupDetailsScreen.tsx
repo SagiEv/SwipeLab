@@ -72,23 +72,19 @@ export default function RecipientGroupDetailsScreen() {
     };
 
     const handleAddSelected = async () => {
-        let finalUsernamesToAdd: string[] = [];
+        let finalUsernamesToAdd: string[] = [...selectedUserIds];
 
-        if (activeTab === 'USERS') {
-            finalUsernamesToAdd = selectedUserIds;
-        } else {
-            // Merge users from selected groups
-            const groupsToAdd = allGroups.filter((g: any) => selectedGroupIds.includes(g.id));
-            groupsToAdd.forEach((g: any) => {
-                g.users.forEach((u: any) => {
-                    if (!currentGroup.users.some((existing: any) => existing.id === u.id)) {
-                        finalUsernamesToAdd.push(u.id);
-                    }
-                });
+        // Merge users from selected groups
+        const groupsToAdd = allGroups.filter((g: any) => selectedGroupIds.includes(g.id));
+        groupsToAdd.forEach((g: any) => {
+            g.users.forEach((u: any) => {
+                if (!currentGroup.users.some((existing: any) => existing.id === u.id)) {
+                    finalUsernamesToAdd.push(u.id);
+                }
             });
-            // Unique IDs only
-            finalUsernamesToAdd = Array.from(new Set(finalUsernamesToAdd));
-        }
+        });
+        // Unique IDs only
+        finalUsernamesToAdd = Array.from(new Set(finalUsernamesToAdd));
 
         if (finalUsernamesToAdd.length === 0) {
             setAddMemberModalVisible(false);
@@ -100,6 +96,9 @@ export default function RecipientGroupDetailsScreen() {
             // Payload: { addUsernames: [...] }
             const res = await apiFetch(API_ENDPOINTS.researcher.RECIPIENTS_UPDATE(currentGroup.id), {
                 method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({ addUsernames: finalUsernamesToAdd })
             });
 
@@ -147,6 +146,9 @@ export default function RecipientGroupDetailsScreen() {
                             // Payload: { removeUsernames: [userId] }
                             const res = await apiFetch(API_ENDPOINTS.researcher.RECIPIENTS_UPDATE(currentGroup.id), {
                                 method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
                                 body: JSON.stringify({ removeUsernames: [userId] })
                             });
                             if (res.ok) {
