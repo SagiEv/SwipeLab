@@ -133,38 +133,52 @@ export default function RecipientGroupDetailsScreen() {
     };
 
     const handleRemoveUser = async (userId: string) => {
+        console.log("[handleRemoveUser] Triggered for user:", userId);
+        
         const removeUserAction = async () => {
+            console.log("[handleRemoveUser] User confirmed removal. Proceeding with apiFetch...");
             try {
-                // New Endpoint: /api/v1/dashboard/recipients/{id}/update
-                // Payload: { removeUsernames: [userId] }
-                const res = await apiFetch(API_ENDPOINTS.researcher.RECIPIENTS_UPDATE(currentGroup.id), {
+                const url = API_ENDPOINTS.researcher.RECIPIENTS_UPDATE(currentGroup.id);
+                console.log("[handleRemoveUser] URL:", url);
+                
+                const res = await apiFetch(url, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ removeUsernames: [userId] })
                 });
+                
+                console.log("[handleRemoveUser] apiFetch response status:", res.status);
+                
                 if (res.ok) {
+                    console.log("[handleRemoveUser] Successfully removed, refreshing group...");
                     refreshGroup();
                 } else {
+                    console.error("[handleRemoveUser] Failed to remove user. Status:", res.status);
                     Alert.alert("Error", "Failed to remove user");
                 }
             } catch (e) {
-                console.error(e);
+                console.error("[handleRemoveUser] Exception during fetch:", e);
+                Alert.alert("Error", "Network error occurred while removing user.");
             }
         };
 
         if (Platform.OS === 'web') {
+            console.log("[handleRemoveUser] Running on web, using window.confirm");
             if (window.confirm("Are you sure you want to remove this user from the group?")) {
                 removeUserAction();
+            } else {
+                console.log("[handleRemoveUser] User cancelled window.confirm");
             }
         } else {
+            console.log("[handleRemoveUser] Running on native, using Alert.alert");
             Alert.alert(
                 "Remove User",
                 "Are you sure you want to remove this user from the group?",
                 [
-                    { text: "Cancel", style: "cancel" },
-                    { text: "Remove", style: "destructive", onPress: removeUserAction }
+                    { text: "Cancel", style: "cancel", onPress: () => console.log("[handleRemoveUser] Cancelled") },
+                    { text: "OK", onPress: removeUserAction }
                 ]
             );
         }
