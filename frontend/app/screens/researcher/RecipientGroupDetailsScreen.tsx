@@ -8,7 +8,8 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    View
+    View,
+    Platform
 } from 'react-native';
 import { Colors } from '../../../constants/theme';
 import { apiFetch } from '../../api/apiFetch';
@@ -45,6 +46,7 @@ export default function RecipientGroupDetailsScreen() {
 
     // Add Member Modal State
     const [addMemberModalVisible, setAddMemberModalVisible] = useState(false);
+    const [userToRemove, setUserToRemove] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'USERS' | 'GROUPS'>('USERS');
 
     // Selection State
@@ -72,23 +74,19 @@ export default function RecipientGroupDetailsScreen() {
     };
 
     const handleAddSelected = async () => {
-        let finalUsernamesToAdd: string[] = [];
+        let finalUsernamesToAdd: string[] = [...selectedUserIds];
 
-        if (activeTab === 'USERS') {
-            finalUsernamesToAdd = selectedUserIds;
-        } else {
-            // Merge users from selected groups
-            const groupsToAdd = allGroups.filter((g: any) => selectedGroupIds.includes(g.id));
-            groupsToAdd.forEach((g: any) => {
-                g.users.forEach((u: any) => {
-                    if (!currentGroup.users.some((existing: any) => existing.id === u.id)) {
-                        finalUsernamesToAdd.push(u.id);
-                    }
-                });
+        // Merge users from selected groups
+        const groupsToAdd = allGroups.filter((g: any) => selectedGroupIds.includes(g.id));
+        groupsToAdd.forEach((g: any) => {
+            g.users.forEach((u: any) => {
+                if (!currentGroup.users.some((existing: any) => existing.id === u.id)) {
+                    finalUsernamesToAdd.push(u.id);
+                }
             });
-            // Unique IDs only
-            finalUsernamesToAdd = Array.from(new Set(finalUsernamesToAdd));
-        }
+        });
+        // Unique IDs only
+        finalUsernamesToAdd = Array.from(new Set(finalUsernamesToAdd));
 
         if (finalUsernamesToAdd.length === 0) {
             setAddMemberModalVisible(false);
@@ -100,6 +98,9 @@ export default function RecipientGroupDetailsScreen() {
             // Payload: { addUsernames: [...] }
             const res = await apiFetch(API_ENDPOINTS.researcher.RECIPIENTS_UPDATE(currentGroup.id), {
                 method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({ addUsernames: finalUsernamesToAdd })
             });
 
@@ -132,35 +133,35 @@ export default function RecipientGroupDetailsScreen() {
         }
     };
 
-    const handleRemoveUser = async (userId: string) => {
-        Alert.alert(
-            "Remove User",
-            "Are you sure you want to remove this user from the group?",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Remove",
-                    style: "destructive",
-                    onPress: async () => {
-                        try {
-                            // New Endpoint: /api/v1/dashboard/recipients/{id}/update
-                            // Payload: { removeUsernames: [userId] }
-                            const res = await apiFetch(API_ENDPOINTS.researcher.RECIPIENTS_UPDATE(currentGroup.id), {
-                                method: 'PUT',
-                                body: JSON.stringify({ removeUsernames: [userId] })
-                            });
-                            if (res.ok) {
-                                refreshGroup();
-                            } else {
-                                Alert.alert("Error", "Failed to remove user");
-                            }
-                        } catch (e) {
-                            console.error(e);
-                        }
-                    }
-                }
-            ]
-        );
+    const handleRemoveUser = (userId: string) => {
+        setUserToRemove(userId);
+    };
+
+    const confirmRemoveUser = async () => {
+        if (!userToRemove) return;
+        const userId = userToRemove;
+        
+        try {
+            const url = API_ENDPOINTS.researcher.RECIPIENTS_UPDATE(currentGroup.id);
+            const res = await apiFetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ removeUsernames: [userId] })
+            });
+            
+            if (res.ok) {
+                refreshGroup();
+            } else {
+                Alert.alert("Error", "Failed to remove user");
+            }
+        } catch (e) {
+            console.error("[confirmRemoveUser] Exception during fetch:", e);
+            Alert.alert("Error", "Network error occurred while removing user.");
+        } finally {
+            setUserToRemove(null);
+        }
     };
 
     // --- Composition Logic ---
@@ -236,6 +237,33 @@ export default function RecipientGroupDetailsScreen() {
                     ))
                 )}
             </ScrollView>
+
+            {/* Remove User Confirmation Modal */}
+            <Modal visible={!!userToRemove} animationType="fade" transparent>
+                <View style={styles.modalContainer}>
+                    <View style={[styles.modalContent, { backgroundColor: themeColors.card, alignItems: 'center' }]}>
+                        <Text style={[styles.modalTitle, { color: themeColors.text, marginBottom: 8 }]}>Remove User</Text>
+                        <Text style={{ color: themeColors.textSecondary, marginBottom: 20, textAlign: 'center' }}>
+                            Are you sure you want to remove this user from the group?
+                        </Text>
+                        
+                        <View style={{ flexDirection: 'row', justifyContent: 'center', width: '100%', gap: 16 }}>
+                            <TouchableOpacity 
+                                style={[styles.closeBtn, { backgroundColor: '#f0f0f0', borderRadius: 8, paddingHorizontal: 24 }]} 
+                                onPress={() => setUserToRemove(null)}
+                            >
+                                <Text style={{ color: '#333', fontWeight: 'bold' }}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                style={[styles.confirmBtn, { backgroundColor: '#FF6B6B' }]} 
+                                onPress={confirmRemoveUser}
+                            >
+                                <Text style={styles.confirmText}>Remove</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
 
             {/* Advanced Add Member Modal */}
             <Modal visible={addMemberModalVisible} animationType="slide" transparent>

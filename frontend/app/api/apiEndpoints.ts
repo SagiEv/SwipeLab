@@ -63,7 +63,7 @@ export const API_ENDPOINTS = {
         //RECIPIENTS
         RECIPIENTS: '/api/v1/dashboard/recipients',
         RECIPIENTS_CREATE: '/api/v1/dashboard/recipients',
-        RECIPIENTS_UPDATE: (groupId: string | number) => `/api/v1/dashboard/recipients/${groupId}/update`,
+        RECIPIENTS_UPDATE: (groupId: string | number) => `/api/v1/dashboard/recipients/${groupId}`,
     },
     STARDBI: {
         LOGIN: 'https://stardbi.cs.bgu.ac.il/auth/get_token/',

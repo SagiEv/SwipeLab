@@ -78,7 +78,7 @@ public class RecipientGroup {
     }
 
     public void removeUser(RecipientUser user) {
-        users.remove(user);
+        users.removeIf(u -> u.getUsername().equals(user.getUsername()));
     }
 
     public void addUsers(Set<RecipientUser> usersToAdd) {
@@ -86,6 +86,9 @@ public class RecipientGroup {
     }
 
     public void removeUsers(Set<RecipientUser> usersToRemove) {
-        users.removeAll(usersToRemove);
+        Set<String> usernamesToRemove = usersToRemove.stream()
+                .map(RecipientUser::getUsername)
+                .collect(java.util.stream.Collectors.toSet());
+        users.removeIf(u -> usernamesToRemove.contains(u.getUsername()));
     }
 }
