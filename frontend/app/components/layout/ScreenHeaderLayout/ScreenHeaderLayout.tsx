@@ -1,9 +1,9 @@
-// components/layout/ScreenHeaderLayout.tsx
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { ScreenHeaderLayoutProps } from "./ScreenHeaderLayout.types";
 import { useThemeStore } from '../../../stores/themeStore';
 import { Colors } from '../../../../constants/theme';
+
 
 export default function ScreenHeaderLayout({
   leftIcon,

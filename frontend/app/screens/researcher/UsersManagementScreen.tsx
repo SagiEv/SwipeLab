@@ -36,13 +36,13 @@ export default function UsersManagementScreen() {
     const { data: profile } = useProfile();
     const [searchQuery, setSearchQuery] = useState('');
 
-    const filteredUsers = users.filter(user => 
+    const filteredUsers = users.filter((user: User) => 
         user.username.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const toggleBanStatus = useMutation({
         mutationFn: async ({ username, isBanned }: { username: string, isBanned: boolean }) => {
-            const endpoint = isBanned ? `/api/v1/users/unban/${username}` : `/api/v1/users/ban/${username}`;
+            const endpoint = isBanned ? API_ENDPOINTS.USERS.UNBAN(username) : API_ENDPOINTS.USERS.BAN(username);
             const res = await apiFetch(endpoint, { method: 'POST' });
             if (!res.ok) throw new Error('Failed to toggle ban status');
             return res.json();
@@ -134,7 +134,6 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         padding: 12,
         alignItems: 'center',
-        width: '30%', // Approx 1/3 minus spacing
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
@@ -145,6 +144,7 @@ const styles = StyleSheet.create({
         elevation: 3,
         borderWidth: 1,
         borderColor: '#e0e0e0',
+        width: '30%', // Approx 1/3 minus spacing
     },
     avatarContainer: {
         width: 50,
