@@ -14,9 +14,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@lombok.EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class RecipientUser {
 
     @Id
+    @lombok.EqualsAndHashCode.Include
     private String username;
 
     @Builder.Default
