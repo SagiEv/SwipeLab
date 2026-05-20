@@ -126,6 +126,11 @@ class UserServiceTest {
 
     @Test
     void banUser_ShouldSetActiveFalse() {
+        User adminUser = new User();
+        adminUser.setUsername("admin");
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(adminUser, null, Collections.emptyList());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenReturn(user);
         when(authMapper.toUserProfileResponse(user)).thenReturn(profileResponse);
@@ -136,7 +141,23 @@ class UserServiceTest {
     }
 
     @Test
+    void banUser_ShouldThrowException_WhenBanningSelf() {
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, 
+            () -> userService.banUser("testuser"));
+        
+        assertEquals("You cannot ban yourself.", exception.getMessage());
+    }
+
+    @Test
     void unbanUser_ShouldSetActiveTrue() {
+        User adminUser = new User();
+        adminUser.setUsername("admin");
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(adminUser, null, Collections.emptyList());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
         user.setActive(false);
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenReturn(user);
@@ -145,5 +166,16 @@ class UserServiceTest {
         userService.unbanUser("testuser");
 
         verify(userRepository, times(1)).save(argThat(User::getActive));
+    }
+
+    @Test
+    void unbanUser_ShouldThrowException_WhenUnbanningSelf() {
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, 
+            () -> userService.unbanUser("testuser"));
+        
+        assertEquals("You cannot unban yourself.", exception.getMessage());
     }
 }
