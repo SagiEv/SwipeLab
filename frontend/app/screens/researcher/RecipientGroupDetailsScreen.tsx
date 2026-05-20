@@ -8,7 +8,8 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    View
+    View,
+    Platform
 } from 'react-native';
 import { Colors } from '../../../constants/theme';
 import { apiFetch } from '../../api/apiFetch';
@@ -132,37 +133,41 @@ export default function RecipientGroupDetailsScreen() {
     };
 
     const handleRemoveUser = async (userId: string) => {
-        Alert.alert(
-            "Remove User",
-            "Are you sure you want to remove this user from the group?",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Remove",
-                    style: "destructive",
-                    onPress: async () => {
-                        try {
-                            // New Endpoint: /api/v1/dashboard/recipients/{id}/update
-                            // Payload: { removeUsernames: [userId] }
-                            const res = await apiFetch(API_ENDPOINTS.researcher.RECIPIENTS_UPDATE(currentGroup.id), {
-                                method: 'PUT',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({ removeUsernames: [userId] })
-                            });
-                            if (res.ok) {
-                                refreshGroup();
-                            } else {
-                                Alert.alert("Error", "Failed to remove user");
-                            }
-                        } catch (e) {
-                            console.error(e);
-                        }
-                    }
+        const removeUserAction = async () => {
+            try {
+                // New Endpoint: /api/v1/dashboard/recipients/{id}/update
+                // Payload: { removeUsernames: [userId] }
+                const res = await apiFetch(API_ENDPOINTS.researcher.RECIPIENTS_UPDATE(currentGroup.id), {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ removeUsernames: [userId] })
+                });
+                if (res.ok) {
+                    refreshGroup();
+                } else {
+                    Alert.alert("Error", "Failed to remove user");
                 }
-            ]
-        );
+            } catch (e) {
+                console.error(e);
+            }
+        };
+
+        if (Platform.OS === 'web') {
+            if (window.confirm("Are you sure you want to remove this user from the group?")) {
+                removeUserAction();
+            }
+        } else {
+            Alert.alert(
+                "Remove User",
+                "Are you sure you want to remove this user from the group?",
+                [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Remove", style: "destructive", onPress: removeUserAction }
+                ]
+            );
+        }
     };
 
     // --- Composition Logic ---
