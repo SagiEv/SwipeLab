@@ -46,6 +46,7 @@ export default function RecipientGroupDetailsScreen() {
 
     // Add Member Modal State
     const [addMemberModalVisible, setAddMemberModalVisible] = useState(false);
+    const [userToRemove, setUserToRemove] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'USERS' | 'GROUPS'>('USERS');
 
     // Selection State
@@ -132,55 +133,34 @@ export default function RecipientGroupDetailsScreen() {
         }
     };
 
-    const handleRemoveUser = async (userId: string) => {
-        console.log("[handleRemoveUser] Triggered for user:", userId);
-        
-        const removeUserAction = async () => {
-            console.log("[handleRemoveUser] User confirmed removal. Proceeding with apiFetch...");
-            try {
-                const url = API_ENDPOINTS.researcher.RECIPIENTS_UPDATE(currentGroup.id);
-                console.log("[handleRemoveUser] URL:", url);
-                
-                const res = await apiFetch(url, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ removeUsernames: [userId] })
-                });
-                
-                console.log("[handleRemoveUser] apiFetch response status:", res.status);
-                
-                if (res.ok) {
-                    console.log("[handleRemoveUser] Successfully removed, refreshing group...");
-                    refreshGroup();
-                } else {
-                    console.error("[handleRemoveUser] Failed to remove user. Status:", res.status);
-                    Alert.alert("Error", "Failed to remove user");
-                }
-            } catch (e) {
-                console.error("[handleRemoveUser] Exception during fetch:", e);
-                Alert.alert("Error", "Network error occurred while removing user.");
-            }
-        };
+    const handleRemoveUser = (userId: string) => {
+        setUserToRemove(userId);
+    };
 
-        if (Platform.OS === 'web') {
-            console.log("[handleRemoveUser] Running on web, using window.confirm");
-            if (window.confirm("Are you sure you want to remove this user from the group?")) {
-                removeUserAction();
+    const confirmRemoveUser = async () => {
+        if (!userToRemove) return;
+        const userId = userToRemove;
+        
+        try {
+            const url = API_ENDPOINTS.researcher.RECIPIENTS_UPDATE(currentGroup.id);
+            const res = await apiFetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ removeUsernames: [userId] })
+            });
+            
+            if (res.ok) {
+                refreshGroup();
             } else {
-                console.log("[handleRemoveUser] User cancelled window.confirm");
+                Alert.alert("Error", "Failed to remove user");
             }
-        } else {
-            console.log("[handleRemoveUser] Running on native, using Alert.alert");
-            Alert.alert(
-                "Remove User",
-                "Are you sure you want to remove this user from the group?",
-                [
-                    { text: "Cancel", style: "cancel", onPress: () => console.log("[handleRemoveUser] Cancelled") },
-                    { text: "OK", onPress: removeUserAction }
-                ]
-            );
+        } catch (e) {
+            console.error("[confirmRemoveUser] Exception during fetch:", e);
+            Alert.alert("Error", "Network error occurred while removing user.");
+        } finally {
+            setUserToRemove(null);
         }
     };
 
@@ -257,6 +237,33 @@ export default function RecipientGroupDetailsScreen() {
                     ))
                 )}
             </ScrollView>
+
+            {/* Remove User Confirmation Modal */}
+            <Modal visible={!!userToRemove} animationType="fade" transparent>
+                <View style={styles.modalContainer}>
+                    <View style={[styles.modalContent, { backgroundColor: themeColors.card, alignItems: 'center' }]}>
+                        <Text style={[styles.modalTitle, { color: themeColors.text, marginBottom: 8 }]}>Remove User</Text>
+                        <Text style={{ color: themeColors.textSecondary, marginBottom: 20, textAlign: 'center' }}>
+                            Are you sure you want to remove this user from the group?
+                        </Text>
+                        
+                        <View style={{ flexDirection: 'row', justifyContent: 'center', width: '100%', gap: 16 }}>
+                            <TouchableOpacity 
+                                style={[styles.closeBtn, { backgroundColor: '#f0f0f0', borderRadius: 8, paddingHorizontal: 24 }]} 
+                                onPress={() => setUserToRemove(null)}
+                            >
+                                <Text style={{ color: '#333', fontWeight: 'bold' }}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                style={[styles.confirmBtn, { backgroundColor: '#FF6B6B' }]} 
+                                onPress={confirmRemoveUser}
+                            >
+                                <Text style={styles.confirmText}>Remove</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
 
             {/* Advanced Add Member Modal */}
             <Modal visible={addMemberModalVisible} animationType="slide" transparent>
