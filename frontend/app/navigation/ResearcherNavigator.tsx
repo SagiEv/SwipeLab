@@ -28,7 +28,7 @@ import { researcherStackParamList } from "./researcherStack.types";
 const Stack = createNativeStackNavigator<researcherStackParamList>();
 
 export default function ResearcherNavigator() {
-  const { isSuperAdmin } = useAuthStore();
+  const isSuperAdmin = useAuthStore((state) => state.isSuperAdmin);
   
   const bottomBarItems = [
     { label: "Home", route: "ResearcherDashboard", icon: require("../../assets/images/home.png") },
