@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, Platform, ScrollView } from 'react-native';
 import { Colors } from '../../../../constants/theme';
 import { useThemeStore } from '../../../stores/themeStore';
 import { StepProps } from './addTaskTypes';
@@ -11,16 +11,12 @@ export default function StepDescription({ formData, onUpdate, onNext, onBack }: 
   const isValidLength = trimmedDesc.length >= 10 && trimmedDesc.length <= 2000;
   const showWarning = formData.description.length > 0 && !isValidLength;
   const canProceed = isValidLength;
+  const isWeb = Platform.OS === 'web';
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
-    >
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" bounces={false}>
-      <Text style={[styles.heading, { color: themeColors.text }]}>Describe the task</Text>
-      <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>
+      <ScrollView contentContainerStyle={[styles.container, isWeb && styles.containerWeb]} keyboardShouldPersistTaps="handled" bounces={false}>
+      <Text style={[styles.heading, { color: themeColors.text }, isWeb && styles.headingWeb]}>Describe the task</Text>
+      <Text style={[styles.subtitle, { color: themeColors.textSecondary }, isWeb && styles.subtitleWeb]}>
         Provide clear instructions so classifiers know exactly what to look for.
       </Text>
 
@@ -38,7 +34,7 @@ export default function StepDescription({ formData, onUpdate, onNext, onBack }: 
         Description must be between 10 and 2000 characters.
       </Text>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, isWeb && styles.footerWeb]}>
         <View style={styles.buttonRow}>
           <TouchableOpacity style={[styles.backButton, { borderColor: themeColors.border }]} onPress={onBack}>
             <Text style={[styles.backButtonText, { color: themeColors.text }]}>← Back</Text>
@@ -53,14 +49,16 @@ export default function StepDescription({ formData, onUpdate, onNext, onBack }: 
         </View>
       </View>
       </ScrollView>
-    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flexGrow: 1, paddingVertical: 16 },
+  containerWeb: { paddingVertical: 8 },
   heading: { fontSize: 22, fontWeight: '700', marginBottom: 8 },
+  headingWeb: { fontSize: 20, marginBottom: 6 },
   subtitle: { fontSize: 14, marginBottom: 24, lineHeight: 20 },
+  subtitleWeb: { marginBottom: 16 },
   input: {
     borderWidth: 1,
     borderRadius: 12,
@@ -69,6 +67,7 @@ const styles = StyleSheet.create({
     minHeight: 120,
   },
   footer: { marginTop: 'auto', paddingTop: 24 },
+  footerWeb: { paddingTop: 16 },
   buttonRow: { flexDirection: 'row', gap: 12 },
   backButton: {
     flex: 1,

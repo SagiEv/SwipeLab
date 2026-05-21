@@ -51,14 +51,14 @@ public class UserController {
     }
 
     // ban user
-    @PreAuthorize("hasRole('RESEARCHER') or @securityAuthorizationService.isSuperAdmin(authentication.name)")
+    @PreAuthorize("@securityAuthorizationService.isSuperAdmin(authentication.name)")
     @PostMapping("/ban/{username}")
     public ResponseEntity<UserProfileResponse> banUser(@PathVariable String username) {
         return ResponseEntity.ok(userService.banUser(username));
     }
 
     // unban user
-    @PreAuthorize("hasRole('RESEARCHER') or @securityAuthorizationService.isSuperAdmin(authentication.name)")
+    @PreAuthorize("@securityAuthorizationService.isSuperAdmin(authentication.name)")
     @PostMapping("/unban/{username}")
     public ResponseEntity<UserProfileResponse> unbanUser(@PathVariable String username) {
         return ResponseEntity.ok(userService.unbanUser(username));
