@@ -108,6 +108,7 @@ public class MockDataSeeder implements CommandLineRunner {
                     .role(UserRole.RESEARCHER)
                     .displayName("Mock Admin")
                     .active(true)
+                    .score(50L)
                     .build();
 
             User user = User.builder()
@@ -119,6 +120,7 @@ public class MockDataSeeder implements CommandLineRunner {
                     .role(UserRole.USER)
                     .displayName("Mock User")
                     .active(true)
+                    .score(20L)
                     .build();
                     
             User reviewer = User.builder()
@@ -130,6 +132,7 @@ public class MockDataSeeder implements CommandLineRunner {
                     .role(UserRole.USER)
                     .displayName("Mock Reviewer")
                     .active(true)
+                    .score(85L)
                     .build();
 
             userRepository.saveAll(List.of(admin, user, reviewer));
