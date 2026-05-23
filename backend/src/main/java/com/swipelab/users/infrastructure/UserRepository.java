@@ -22,6 +22,8 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     boolean existsByUsername(String username);
 
+    Optional<User> findByProviderIdAndProvider(String providerId, com.swipelab.auth.infrastructure.AuthProvider provider);
+
     Optional<User> findByEmailVerificationToken(String token);
 
     Optional<User> findByResetPasswordToken(String token);

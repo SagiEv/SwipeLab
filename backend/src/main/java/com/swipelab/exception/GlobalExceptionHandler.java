@@ -53,6 +53,21 @@ public class GlobalExceptionHandler {
                 return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
         }
 
+        @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+        public ResponseEntity<ErrorResponse> handleAccessDeniedException(
+                        org.springframework.security.access.AccessDeniedException ex, HttpServletRequest request) {
+
+                ErrorResponse errorResponse = ErrorResponse.builder()
+                                .timestamp(LocalDateTime.now())
+                                .status(HttpStatus.FORBIDDEN.value())
+                                .error("Forbidden")
+                                .message("You don't have permission to access this resource.")
+                                .path(request.getRequestURI())
+                                .build();
+
+                return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+        }
+
         @ExceptionHandler(ResourceNotFoundException.class)
         public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
                         ResourceNotFoundException ex, HttpServletRequest request) {

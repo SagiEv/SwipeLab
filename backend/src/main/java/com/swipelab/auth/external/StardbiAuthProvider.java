@@ -21,6 +21,7 @@ public class StardbiAuthProvider implements ExternalAuthProvider {
 
     private final StardbiClient stardbiClient;
     private final ObjectMapper objectMapper;
+    private final com.swipelab.users.infrastructure.UserRepository userRepository;
 
     // Cache to map token to UserDetails if we extract directly from login
     private final Map<String, UserDetails> tokenCache = new ConcurrentHashMap<>();
@@ -63,7 +64,14 @@ public class StardbiAuthProvider implements ExternalAuthProvider {
                 if (payload.has("username")) {
                     username = payload.get("username").asText();
                 } else if (payload.has("user_id")) {
-                    username = payload.get("user_id").asText();
+                    String stardbiId = payload.get("user_id").asText();
+                    // Resolve the real username from the DB using the provider_id
+                    com.swipelab.users.domain.User localUser = userRepository
+                            .findByProviderIdAndProvider(stardbiId, com.swipelab.auth.infrastructure.AuthProvider.STARDBI)
+                            .orElse(null);
+                    if (localUser != null) {
+                        username = localUser.getUsername();
+                    }
                 }
 
                 if (username != null) {

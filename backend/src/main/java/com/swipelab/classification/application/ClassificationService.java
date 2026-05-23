@@ -62,11 +62,22 @@ public class ClassificationService {
                     .isGoldStandard(true)
                     .submittedAt(LocalDateTime.now())
                     .species(result.species())
+                    .userResponse(request.getDecision())
                     .responseTimeMs(request.getResponseTimeMs())
                     .userCredibility(userCredibility)
                     .build();
         } else {
-            String species = taskProvider.getTaskInfo(request.getTaskId()).querySpecies();
+            TaskProvider.TaskInfo taskInfo = taskProvider.getTaskInfo(request.getTaskId());
+            String species = taskInfo.querySpecies();
+            if (species == null || species.isBlank()) {
+                if (request.getQuestion() != null && request.getQuestion().startsWith("Is this a ") && request.getQuestion().endsWith("?")) {
+                    species = request.getQuestion().substring("Is this a ".length(), request.getQuestion().length() - 1);
+                } else {
+                    species = (taskInfo.targetSpeciesNames() != null && !taskInfo.targetSpeciesNames().isEmpty())
+                            ? taskInfo.targetSpeciesNames().get(0)
+                            : null;
+                }
+            }
             Classification classification = Classification.builder()
                     .username(username)
                     .userRole(userRole)
@@ -86,6 +97,7 @@ public class ClassificationService {
                     .isGoldStandard(false)
                     .submittedAt(saved.getCreatedAt())
                     .species(species)
+                    .userResponse(request.getDecision())
                     .responseTimeMs(request.getResponseTimeMs())
                     .userCredibility(userCredibility)
                     .build();
@@ -120,10 +132,17 @@ public class ClassificationService {
                         .isGoldStandard(true)
                         .submittedAt(LocalDateTime.now())
                         .species(result.species())
+                        .userResponse(response.getUserResponse())
                         .userCredibility(null)
                         .build();
             } else {
-                String species = taskProvider.getTaskInfo(taskId).querySpecies();
+                TaskProvider.TaskInfo taskInfo = taskProvider.getTaskInfo(taskId);
+                String species = taskInfo.querySpecies();
+                if (species == null || species.isBlank()) {
+                    species = (taskInfo.targetSpeciesNames() != null && !taskInfo.targetSpeciesNames().isEmpty())
+                            ? taskInfo.targetSpeciesNames().get(0)
+                            : null;
+                }
                 Classification classification = Classification.builder()
                         .username(username)
                         .userRole(userRole)
@@ -143,6 +162,7 @@ public class ClassificationService {
                         .isGoldStandard(false)
                         .submittedAt(saved.getCreatedAt())
                         .species(species)
+                        .userResponse(response.getUserResponse())
                         .userCredibility(null)
                         .build();
             }

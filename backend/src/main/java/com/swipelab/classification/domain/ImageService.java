@@ -21,6 +21,10 @@ import java.util.List;
 import java.util.Optional;
 
 import java.util.stream.Collectors;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 
 @Service
 @RequiredArgsConstructor
@@ -91,7 +95,7 @@ public class ImageService {
                                 .build();
         }
 
-        private String getProvidedImagePath(String path) {
+        public String getProvidedImagePath(String path) {
                 if (path == null) {
                         return getFallbackImage();
                 }
@@ -205,5 +209,34 @@ public class ImageService {
                                 .priority(image.getPriority())
                                 .isGoldStandard(isGold)
                                 .build();
+        }
+
+        public ResponseEntity<byte[]> getImageContent(Long id) {
+                Image image = imageRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException("Image not found: " + id));
+                String path = image.getSrcPath();
+                if (path == null) {
+                        return ResponseEntity.notFound().build();
+                }
+
+                if (path.startsWith("http") || path.startsWith("data:image") || path.startsWith("/9j") || path.startsWith("iVBOR")) {
+                        // Not a local file, we can't easily serve it as a raw byte array endpoint
+                        // Frontend should use the original URL/base64 directly
+                        return ResponseEntity.status(HttpStatus.SEE_OTHER).header(HttpHeaders.LOCATION, path).build();
+                }
+
+                try {
+                        java.io.File file = new java.io.File(path);
+                        if (file.exists() && file.isFile()) {
+                                byte[] bytes = java.nio.file.Files.readAllBytes(file.toPath());
+                                return ResponseEntity.ok()
+                                                .contentType(MediaType.IMAGE_JPEG)
+                                                .body(bytes);
+                        }
+                } catch (Exception e) {
+                        org.slf4j.LoggerFactory.getLogger(ImageService.class)
+                                        .warn("Could not read image from path: {}", path, e);
+                }
+                return ResponseEntity.notFound().build();
         }
 }

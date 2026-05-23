@@ -1,4 +1,4 @@
--- V7: Add Gamification Challenges & Badges Schema
+-- V12: Add Gamification Challenges & Badges Schema
 
 -- 1. badge_definition: Reusable badge templates
 CREATE TABLE badge_definition (

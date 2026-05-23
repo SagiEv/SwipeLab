@@ -6,7 +6,7 @@ import { apiFetch } from '../../api/apiFetch';
 import ScreenHeaderLayout from '../../components/layout/ScreenHeaderLayout/ScreenHeaderLayout';
 import { useThemeStore } from '../../stores/themeStore';
 import { API_ENDPOINTS } from '../../api/apiEndpoints';
-import { useLeaderboard } from '../../api/queries';
+import { useLeaderboard, useRank } from '../../api/queries';
 
 
 interface LeaderboardEntry {
@@ -103,6 +103,90 @@ function LeaderboardTable({ title, data, type }: LeaderboardTableProps) {
 }
 
 
+const RANK_COLORS: Record<string, string> = {
+    UNRANKED: '#9ca3af',
+    BEGINNER: '#60a5fa',
+    EXPERT: '#34d399',
+    PRO: '#a78bfa',
+    LEGEND: '#fbbf24',
+};
+
+function RankBadge({ themeColors, isDark }: { themeColors: any; isDark: boolean }) {
+    const { data: rankData, isLoading } = useRank();
+    if (isLoading || !rankData) return null;
+
+    const color = RANK_COLORS[rankData.tier] ?? '#9ca3af';
+    const nextLabel = rankData.nextTierAt === -1
+        ? 'MAX'
+        : `${rankData.yesTagCount} / ${rankData.nextTierAt} tags`;
+
+    return (
+        <View style={[rankStyles.container, { backgroundColor: isDark ? themeColors.card : '#fff' }]}>
+            <View style={[rankStyles.pill, { backgroundColor: color }]}>
+                <Text style={rankStyles.pillText}>{rankData.tier}</Text>
+            </View>
+            <View style={rankStyles.info}>
+                <Text style={[rankStyles.label, { color: themeColors.text }]}>Your Rank</Text>
+                <Text style={[rankStyles.sub, { color: themeColors.textSecondary }]}>{nextLabel}</Text>
+            </View>
+            {rankData.nextTierAt !== -1 && (
+                <View style={[rankStyles.barBg, { backgroundColor: isDark ? '#374151' : '#e5e7eb' }]}>
+                    <View style={[rankStyles.barFill, { width: `${rankData.progressPercent}%` as any, backgroundColor: color }]} />
+                </View>
+            )}
+        </View>
+    );
+}
+
+const rankStyles = StyleSheet.create({
+    container: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderRadius: 12,
+        padding: 12,
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.08,
+        shadowRadius: 3,
+        elevation: 2,
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    pill: {
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        borderRadius: 20,
+    },
+    pillText: {
+        color: '#fff',
+        fontWeight: '800',
+        fontSize: 13,
+        letterSpacing: 0.5,
+    },
+    info: {
+        flex: 1,
+    },
+    label: {
+        fontWeight: '700',
+        fontSize: 13,
+    },
+    sub: {
+        fontSize: 11,
+        marginTop: 1,
+    },
+    barBg: {
+        height: 4,
+        borderRadius: 2,
+        width: '100%',
+        marginTop: 4,
+    },
+    barFill: {
+        height: 4,
+        borderRadius: 2,
+    },
+});
+
 const DEBUG_MODE = false;
 
 export default function LeaderboardScreen() {
@@ -188,6 +272,9 @@ export default function LeaderboardScreen() {
                         <Text style={styles.currentScore}>Current: {data.currentUser.score.toLocaleString()} pts</Text>
                     </View>
                 )}
+
+                {/* Rank Badge for current user */}
+                <RankBadge themeColors={themeColors} isDark={theme === 'dark'} />
 
                 {/* All Time Leaderboard */}
                 <LeaderboardTable
