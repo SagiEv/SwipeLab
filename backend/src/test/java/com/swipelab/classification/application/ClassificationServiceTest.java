@@ -168,14 +168,20 @@ class ClassificationServiceTest {
         savedClassification.setId(11L);
         when(classificationRepository.save(any(Classification.class))).thenReturn(savedClassification);
 
-        classificationService.submitClassification("testuser", "USER", 0.8, request);
+        SubmitClassificationRequest testReq = new SubmitClassificationRequest();
+        testReq.setImageId(1L);
+        testReq.setTaskId(1L);
+        testReq.setQuestion("Is this a Bear?");
+        testReq.setDecision(Classification.UserResponse.YES);
+
+        classificationService.submitClassification("testuser", "USER", 0.8, testReq);
 
         ArgumentCaptor<Classification> classificationCaptor = ArgumentCaptor.forClass(Classification.class);
         verify(classificationRepository, times(1)).save(classificationCaptor.capture());
-        assertEquals("Tiger", classificationCaptor.getValue().getQuerySpecies());
+        assertEquals("Bear", classificationCaptor.getValue().getQuerySpecies());
 
         ArgumentCaptor<ClassificationSubmittedEvent> eventCaptor = ArgumentCaptor.forClass(ClassificationSubmittedEvent.class);
         verify(eventPublisher, times(1)).publishEvent(eventCaptor.capture());
-        assertEquals("Tiger", eventCaptor.getValue().getSpecies());
+        assertEquals("Bear", eventCaptor.getValue().getSpecies());
     }
 }

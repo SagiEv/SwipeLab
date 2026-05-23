@@ -77,7 +77,8 @@ public class SecurityConfig {
                                                                 "/swipe_lab/**",
                                                                 "/api/v1/system/**",
                                                                 "/swagger-ui.html",
-                                                                "/api/admin/gold-images/*/image")
+                                                                "/api/admin/gold-images/*/image",
+                                                                "/api/v1/images/*/content")
                                                 .permitAll()
                                                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**")
                                                 .permitAll()

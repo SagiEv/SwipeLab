@@ -61,7 +61,7 @@ public class CollectionService {
                 .id(entry.getId())
                 .imageId(entry.getImageId())
                 .species(entry.getSpecies())
-                .imageUrl(entry.getImageUrl())
+                .imageUrl("/api/v1/images/" + entry.getImageId() + "/content")
                 .taskId(entry.getTaskId())
                 .taggedAt(entry.getTaggedAt())
                 .build();

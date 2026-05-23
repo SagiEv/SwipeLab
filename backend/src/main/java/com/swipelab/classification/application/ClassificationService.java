@@ -70,9 +70,13 @@ public class ClassificationService {
             TaskProvider.TaskInfo taskInfo = taskProvider.getTaskInfo(request.getTaskId());
             String species = taskInfo.querySpecies();
             if (species == null || species.isBlank()) {
-                species = (taskInfo.targetSpeciesNames() != null && !taskInfo.targetSpeciesNames().isEmpty())
-                        ? taskInfo.targetSpeciesNames().get(0)
-                        : null;
+                if (request.getQuestion() != null && request.getQuestion().startsWith("Is this a ") && request.getQuestion().endsWith("?")) {
+                    species = request.getQuestion().substring("Is this a ".length(), request.getQuestion().length() - 1);
+                } else {
+                    species = (taskInfo.targetSpeciesNames() != null && !taskInfo.targetSpeciesNames().isEmpty())
+                            ? taskInfo.targetSpeciesNames().get(0)
+                            : null;
+                }
             }
             Classification classification = Classification.builder()
                     .username(username)
