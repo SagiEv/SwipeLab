@@ -16,7 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/collection")
-@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+@PreAuthorize("hasAnyRole('USER', 'ADMIN', 'RESEARCHER')")
 @RequiredArgsConstructor
 public class CollectionController {
 

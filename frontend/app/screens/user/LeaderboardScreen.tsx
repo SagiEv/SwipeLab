@@ -118,7 +118,7 @@ function RankBadge({ themeColors, isDark }: { themeColors: any; isDark: boolean 
     const color = RANK_COLORS[rankData.tier] ?? '#9ca3af';
     const nextLabel = rankData.nextTierAt === -1
         ? 'MAX'
-        : `${rankData.yesTagCount} / ${rankData.nextTierAt} YES tags`;
+        : `${rankData.yesTagCount} / ${rankData.nextTierAt} tags`;
 
     return (
         <View style={[rankStyles.container, { backgroundColor: isDark ? themeColors.card : '#fff' }]}>
