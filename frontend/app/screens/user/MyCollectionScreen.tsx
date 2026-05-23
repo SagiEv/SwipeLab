@@ -2,6 +2,7 @@ import React, { useCallback, useEffect } from 'react';
 import {
     ActivityIndicator,
     Image,
+    Platform,
     RefreshControl,
     ScrollView,
     StyleSheet,
@@ -20,11 +21,29 @@ function formatDate(iso: string): string {
 }
 
 function CollectionCard({ item, themeColors }: { item: CollectionEntry; themeColors: any }) {
+    const backendBaseUrl =
+        process.env.EXPO_PUBLIC_API_URL ||
+        (Platform.OS === 'web' ? 'http://localhost:8080' : 'http://192.168.1.133:8080');
+
+    let parsedImageUrl = item.imageUrl;
+    if (parsedImageUrl) {
+        if (parsedImageUrl.startsWith('http')) {
+            // valid URL
+        } else if (parsedImageUrl.startsWith('data:image')) {
+            // valid base64
+        } else if (/^[A-Za-z0-9+/]/.test(parsedImageUrl) || parsedImageUrl.startsWith('/9')) {
+            // raw base64 jpeg
+            parsedImageUrl = `data:image/jpeg;base64,${parsedImageUrl}`;
+        } else if (parsedImageUrl.startsWith('/')) {
+            parsedImageUrl = `${backendBaseUrl}${parsedImageUrl}`;
+        }
+    }
+
     return (
         <View style={[styles.card, { backgroundColor: themeColors.card }]}>
-            {item.imageUrl ? (
+            {parsedImageUrl ? (
                 <Image
-                    source={{ uri: item.imageUrl }}
+                    source={{ uri: parsedImageUrl }}
                     style={styles.cardImage}
                     resizeMode="cover"
                 />
@@ -89,7 +108,7 @@ export default function MyCollectionScreen() {
                     <View style={[styles.statCard, { backgroundColor: themeColors.card }]}>
                         <Text style={styles.statNumber}>{stats.total}</Text>
                         <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>
-                            YES Tags Collected
+                            Tags Collected
                         </Text>
                     </View>
                 </View>

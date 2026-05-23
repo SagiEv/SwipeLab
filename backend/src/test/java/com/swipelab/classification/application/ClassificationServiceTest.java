@@ -153,4 +153,29 @@ class ClassificationServiceTest {
         verify(classificationRepository, times(1)).save(any(Classification.class));
         verify(eventPublisher, times(1)).publishEvent(any(ClassificationSubmittedEvent.class));
     }
+
+    @Test
+    void submitClassification_ShouldFallbackToTargetSpeciesNames_WhenQuerySpeciesIsEmpty() {
+        TaskProvider.TaskInfo emptyQueryTaskInfo = new TaskProvider.TaskInfo(1L, "Question", "", List.of("Tiger", "Bear"));
+        
+        when(imageRepository.findById(1L)).thenReturn(Optional.of(image));
+        when(goldImageEvaluatorService.evaluate(any(), any(), any(), any())).thenReturn(Optional.empty());
+        when(imageService.getNextBatchForApi(anyLong(), anyString(), anyInt()))
+                .thenReturn(NextBatchResponse.builder().build());
+        when(taskProvider.getTaskInfo(1L)).thenReturn(emptyQueryTaskInfo);
+
+        Classification savedClassification = new Classification();
+        savedClassification.setId(11L);
+        when(classificationRepository.save(any(Classification.class))).thenReturn(savedClassification);
+
+        classificationService.submitClassification("testuser", "USER", 0.8, request);
+
+        ArgumentCaptor<Classification> classificationCaptor = ArgumentCaptor.forClass(Classification.class);
+        verify(classificationRepository, times(1)).save(classificationCaptor.capture());
+        assertEquals("Tiger, Bear", classificationCaptor.getValue().getQuerySpecies());
+
+        ArgumentCaptor<ClassificationSubmittedEvent> eventCaptor = ArgumentCaptor.forClass(ClassificationSubmittedEvent.class);
+        verify(eventPublisher, times(1)).publishEvent(eventCaptor.capture());
+        assertEquals("Tiger, Bear", eventCaptor.getValue().getSpecies());
+    }
 }

@@ -67,7 +67,13 @@ public class ClassificationService {
                     .userCredibility(userCredibility)
                     .build();
         } else {
-            String species = taskProvider.getTaskInfo(request.getTaskId()).querySpecies();
+            TaskProvider.TaskInfo taskInfo = taskProvider.getTaskInfo(request.getTaskId());
+            String species = taskInfo.querySpecies();
+            if (species == null || species.isBlank()) {
+                species = (taskInfo.targetSpeciesNames() != null && !taskInfo.targetSpeciesNames().isEmpty())
+                        ? String.join(", ", taskInfo.targetSpeciesNames())
+                        : null;
+            }
             Classification classification = Classification.builder()
                     .username(username)
                     .userRole(userRole)
@@ -126,7 +132,13 @@ public class ClassificationService {
                         .userCredibility(null)
                         .build();
             } else {
-                String species = taskProvider.getTaskInfo(taskId).querySpecies();
+                TaskProvider.TaskInfo taskInfo = taskProvider.getTaskInfo(taskId);
+                String species = taskInfo.querySpecies();
+                if (species == null || species.isBlank()) {
+                    species = (taskInfo.targetSpeciesNames() != null && !taskInfo.targetSpeciesNames().isEmpty())
+                            ? String.join(", ", taskInfo.targetSpeciesNames())
+                            : null;
+                }
                 Classification classification = Classification.builder()
                         .username(username)
                         .userRole(userRole)
