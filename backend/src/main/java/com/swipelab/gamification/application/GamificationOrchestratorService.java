@@ -1,9 +1,14 @@
 package com.swipelab.gamification.application;
 
+import com.swipelab.classification.domain.Classification.UserResponse;
 import com.swipelab.classification.events.ClassificationSubmittedEvent;
 import com.swipelab.gamification.domain.BadgeService;
+import com.swipelab.gamification.domain.Gamification;
 import com.swipelab.gamification.domain.PointsService;
+import com.swipelab.gamification.domain.RankService;
+import com.swipelab.gamification.domain.RankTier;
 import com.swipelab.gamification.domain.StreakService;
+import com.swipelab.gamification.infrastructure.GamificationRepository;
 import com.swipelab.users.domain.User;
 import com.swipelab.users.infrastructure.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +26,8 @@ public class GamificationOrchestratorService {
     private final StreakService streakService;
     private final PointsService pointsService;
     private final BadgeService badgeService;
+    private final RankService rankService;
+    private final GamificationRepository gamificationRepository;
     private final UserRepository userRepository;
 
     @Async
@@ -34,30 +41,43 @@ public class GamificationOrchestratorService {
         // 1. Update Streak
         streakService.updateStreak(username);
 
-        // 2. Award Points
-        // Logic: 10 points per classification? Bonus for Gold?
-        // Matches logic removed from ClassificationService: 10 base, 50 bonus for
-        // correct gold.
-
-        // Replicating previous logic:
-        // Always 10 base points (with multiplier checking inside calculateAndAddPoints)
+        // 2. Award Points (10 base, 50 bonus for correct gold)
         pointsService.calculateAndAddPoints(username, 10);
-
         if (event.isGoldStandard() && event.isCorrect()) {
             pointsService.calculateAndAddPoints(username, 50);
         }
 
         // 3. Check for Badges
-        // Need totalSwipes.
-        // We can fetch from User or trust the event if we added it. Event doesn't have
-        // it.
-        // Fetching user to get totalClassifications.
-        // Note: totalClassifications is updated in ClassificationService BEFORE event
-        // likely.
-
         User user = userRepository.findByUsername(username).orElse(null);
         if (user != null) {
             badgeService.checkForBadges(username, user.getTotalClassifications());
         }
+
+        // 4. Update YES tag count and recompute rank (only for YES responses)
+        if (event.getUserResponse() == UserResponse.YES) {
+            updateYesTagCountAndRank(username);
+        }
+    }
+
+    private void updateYesTagCountAndRank(String username) {
+        Gamification gamification = gamificationRepository.findById(username)
+                .orElse(Gamification.builder()
+                        .username(username)
+                        .yesTagCount(0)
+                        .score(0L)
+                        .currentStreak(0)
+                        .longestStreak(0)
+                        .rank(RankTier.UNRANKED.name())
+                        .build());
+
+        int newCount = (gamification.getYesTagCount() == null ? 0 : gamification.getYesTagCount()) + 1;
+        gamification.setYesTagCount(newCount);
+
+        RankTier newTier = rankService.computeRank(newCount);
+        gamification.setRank(newTier.name());
+
+        gamificationRepository.save(gamification);
+        log.info("User {} yes_tag_count={} rank={}", username, newCount, newTier.name());
     }
 }
+

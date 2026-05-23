@@ -1,5 +1,6 @@
 package com.swipelab.classification.events;
 
+import com.swipelab.classification.domain.Classification.UserResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,9 +17,13 @@ public class ClassificationSubmittedEvent {
     private Long classificationId;
     private Long imageId;
     private Long taskId;
-    private boolean isCorrect; // Nullable if not applicable, but boolean matches typical event needs
+    private boolean isCorrect;
     private boolean isGoldStandard;
     private LocalDateTime submittedAt;
+
+    // The actual answer the user gave (YES / NO / DONT_KNOW / TRASH).
+    // Required by gamification (rank) and collection listeners.
+    private UserResponse userResponse;
 
     // Analytics fields
     private String species;

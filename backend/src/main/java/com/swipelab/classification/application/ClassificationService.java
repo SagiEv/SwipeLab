@@ -62,6 +62,7 @@ public class ClassificationService {
                     .isGoldStandard(true)
                     .submittedAt(LocalDateTime.now())
                     .species(result.species())
+                    .userResponse(request.getDecision())
                     .responseTimeMs(request.getResponseTimeMs())
                     .userCredibility(userCredibility)
                     .build();
@@ -86,6 +87,7 @@ public class ClassificationService {
                     .isGoldStandard(false)
                     .submittedAt(saved.getCreatedAt())
                     .species(species)
+                    .userResponse(request.getDecision())
                     .responseTimeMs(request.getResponseTimeMs())
                     .userCredibility(userCredibility)
                     .build();
@@ -120,6 +122,7 @@ public class ClassificationService {
                         .isGoldStandard(true)
                         .submittedAt(LocalDateTime.now())
                         .species(result.species())
+                        .userResponse(response.getUserResponse())
                         .userCredibility(null)
                         .build();
             } else {
@@ -143,6 +146,7 @@ public class ClassificationService {
                         .isGoldStandard(false)
                         .submittedAt(saved.getCreatedAt())
                         .species(species)
+                        .userResponse(response.getUserResponse())
                         .userCredibility(null)
                         .build();
             }

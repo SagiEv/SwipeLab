@@ -47,13 +47,19 @@ public class Gamification {
     @Column(name = "badge")
     private String badge;
 
-    // Rank (Level based on challenges)
+    // Rank (tier level driven by yes_tag_count)
     @Column(name = "rank_level")
     @Builder.Default
     private String rank = "UNRANKED";
+
+    // Total number of YES classifications — drives rank tier computation.
+    @Column(name = "yes_tag_count")
+    @Builder.Default
+    private Integer yesTagCount = 0;
 
     public Long getScore() {
         return score;
     }
 
 }
+

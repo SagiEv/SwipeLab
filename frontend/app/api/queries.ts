@@ -25,6 +25,7 @@ export const QUERY_KEYS = {
   leaderboard: ['gamification', 'leaderboard'],
   challenges: ['gamification', 'challenges'],
   myBadges: ['gamification', 'my_badges'],
+  rank: ['gamification', 'rank'],
   collection: ['collection', 'base'],
   
   // Swipe State
@@ -161,6 +162,15 @@ export const useMyBadges = () => {
     queryKey: QUERY_KEYS.myBadges,
     queryFn: () => fetchJson(API_ENDPOINTS.GAMIFICATION.MY_BADGES).catch(() => []),
     staleTime: 5 * 60 * 1000,
+  });
+};
+
+/** Returns the authenticated user's current rank tier, YES tag count, and progress. */
+export const useRank = () => {
+  return useQuery({
+    queryKey: QUERY_KEYS.rank,
+    queryFn: () => fetchJson(API_ENDPOINTS.GAMIFICATION.RANK),
+    staleTime: 2 * 60 * 1000,
   });
 };
 

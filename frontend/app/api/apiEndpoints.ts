@@ -42,12 +42,13 @@ export const API_ENDPOINTS = {
     COLLECTION: {
         BASE: '/api/v1/collection',
         STATS: '/api/v1/collection/stats',
-        ADD: '/api/v1/collection/add',
+        // ADD removed — collection entries are created server-side on YES classification
     },
     GAMIFICATION: {
         LEADERBOARD: '/api/v1/gamification/leaderboard',
         CHALLENGES: '/api/v1/gamification/challenges',
         MY_BADGES: '/api/v1/gamification/me/badges',
+        RANK: '/api/v1/gamification/rank',
     },
     ADMIN: {
         //ANALYTICS
