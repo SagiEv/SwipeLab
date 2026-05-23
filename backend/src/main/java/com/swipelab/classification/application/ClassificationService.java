@@ -71,7 +71,7 @@ public class ClassificationService {
             String species = taskInfo.querySpecies();
             if (species == null || species.isBlank()) {
                 species = (taskInfo.targetSpeciesNames() != null && !taskInfo.targetSpeciesNames().isEmpty())
-                        ? String.join(", ", taskInfo.targetSpeciesNames())
+                        ? taskInfo.targetSpeciesNames().get(0)
                         : null;
             }
             Classification classification = Classification.builder()
@@ -136,7 +136,7 @@ public class ClassificationService {
                 String species = taskInfo.querySpecies();
                 if (species == null || species.isBlank()) {
                     species = (taskInfo.targetSpeciesNames() != null && !taskInfo.targetSpeciesNames().isEmpty())
-                            ? String.join(", ", taskInfo.targetSpeciesNames())
+                            ? taskInfo.targetSpeciesNames().get(0)
                             : null;
                 }
                 Classification classification = Classification.builder()

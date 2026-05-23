@@ -31,11 +31,11 @@ function CollectionCard({ item, themeColors }: { item: CollectionEntry; themeCol
             // valid URL
         } else if (parsedImageUrl.startsWith('data:image')) {
             // valid base64
+        } else if (parsedImageUrl.startsWith('/')) {
+            parsedImageUrl = `${backendBaseUrl}${parsedImageUrl}`;
         } else if (/^[A-Za-z0-9+/]/.test(parsedImageUrl) || parsedImageUrl.startsWith('/9')) {
             // raw base64 jpeg
             parsedImageUrl = `data:image/jpeg;base64,${parsedImageUrl}`;
-        } else if (parsedImageUrl.startsWith('/')) {
-            parsedImageUrl = `${backendBaseUrl}${parsedImageUrl}`;
         }
     }
 

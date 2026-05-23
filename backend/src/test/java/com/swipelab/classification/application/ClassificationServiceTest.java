@@ -172,10 +172,10 @@ class ClassificationServiceTest {
 
         ArgumentCaptor<Classification> classificationCaptor = ArgumentCaptor.forClass(Classification.class);
         verify(classificationRepository, times(1)).save(classificationCaptor.capture());
-        assertEquals("Tiger, Bear", classificationCaptor.getValue().getQuerySpecies());
+        assertEquals("Tiger", classificationCaptor.getValue().getQuerySpecies());
 
         ArgumentCaptor<ClassificationSubmittedEvent> eventCaptor = ArgumentCaptor.forClass(ClassificationSubmittedEvent.class);
         verify(eventPublisher, times(1)).publishEvent(eventCaptor.capture());
-        assertEquals("Tiger, Bear", eventCaptor.getValue().getSpecies());
+        assertEquals("Tiger", eventCaptor.getValue().getSpecies());
     }
 }
