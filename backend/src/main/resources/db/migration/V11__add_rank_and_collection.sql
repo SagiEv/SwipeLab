@@ -1,4 +1,4 @@
--- V9__add_rank_and_collection.sql
+-- V11__add_rank_and_collection.sql
 -- Adds YES-tag counter to gamification for rank computation,
 -- and creates the user collection table (one row per YES-tagged image).
 
