@@ -7,6 +7,8 @@ import lombok.Data;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -22,4 +24,7 @@ public class UserProfileResponse {
     private Long score;
     private List<String> badges;
     private String rank;
+    @JsonProperty("isSuperAdmin")
+    private boolean isSuperAdmin;
+    private boolean active;
 }

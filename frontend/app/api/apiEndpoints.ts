@@ -10,6 +10,8 @@ export const API_ENDPOINTS = {
         ME: '/api/v1/users/me',
         GET_ALL: '/api/v1/users/get-all',
         INVITE: '/api/v1/manager/users/invite',
+        BAN: (username: string) => `/api/v1/users/ban/${username}`,
+        UNBAN: (username: string) => `/api/v1/users/unban/${username}`,
     },
     TASKS: {
         MY_TASKS: '/api/v1/tasks/my-tasks',
@@ -50,7 +52,7 @@ export const API_ENDPOINTS = {
         MY_BADGES: '/api/v1/gamification/me/badges',
         RANK: '/api/v1/gamification/rank',
     },
-    ADMIN: {
+    researcher: {
         //ANALYTICS
         ANALYTICS_TASKS: (taskId: string | number) => `/api/v1/analytics/tasks/${taskId}`,
         ANALYTICS_EXPORTS: '/api/v1/analytics/exports',
@@ -64,7 +66,7 @@ export const API_ENDPOINTS = {
         //RECIPIENTS
         RECIPIENTS: '/api/v1/dashboard/recipients',
         RECIPIENTS_CREATE: '/api/v1/dashboard/recipients',
-        RECIPIENTS_UPDATE: (groupId: string | number) => `/api/v1/dashboard/recipients/${groupId}/update`,
+        RECIPIENTS_UPDATE: (groupId: string | number) => `/api/v1/dashboard/recipients/${groupId}`,
     },
     STARDBI: {
         LOGIN: 'https://stardbi.cs.bgu.ac.il/auth/get_token/',

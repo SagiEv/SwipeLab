@@ -83,8 +83,23 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    public List<UserProfileResponse> getUsersByRole(String roleName) {
+        try {
+            com.swipelab.model.enums.UserRole role = com.swipelab.model.enums.UserRole.valueOf(roleName.toUpperCase());
+            return userRepository.findByRole(role).stream()
+                    .map(authMapper::toUserProfileResponse)
+                    .collect(Collectors.toList());
+        } catch (IllegalArgumentException e) {
+            throw new ResourceNotFoundException("Invalid role: " + roleName);
+        }
+    }
+
     @Transactional
     public UserProfileResponse banUser(String username) {
+        User currentUser = getCurrentUser();
+        if (currentUser.getUsername().equalsIgnoreCase(username)) {
+            throw new IllegalArgumentException("You cannot ban yourself.");
+        }
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
         user.setActive(false);
@@ -95,6 +110,10 @@ public class UserService {
 
     @Transactional
     public UserProfileResponse unbanUser(String username) {
+        User currentUser = getCurrentUser();
+        if (currentUser.getUsername().equalsIgnoreCase(username)) {
+            throw new IllegalArgumentException("You cannot unban yourself.");
+        }
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
         user.setActive(true);

@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 public interface UserRepository extends JpaRepository<User, String> {
@@ -26,6 +27,8 @@ public interface UserRepository extends JpaRepository<User, String> {
     Optional<User> findByResetPasswordToken(String token);
 
     Set<User> findByUsernameIn(Collection<String> usernames);
+
+    List<User> findByRole(com.swipelab.model.enums.UserRole role);
 
     /**
      * Revokes the refresh token for a user directly via UPDATE — no prior SELECT needed.
