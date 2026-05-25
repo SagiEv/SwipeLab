@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -87,4 +88,12 @@ public interface ClassificationRepository extends JpaRepository<Classification, 
      */
     @Query("SELECT c.querySpecies FROM Classification c WHERE c.username = :username AND c.image.id = :imageId")
     List<String> findQueriedSpeciesByUsernameAndImageId(@Param("username") String username, @Param("imageId") Long imageId);
-}
+
+    /**
+     * Returns (userResponse, count) pairs for all classifications since the given timestamp.
+     * Used by the platform overview endpoint to show YES/NO/DONT_KNOW/TRASH breakdown.
+     */
+    @Query("SELECT c.userResponse, COUNT(c) FROM Classification c " +
+            "WHERE c.createdAt >= :since GROUP BY c.userResponse")
+    List<Object[]> getLabelDistributionSince(@Param("since") LocalDateTime since);
+}
