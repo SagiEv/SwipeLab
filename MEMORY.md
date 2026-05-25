@@ -21,6 +21,7 @@ Architecture: Modular Hexagonal/DDD.
 * Frontend: Added search bar + sort-by-credibility-score toggle to UsersManagementScreen; updated mock data (Issues #217, #218).
 * Frontend: Added information sections to GoldImagesManagementScreen and AddGoldImageScreen to clarify their purpose for researchers (Issue #223).
 * Backend: Implemented analytics overview endpoint + implemented placeholder endpoints — added `GET /api/v1/analytics/overview` (platform-wide time-windowed stats: classifications/images/users/tasks/experiments for today/week/month, 30-day confidence trend, label distribution), added `GET /api/v1/analytics/global-stats`, implemented `getUserPerformanceMetrics` and `getTopPerformers`, added V13 Flyway migration for analytics tables, fixed missing leading `/` on admin endpoints (Issue #220).
+* Frontend: Redesigned AnalyticsScreen with two-tab layout (Overview / Tasks). Overview tab consumes new `/api/v1/analytics/overview` endpoint and renders: TimeWindowCards (Today/Week/Month activity), platform totals, ConfidenceTrendChart (30-day credibility sparkline), LabelDistributionBar (YES/NO/DONT_KNOW/TRASH), and top performers. Tasks tab lists all researcher tasks with expandable per-task analytics panel. Added analyticsTypes.ts, 3 new components, 2 new query hooks, mock routes (Issue #221).
 
 ## Current Focus (Active GitHub Issues)
 * Issue #201: Refactor Backend roles to include Researchers and Super Admin.
@@ -29,7 +30,6 @@ Architecture: Modular Hexagonal/DDD.
 * Issue #225: [System] fix refresh token for Researcher.
 * Issue #224: [Frontend] Mobile Vs. Web compatibility enhancement.
 * Issue #222: [Frontend] fix TasksManagementScreen UI.
-* Issue #221: [Frontend] adapt to changes of analytics new endpoints.
 * Issue #219: [Frontend] Add to UsersScreen ONLY for Admin role control buttons.
 
 ## Architecture & Design Decisions

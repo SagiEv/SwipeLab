@@ -54,6 +54,8 @@ export const API_ENDPOINTS = {
     },
     researcher: {
         //ANALYTICS
+        ANALYTICS_OVERVIEW: '/api/v1/analytics/overview',
+        ANALYTICS_GLOBAL_STATS: '/api/v1/analytics/global-stats',
         ANALYTICS_TASKS: (taskId: string | number) => `/api/v1/analytics/tasks/${taskId}`,
         ANALYTICS_EXPORTS: '/api/v1/analytics/exports',
         ANALYTICS_USERS: (taskId: string | number) => `/api/v1/analytics/users?taskId=${taskId}`,

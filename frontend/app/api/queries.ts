@@ -18,6 +18,8 @@ export const QUERY_KEYS = {
   analyticsTasks: (id: string | number) => ['analytics', 'tasks', id],
   analyticsUsers: (id: string | number) => ['analytics', 'users', id],
   analyticsTop: ['analytics', 'top'],
+  analyticsOverview: ['analytics', 'overview'],
+  analyticsGlobalStats: ['analytics', 'global-stats'],
   
   // Metadata & Misc
   metadata: ['metadata', 'species'],
@@ -105,6 +107,7 @@ export const useAnalyticsTask = (taskId: string | number) => {
     queryKey: QUERY_KEYS.analyticsTasks(taskId),
     queryFn: () => fetchJson(API_ENDPOINTS.researcher.ANALYTICS_TASKS(taskId)),
     staleTime: 2 * 60 * 1000,
+    enabled: taskId !== 0 && taskId !== '',
   });
 };
 
@@ -128,6 +131,22 @@ export const useAnalyticsTop = (limit: number = 5) => {
   return useQuery({
     queryKey: [...QUERY_KEYS.analyticsTop, limit],
     queryFn: () => fetchJson(API_ENDPOINTS.researcher.ANALYTICS_TOP(limit)),
+    staleTime: 2 * 60 * 1000,
+  });
+};
+
+export const useAnalyticsOverview = () => {
+  return useQuery({
+    queryKey: QUERY_KEYS.analyticsOverview,
+    queryFn: () => fetchJson(API_ENDPOINTS.researcher.ANALYTICS_OVERVIEW),
+    staleTime: 2 * 60 * 1000,
+  });
+};
+
+export const useAnalyticsGlobalStats = () => {
+  return useQuery({
+    queryKey: QUERY_KEYS.analyticsGlobalStats,
+    queryFn: () => fetchJson(API_ENDPOINTS.researcher.ANALYTICS_GLOBAL_STATS),
     staleTime: 2 * 60 * 1000,
   });
 };
