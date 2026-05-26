@@ -6,12 +6,14 @@ import com.swipelab.analytics.infrastructure.*;
 import com.swipelab.classification.domain.Classification.UserResponse;
 import com.swipelab.classification.infrastructure.ClassificationRepository;
 import com.swipelab.classification.infrastructure.ImageRepository;
+import com.swipelab.config.CacheConfig;
 import com.swipelab.dto.response.DashboardStatsResponse;
 import com.swipelab.dto.response.UserPerformanceResponse;
 import com.swipelab.tasks.domain.TaskStatus;
 import com.swipelab.tasks.infrastructure.TaskRepository;
 import com.swipelab.users.infrastructure.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -222,6 +224,7 @@ public class AnalyticsService {
      * confidence trend (last 30 days), and label distribution (last 30 days).
      * All date windows use server time (Asia/Jerusalem).
      */
+    @Cacheable(value = CacheConfig.CACHE_PLATFORM_OVERVIEW)
     @Transactional(readOnly = true)
     public PlatformOverviewResponse getPlatformOverview() {
         LocalDate today = LocalDate.now();
