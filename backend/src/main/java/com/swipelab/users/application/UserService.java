@@ -1,12 +1,15 @@
 package com.swipelab.users.application;
 
 import com.swipelab.auth.domain.AuthMapper;
+import com.swipelab.auth.application.SecurityAuthorizationService;
 import com.swipelab.dto.request.UpdateProfileRequest;
 import com.swipelab.dto.response.UserProfileResponse;
 import com.swipelab.exception.ResourceNotFoundException;
 import com.swipelab.users.domain.User;
+import com.swipelab.users.events.UserStatusChangedEvent;
 import com.swipelab.users.infrastructure.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -21,6 +24,8 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final AuthMapper authMapper;
+    private final SecurityAuthorizationService securityAuthorizationService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public UserProfileResponse getUserProfile(String username) {
         User user = userRepository.findByUsername(username)
@@ -96,6 +101,10 @@ public class UserService {
 
     @Transactional
     public UserProfileResponse banUser(String username) {
+        // Super Admin can never be banned — guard against both manual and automated paths.
+        if (securityAuthorizationService.isSuperAdmin(username)) {
+            throw new IllegalArgumentException("Super Admin cannot be banned.");
+        }
         User currentUser = getCurrentUser();
         if (currentUser.getUsername().equalsIgnoreCase(username)) {
             throw new IllegalArgumentException("You cannot ban yourself.");
@@ -104,7 +113,16 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
         user.setActive(false);
         user.setStatus(com.swipelab.model.enums.UserStatus.BANNED);
+        // Mirror the auto-ban path — accountLocked blocks login and the BannedUserFilter
+        user.setAccountLocked(true);
         User updatedUser = userRepository.save(user);
+
+        // Notify the recipients module so the user is removed from active recipient lists
+        eventPublisher.publishEvent(UserStatusChangedEvent.builder()
+                .username(username)
+                .active(false)
+                .build());
+
         return authMapper.toUserProfileResponse(updatedUser);
     }
 

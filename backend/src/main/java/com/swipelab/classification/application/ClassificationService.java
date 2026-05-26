@@ -8,10 +8,12 @@ import com.swipelab.classification.dto.UserClassification;
 import com.swipelab.classification.dto.api.NextBatchResponse;
 import com.swipelab.classification.dto.api.SubmitClassificationRequest;
 import com.swipelab.classification.events.ClassificationSubmittedEvent;
+import com.swipelab.classification.domain.FraudAnalysisResult;
 import com.swipelab.classification.infrastructure.ClassificationRepository;
 import com.swipelab.classification.infrastructure.ImageRepository;
 import com.swipelab.classification.application.port.out.TaskProvider;
 import com.swipelab.exception.ResourceNotFoundException;
+import com.swipelab.exception.UserBannedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -37,9 +39,14 @@ public class ClassificationService {
     public NextBatchResponse submitClassification(String username, String userRole, Double userCredibility,
             SubmitClassificationRequest request) {
 
-        // 1. Fraud Detection
+        // 1. Fraud Detection — passes role so researchers get a lenient threshold
+        FraudAnalysisResult fraudResult = null;
         if (request.getResponseTimeMs() != null) {
-            fraudDetectionService.analyzeClassification(username, request.getResponseTimeMs());
+            fraudResult = fraudDetectionService.analyzeClassification(
+                    username, userRole, request.getResponseTimeMs(), request.getTaskId());
+            if (fraudResult.isBanned()) {
+                throw new UserBannedException("Account banned due to suspicious activity");
+            }
         }
 
         // 2. Load Image
@@ -107,7 +114,11 @@ public class ClassificationService {
         eventPublisher.publishEvent(event);
 
         // 5. Return Next Batch
-        return imageService.getNextBatchForApi(request.getTaskId(), username, 10);
+        NextBatchResponse response = imageService.getNextBatchForApi(request.getTaskId(), username, 10);
+        if (fraudResult != null && fraudResult.getWarning() != null) {
+            response.setWarning(fraudResult.getWarning());
+        }
+        return response;
     }
 
     @Transactional

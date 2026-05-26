@@ -63,6 +63,23 @@ public class GlobalExceptionHandler {
                                 .error("Forbidden")
                                 .message("You don't have permission to access this resource.")
                                 .path(request.getRequestURI())
+                                .errorCode("ACCESS_DENIED")
+                                .build();
+
+                return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+        }
+
+        @ExceptionHandler(UserBannedException.class)
+        public ResponseEntity<ErrorResponse> handleUserBannedException(
+                        UserBannedException ex, HttpServletRequest request) {
+
+                ErrorResponse errorResponse = ErrorResponse.builder()
+                                .timestamp(LocalDateTime.now())
+                                .status(HttpStatus.FORBIDDEN.value())
+                                .error("Forbidden")
+                                .message(ex.getMessage())
+                                .path(request.getRequestURI())
+                                .errorCode("ACCOUNT_BANNED")
                                 .build();
 
                 return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
