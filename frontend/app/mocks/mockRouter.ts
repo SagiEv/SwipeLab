@@ -4,7 +4,7 @@ import { addToCollection, getCollection, getCollectionStats } from './data/colle
 import { dashboardAdminMock } from './data/dashboard.researcher.mock'
 import { dashboardUserMock } from './data/dashboard.user.mock'
 
-import { getTaskAnalytics, getUserPerformance } from './data/analytics.mock'
+import { getTaskAnalytics, getUserPerformance, MOCK_PLATFORM_OVERVIEW, MOCK_GLOBAL_STATS } from './data/analytics.mock'
 import { refinedChallengesMock } from './data/challenges.mock'
 import { setUserAccuracy, statisticsMock } from './data/statistics.mock'
 
@@ -251,13 +251,29 @@ export async function mockRouter(
   }
 
   // ---------- ANALYTICS ----------
-  // Task Analytics
+  // Platform Overview
+  if (method === 'GET' && url.includes('/api/v1/analytics/overview')) {
+    return jsonResponse(MOCK_PLATFORM_OVERVIEW);
+  }
+
+  // Global Stats
+  if (method === 'GET' && url.includes('/api/v1/analytics/global-stats')) {
+    return jsonResponse(MOCK_GLOBAL_STATS);
+  }
+
+  // Task Analytics (real endpoint is /api/v1/analytics/tasks/:id)
+  if (method === 'GET' && url.match(/\/api\/v1\/analytics\/tasks\/\d+$/)) {
+    const idMatch = url.match(/\/api\/v1\/analytics\/tasks\/(\d+)$/);
+    const taskId = idMatch ? parseInt(idMatch[1], 10) : null;
+    if (!taskId) return jsonResponse({ message: 'Invalid task ID' }, 400);
+    return jsonResponse(getTaskAnalytics(taskId));
+  }
+
+  // Task Analytics (legacy dashboard path — kept for backward compat)
   if (method === 'GET' && url.match(/\/api\/v1\/dashboard\/tasks\/\d+\/analytics$/)) {
     const idMatch = url.match(/\/api\/v1\/dashboard\/tasks\/(\d+)\/analytics$/);
     const taskId = idMatch ? parseInt(idMatch[1], 10) : null;
-
     if (!taskId) return jsonResponse({ message: 'Invalid task ID' }, 400);
-
     return jsonResponse(getTaskAnalytics(taskId));
   }
 

@@ -2,6 +2,7 @@ package com.swipelab.analytics.api;
 
 import com.swipelab.analytics.application.AnalyticsService;
 import com.swipelab.analytics.dto.*;
+import com.swipelab.dto.response.DashboardStatsResponse;
 import com.swipelab.dto.response.UserPerformanceResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,26 +13,19 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.UUID;
-
 @RestController
 @RequiredArgsConstructor
 public class AnalyticsController {
 
     private final AnalyticsService analyticsService;
 
-    // 1. Progress (mapped to /api/v1/classifications/progress or
-    // /api/v1/statistics/progress?)
-    // User request: GET /api/v1/classifications/progress
+    // ─── User-scoped endpoints ────────────────────────────────────────────────
+
     @GetMapping("/api/v1/classifications/progress")
     @PreAuthorize("hasAnyRole('USER', 'RESEARCHER') or @securityAuthorizationService.isSuperAdmin(authentication.name)")
     public ResponseEntity<UserProgressResponse> getProgress(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(analyticsService.getUserProgress(userDetails.getUsername()));
     }
-
-    // 2. User Statistics (Base Path: /api/v1/statistics)
 
     @GetMapping("/api/v1/statistics/me")
     @PreAuthorize("hasAnyRole('USER', 'RESEARCHER') or @securityAuthorizationService.isSuperAdmin(authentication.name)")
@@ -48,8 +42,7 @@ public class AnalyticsController {
     @GetMapping("/api/v1/statistics/me/vs-users")
     @PreAuthorize("hasAnyRole('USER', 'RESEARCHER') or @securityAuthorizationService.isSuperAdmin(authentication.name)")
     public ResponseEntity<UserVsExpertsResponse> getUserVsUsers(@AuthenticationPrincipal UserDetails userDetails) {
-        // Re-using same response structure or method for now as per confusion
-        // Or implement separate logic.
+        // Uses same logic as vs-experts for now (community average acts as the comparator)
         return ResponseEntity.ok(analyticsService.getUserVsExperts(userDetails.getUsername()));
     }
 
@@ -68,10 +61,36 @@ public class AnalyticsController {
         return ResponseEntity.ok(analyticsService.getTimeSeries(userDetails.getUsername(), metric, period));
     }
 
-    // ADMIN ANALYTICS SECTION
+    // ─── Platform overview (Researcher / SuperAdmin) ──────────────────────────
 
-    // 3. Task Analytics (Base Path: /dashboard)
-    @GetMapping("api/v1/analytics/tasks/{taskId}")
+    /**
+     * Returns a platform-wide snapshot broken down by today / this week / this month:
+     * - classifications count
+     * - unique images classified
+     * - unique users active
+     * - unique tasks involved
+     * - unique experiments involved
+     * Also returns a 30-day confidence trend and label-distribution breakdown.
+     */
+    @GetMapping("/api/v1/analytics/overview")
+    @PreAuthorize("hasRole('RESEARCHER') or @securityAuthorizationService.isSuperAdmin(authentication.name)")
+    public ResponseEntity<PlatformOverviewResponse> getPlatformOverview() {
+        return ResponseEntity.ok(analyticsService.getPlatformOverview());
+    }
+
+    /**
+     * Exposes the global totals (users, swipes, active tasks, images).
+     * Useful as a lightweight header stat for the researcher dashboard.
+     */
+    @GetMapping("/api/v1/analytics/global-stats")
+    @PreAuthorize("hasRole('RESEARCHER') or @securityAuthorizationService.isSuperAdmin(authentication.name)")
+    public ResponseEntity<DashboardStatsResponse> getGlobalStats() {
+        return ResponseEntity.ok(analyticsService.getGlobalStats());
+    }
+
+    // ─── Task-scoped endpoints (Researcher / SuperAdmin) ─────────────────────
+
+    @GetMapping("/api/v1/analytics/tasks/{taskId}")
     @PreAuthorize("hasRole('RESEARCHER') or @securityAuthorizationService.isSuperAdmin(authentication.name)")
     public ResponseEntity<TaskAnalyticsResponse> getTaskAnalytics(
             @PathVariable Long taskId,
@@ -80,26 +99,19 @@ public class AnalyticsController {
         return ResponseEntity.ok(analyticsService.getTaskAnalytics(taskId));
     }
 
-    @PostMapping("api/v1/analytics/exports")
+    // ─── Admin user-performance endpoints (Researcher / SuperAdmin) ───────────
+
+    @GetMapping("/api/v1/analytics/users")
     @PreAuthorize("hasRole('RESEARCHER') or @securityAuthorizationService.isSuperAdmin(authentication.name)")
-    public ResponseEntity<Map<String, Object>> createExport(@RequestBody Map<String, Object> request) {
-        // Placeholder for export
-        return ResponseEntity.accepted().body(Map.of(
-                "exportId", "exp_" + UUID.randomUUID(),
-                "status", "QUEUED",
-                "createdAt", LocalDateTime.now(),
-                "estimatedCompletion", LocalDateTime.now().plusMinutes(10)));
+    public ResponseEntity<List<UserPerformanceResponse>> getUserPerformance(
+            @RequestParam(required = false) Long taskId) {
+        return ResponseEntity.ok(analyticsService.getUserPerformanceMetrics(taskId));
     }
 
-    @GetMapping("api/v1/analytics/users")
+    @GetMapping("/api/v1/analytics/top-performers")
     @PreAuthorize("hasRole('RESEARCHER') or @securityAuthorizationService.isSuperAdmin(authentication.name)")
-    public List<UserPerformanceResponse> getUserPerformance(@RequestParam(required = false) Long taskId) {
-        return analyticsService.getUserPerformanceMetrics(taskId);
-    }
-
-    @GetMapping("api/v1/analytics/top-performers")
-    @PreAuthorize("hasRole('RESEARCHER') or @securityAuthorizationService.isSuperAdmin(authentication.name)")
-    public List<UserPerformanceResponse> getTopPerformers(@RequestParam(defaultValue = "10") int limit) {
-        return analyticsService.getTopPerformers(limit);
+    public ResponseEntity<List<UserPerformanceResponse>> getTopPerformers(
+            @RequestParam(defaultValue = "10") int limit) {
+        return ResponseEntity.ok(analyticsService.getTopPerformers(limit));
     }
 }
