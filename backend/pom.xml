@@ -140,6 +140,16 @@
 
 
 
+		<!-- Application Caching: Spring Cache abstraction + Caffeine in-process cache -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-cache</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.github.ben-manes.caffeine</groupId>
+			<artifactId>caffeine</artifactId>
+		</dependency>
+
 		<!-- Awaitility: polling helper used in integration tests -->
 		<dependency>
 			<groupId>org.awaitility</groupId>

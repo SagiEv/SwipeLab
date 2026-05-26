@@ -1,9 +1,11 @@
 package com.swipelab.integration.stardbi;
 
+import com.swipelab.config.CacheConfig;
 import com.swipelab.integration.stardbi.dto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -148,6 +150,7 @@ public class StardbiClient {
     // TAXONOMY
     // ======================================
 
+    @Cacheable(value = CacheConfig.CACHE_TAXONOMY)
     public List<ExternalTaxonomyDto> getTaxonomy() {
         String url = baseUrl + "/swipe_lab/taxonomy/";
         HttpEntity<Void> entity = new HttpEntity<>(createAuthHeaders(getServiceAccountToken()));
