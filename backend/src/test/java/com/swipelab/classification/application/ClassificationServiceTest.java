@@ -8,6 +8,7 @@ import com.swipelab.classification.dto.UserClassification;
 import com.swipelab.classification.dto.api.NextBatchResponse;
 import com.swipelab.classification.dto.api.SubmitClassificationRequest;
 import com.swipelab.classification.events.ClassificationSubmittedEvent;
+import com.swipelab.classification.domain.FraudAnalysisResult;
 import com.swipelab.classification.infrastructure.ClassificationRepository;
 import com.swipelab.classification.infrastructure.ImageRepository;
 import com.swipelab.exception.ResourceNotFoundException;
@@ -78,6 +79,8 @@ class ClassificationServiceTest {
 
     @Test
     void submitClassification_ShouldThrowException_WhenImageNotFound() {
+        when(fraudDetectionService.analyzeClassification(anyString(), anyString(), anyLong(), anyLong()))
+                .thenReturn(new FraudAnalysisResult(false, null));
         when(imageRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () ->
@@ -93,10 +96,12 @@ class ClassificationServiceTest {
                 .thenReturn(Optional.of(goldResult));
         when(imageService.getNextBatchForApi(anyLong(), anyString(), anyInt()))
                 .thenReturn(NextBatchResponse.builder().build());
+        when(fraudDetectionService.analyzeClassification(anyString(), anyString(), anyLong(), anyLong()))
+                .thenReturn(new FraudAnalysisResult(false, null));
 
         classificationService.submitClassification("testuser", "USER", 0.8, request);
 
-        verify(fraudDetectionService, times(1)).analyzeClassification("testuser", 1500L);
+        verify(fraudDetectionService, times(1)).analyzeClassification("testuser", "USER", 1500L, 1L);
         verify(goldImageEvaluatorService, times(1)).evaluate(any(), any(), any(), any());
         verify(classificationRepository, never()).save(any());
 
@@ -115,6 +120,8 @@ class ClassificationServiceTest {
         when(imageService.getNextBatchForApi(anyLong(), anyString(), anyInt()))
                 .thenReturn(NextBatchResponse.builder().build());
         when(taskProvider.getTaskInfo(1L)).thenReturn(taskInfo);
+        when(fraudDetectionService.analyzeClassification(anyString(), anyString(), anyLong(), anyLong()))
+                .thenReturn(new FraudAnalysisResult(false, null));
 
         Classification savedClassification = new Classification();
         savedClassification.setId(10L);
@@ -122,7 +129,7 @@ class ClassificationServiceTest {
 
         classificationService.submitClassification("testuser", "USER", 0.8, request);
 
-        verify(fraudDetectionService, times(1)).analyzeClassification("testuser", 1500L);
+        verify(fraudDetectionService, times(1)).analyzeClassification("testuser", "USER", 1500L, 1L);
         verify(goldImageEvaluatorService, times(1)).evaluate(any(), any(), any(), any());
         verify(classificationRepository, times(1)).save(any());
 
@@ -163,6 +170,8 @@ class ClassificationServiceTest {
         when(imageService.getNextBatchForApi(anyLong(), anyString(), anyInt()))
                 .thenReturn(NextBatchResponse.builder().build());
         when(taskProvider.getTaskInfo(1L)).thenReturn(emptyQueryTaskInfo);
+        when(fraudDetectionService.analyzeClassification(anyString(), anyString(), anyLong(), anyLong()))
+                .thenReturn(new FraudAnalysisResult(false, null));
 
         Classification savedClassification = new Classification();
         savedClassification.setId(11L);
@@ -173,6 +182,7 @@ class ClassificationServiceTest {
         testReq.setTaskId(1L);
         testReq.setQuestion("Is this a Bear?");
         testReq.setDecision(Classification.UserResponse.YES);
+        testReq.setResponseTimeMs(1500L); // Need to set this for the mock
 
         classificationService.submitClassification("testuser", "USER", 0.8, testReq);
 

@@ -13,14 +13,19 @@ import { useModeStore } from "../stores/modeStore";
 // navigators
 import ResearcherNavigator from "./ResearcherNavigator";
 import UserNavigator from "./UserNavigator";
+import { useProfile } from "../api/queries";
 
 // screens
 import LoginScreen from "../screens/shared/LoginScreen";
+import BannedScreen from "../screens/shared/BannedScreen";
 
 export default function RootNavigator() {
-  const { token, role, isLoading, sessionExpiredMessage } = useAuthStore();       // "USER" | "researcher" | null
-  const { mode } = useModeStore();              // "USER" | "researcher"
+  const { token, role, isLoading, sessionExpiredMessage, isSuperAdmin, isBanned: storeIsBanned } = useAuthStore();
+  const { mode } = useModeStore();
   const Stack = createNativeStackNavigator();
+  
+  const { data: profile } = useProfile();
+  const isBanned = storeIsBanned || profile?.status === 'BANNED';
 
   if (sessionExpiredMessage) {
     return (
@@ -53,6 +58,11 @@ export default function RootNavigator() {
         </Stack.Navigator>
       </NavigationContainer>
     );
+  }
+
+  // Show banned screen before any navigation
+  if (isBanned) {
+    return <BannedScreen />;
   }
 
   const isAdmin = role === "RESEARCHER";

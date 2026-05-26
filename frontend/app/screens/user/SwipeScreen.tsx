@@ -19,10 +19,12 @@ import { QUERY_KEYS, useMyTasks, useSwipeBatch } from '../../api/queries';
 import ReferenceGallery from '../../components/user/ReferenceGallery';
 import SwipeButtons from '../../components/user/SwipeButtons';
 import SwipeCard, { SwipeCardHandle } from '../../components/user/SwipeCard';
+import WarningToast from '../../components/ui/WarningToast';
 import useResponsive from '../../hooks/useResponsive';
 import { useSwipeStore } from '../../stores/swipeStore';
 import { useThemeStore } from '../../stores/themeStore';
 import { SwipeDirection } from '../../types';
+import { ClassificationWarning } from '../../types/fraudTypes';
 
 const BACKEND_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ||
@@ -37,7 +39,9 @@ export default function SwipeScreen() {
   const { dataBatch, currentIndex, activeTaskId, setActiveTaskId, setBatch, nextCard, clearBatch } =
     useSwipeStore();
   const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeWarning, setActiveWarning] = useState<ClassificationWarning | null>(null);
 
   const { isPhone, isDesktop } = useResponsive();
   const { theme } = useThemeStore();
@@ -97,32 +101,42 @@ export default function SwipeScreen() {
   };
 
   const handleSwipe = async (direction: SwipeDirection) => {
+    if (isSubmitting) return;
     const currentImage = dataBatch[currentIndex];
 
     if (currentImage) {
+      setIsSubmitting(true);
       let decision = direction.toUpperCase();
       if (direction === 'dont-know') decision = 'DONT_KNOW';
 
-      apiFetch(`/api/v1/classifications/submit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          imageId: currentImage.imageId,
-          taskId: currentImage.taskId,
-          question: currentImage.question,
-          decision,
-          responseTimeMs: 0,
-        }),
-      })
-        .then((res) => {
-          if (res.ok) {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.challenges });
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.myBadges });
-            // Refresh top-bar stats (score, rank, streak) after each classification
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userProfile });
+      try {
+        const res = await apiFetch(`/api/v1/classifications/submit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            imageId: currentImage.imageId,
+            taskId: currentImage.taskId,
+            question: currentImage.question,
+            decision,
+            responseTimeMs: 0,
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          // Show warning toast if the fraud detection system issued one
+          if (data?.warning) {
+            setActiveWarning(data.warning as ClassificationWarning);
           }
-        })
-        .catch((e) => console.error('Submit error:', e));
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.challenges });
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.myBadges });
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userProfile });
+        }
+      } catch (e) {
+        console.error('Submit error:', e);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
 
     if (currentIndex + 1 < dataBatch.length) {
@@ -135,9 +149,10 @@ export default function SwipeScreen() {
 
   // Keyboard shortcuts (web only, active swipe state)
   useEffect(() => {
-    if (Platform.OS !== 'web' || loading || dataBatch.length === 0) return;
+    if (Platform.OS !== 'web' || loading || isSubmitting || dataBatch.length === 0) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (isSubmitting) return;
       switch (e.key) {
         case 'ArrowUp':    cardRef.current?.swipeCard('dont-know'); break;
         case 'ArrowDown':  cardRef.current?.swipeCard('trash');     break;
@@ -148,7 +163,7 @@ export default function SwipeScreen() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [loading, dataBatch, currentIndex]);
+  }, [loading, isSubmitting, dataBatch, currentIndex]);
 
   // ─── STATE A: Active task — loading batch ──────────────────────────────────
   if (activeTaskId && (loading || isQueryLoading)) {
@@ -227,6 +242,14 @@ export default function SwipeScreen() {
 
     return (
       <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+        {/* Warning toast — rendered above everything, non-blocking */}
+        {activeWarning && (
+          <WarningToast
+            warning={activeWarning}
+            onDismiss={() => setActiveWarning(null)}
+          />
+        )}
+
         <View style={[styles.cardSection, { maxWidth: size }]}>
           <SwipeCard
             ref={cardRef}

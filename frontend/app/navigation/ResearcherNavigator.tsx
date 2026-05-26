@@ -2,9 +2,9 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 
-
 import BottomBar from "./components/BottomBar";
 import TopBar from "./components/TopBar";
+
 import { useAuthStore } from "../stores/authStore";
 
 import AddTaskScreen from "../screens/researcher/AddTaskScreen";
@@ -152,4 +152,5 @@ export default function ResearcherNavigator() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { flex: 1 },
+
 });
