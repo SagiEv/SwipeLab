@@ -1,5 +1,5 @@
-// Researcher Analytics Screen — Issue #221
-// Redesigned to show platform-wide overview (default) + per-task drill-down.
+// Researcher Analytics Screen — Issue #221, #257
+// Overview + per-task drill-down + CSV export.
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -28,6 +28,7 @@ import {
   QUERY_KEYS,
 } from '../../api/queries';
 import type { UserPerformance, TaskAnalytics } from '../../types/analyticsTypes';
+import ExportModal from '../../components/researcher/ExportModal';
 
 type Tab = 'overview' | 'tasks';
 
@@ -40,6 +41,7 @@ export default function AnalyticsScreen({ navigation }: any) {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [exportModalVisible, setExportModalVisible] = useState(false);
 
   // ─── Data ─────────────────────────────────────────────────────────────────
   const { data: overview, isLoading: overviewLoading, refetch: refetchOverview } =
@@ -386,8 +388,29 @@ export default function AnalyticsScreen({ navigation }: any) {
         }
       >
         {tabBar}
+
+        {/* Export to CSV button */}
+        <TouchableOpacity
+          style={[
+            styles.exportCsvButton,
+            {
+              backgroundColor: isDark ? '#1e3a5f' : '#EFF6FF',
+              borderColor: '#3B82F6',
+            },
+          ]}
+          onPress={() => setExportModalVisible(true)}
+        >
+          <Ionicons name="download-outline" size={18} color="#3B82F6" />
+          <Text style={styles.exportCsvText}>Export to CSV</Text>
+        </TouchableOpacity>
+
         {activeTab === 'overview' ? renderOverview() : renderTasks()}
       </ScrollView>
+
+      <ExportModal
+        visible={exportModalVisible}
+        onClose={() => setExportModalVisible(false)}
+      />
     </ScreenHeaderLayout>
   );
 }
@@ -669,5 +692,21 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 12,
     marginTop: -8,
+  },
+  // Export button
+  exportCsvButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 16,
+  },
+  exportCsvText: {
+    color: '#3B82F6',
+    fontSize: 14,
+    fontWeight: '700',
   },
 });
