@@ -101,11 +101,11 @@ public class ExportService {
                 Image image = c.getImage();
                 boolean isGold = goldImageRepository.existsByImageId(image.getId());
 
-                String row = String.format("%d,%d,\"%s\",%d,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%s,%b,\"%s\"",
+                String row = String.format("%d,%d,\"%s\",%s,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%s,%b,\"%s\"",
                         c.getId(),
                         c.getTaskId(),
                         escapeCsv(taskNameMap.getOrDefault(c.getTaskId(), "")),
-                        image.getId(),
+                        image.getParentImageId() != null ? image.getParentImageId().toString() : "",
                         escapeCsv(image.getSrcPath()),
                         escapeCsv(c.getUsername()),
                         escapeCsv(c.getUserRole() != null ? c.getUserRole() : ""),
@@ -196,8 +196,8 @@ public class ExportService {
 
     private String formatLegacyCsvRow(Classification classification, boolean isGoldStandard) {
         Image image = classification.getImage();
-        return String.format("%d,\"%s\",\"%s\",\"%s\",\"%s\",%b",
-                image.getId(),
+        return String.format("%s,\"%s\",\"%s\",\"%s\",\"%s\",%b",
+                image.getParentImageId() != null ? image.getParentImageId().toString() : "",
                 escapeCsv(image.getSrcPath()),
                 escapeCsv(classification.getUsername()),
                 escapeCsv(classification.getUserResponse().name()),
@@ -208,7 +208,7 @@ public class ExportService {
     private Map<String, Object> formatJsonObject(Classification classification, boolean isGoldStandard) {
         Image image = classification.getImage();
         Map<String, Object> obj = new HashMap<>();
-        obj.put("imageId", image.getId());
+        obj.put("imageId", image.getParentImageId());
         obj.put("srcPath", image.getSrcPath());
         obj.put("username", classification.getUsername());
         obj.put("userResponse", classification.getUserResponse().name());

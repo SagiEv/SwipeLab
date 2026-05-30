@@ -54,7 +54,7 @@ class ExportServiceTest {
         task1 = Task.builder().id(1L).name("Bird Survey").createdBy("researcher1").build();
         task2 = Task.builder().id(2L).name("Fish Study").createdBy("researcher1").build();
 
-        image1 = Image.builder().id(10L).srcPath("/images/bird1.jpg").taskId(1L).build();
+        image1 = Image.builder().id(10L).parentImageId(999L).srcPath("/images/bird1.jpg").taskId(1L).build();
 
         classification1 = Classification.builder()
                 .id(100L)
@@ -93,6 +93,7 @@ class ExportServiceTest {
         assertTrue(lines[0].trim().startsWith("classification_id,task_id,task_name"));
         assertTrue(lines[1].contains("100"));        // classification_id
         assertTrue(lines[1].contains("Bird Survey")); // task_name
+        assertTrue(lines[1].contains("999"));         // image_id (parentImageId)
         assertTrue(lines[1].contains("labeler1"));     // username
         assertTrue(lines[1].contains("0.85"));         // credibility_score
         assertTrue(lines[1].contains("YES"));          // user_response
