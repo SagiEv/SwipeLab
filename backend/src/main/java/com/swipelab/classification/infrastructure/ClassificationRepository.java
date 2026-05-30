@@ -96,4 +96,9 @@ public interface ClassificationRepository extends JpaRepository<Classification, 
     @Query("SELECT c.userResponse, COUNT(c) FROM Classification c " +
             "WHERE c.createdAt >= :since GROUP BY c.userResponse")
     List<Object[]> getLabelDistributionSince(@Param("since") LocalDateTime since);
+
+    /**
+     * Batch-fetch all classifications for multiple tasks — used by multi-task CSV export
+     */
+    List<Classification> findByTaskIdIn(List<Long> taskIds);
 }

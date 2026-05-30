@@ -58,6 +58,7 @@ export const API_ENDPOINTS = {
         ANALYTICS_GLOBAL_STATS: '/api/v1/analytics/global-stats',
         ANALYTICS_TASKS: (taskId: string | number) => `/api/v1/analytics/tasks/${taskId}`,
         ANALYTICS_EXPORTS: '/api/v1/analytics/exports',
+        EXPORT_CSV: '/api/v1/admin/export/classifications/csv',
         ANALYTICS_USERS: (taskId: string | number) => `/api/v1/analytics/users?taskId=${taskId}`,
         ANALYTICS_TOP: (limit: number = 5) => `/api/v1/analytics/top-performers?limit=${limit}`,
         //GOLD IMAGES

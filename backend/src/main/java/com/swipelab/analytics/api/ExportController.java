@@ -1,16 +1,20 @@
 package com.swipelab.analytics.api;
 
+import com.swipelab.analytics.application.ExportService;
+import com.swipelab.analytics.dto.ExportRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import com.swipelab.analytics.application.ExportService;
-
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +25,32 @@ import java.util.Map;
 public class ExportController {
 
     private final ExportService exportService;
+
+    // ─── Multi-task export (Issue #257) ───────────────────────────────────────
+
+    /**
+     * Export classifications for multiple tasks as a single CSV.
+     * Authorization is enforced at the service layer per task.
+     */
+    @PostMapping("/classifications/csv")
+    public void exportMultiTaskCsv(
+            @Valid @RequestBody ExportRequest request,
+            @AuthenticationPrincipal UserDetails userDetails,
+            HttpServletResponse response) throws IOException {
+
+        response.setContentType("text/csv");
+        response.setCharacterEncoding("UTF-8");
+        String filename = "swipelab_classifications_export_" + LocalDate.now() + ".csv";
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=\"" + filename + "\"");
+
+        exportService.exportMultiTaskClassificationsAsCsv(
+                request.getTaskIds(),
+                userDetails.getUsername(),
+                response.getOutputStream());
+    }
+
+    // ─── Legacy single-task endpoints ────────────────────────────────────────
 
     /**
      * Get export summary before downloading.

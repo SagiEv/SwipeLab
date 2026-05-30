@@ -289,6 +289,27 @@ export const useAssignTask = () => {
   });
 };
 
+/**
+ * Mutation hook for multi-task CSV export (Issue #257).
+ * Returns a Blob containing the CSV file streamed from the backend.
+ */
+export const useExportClassificationsCsv = () => {
+  return useMutation({
+    mutationFn: async (taskIds: number[]) => {
+      const res = await apiFetch(API_ENDPOINTS.researcher.EXPORT_CSV, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskIds }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message ?? 'Export failed');
+      }
+      return res.blob();
+    },
+  });
+};
+
 import { queryClient } from '../queryClient';
 
 export const preloadAfterLogin = async (role: string) => {
