@@ -43,10 +43,10 @@ public class ExportService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     // Legacy header kept for backward-compatible single-task endpoints
-    private static final String LEGACY_CSV_HEADER = "image_id,src_path,username,user_response,classified_at,is_gold_standard";
+    private static final String LEGACY_CSV_HEADER = "parent_image_id,crop_id,src_path,username,user_response,classified_at,is_gold_standard";
 
     private static final String MULTI_EXPORT_CSV_HEADER =
-            "classification_id,task_id,task_name,image_id,image_src_path,username,user_role,query_species,user_response,credibility_score,is_gold_standard,classified_at";
+            "classification_id,task_id,task_name,parent_image_id,crop_id,image_src_path,username,user_role,query_species,user_response,credibility_score,is_gold_standard,classified_at";
 
     // ─── Multi-task export (Issue #257) ───────────────────────────────────────
 
@@ -101,11 +101,12 @@ public class ExportService {
                 Image image = c.getImage();
                 boolean isGold = goldImageRepository.existsByImageId(image.getId());
 
-                String row = String.format("%d,%d,\"%s\",%s,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%s,%b,\"%s\"",
+                String row = String.format("%d,%d,\"%s\",%s,%s,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%s,%b,\"%s\"",
                         c.getId(),
                         c.getTaskId(),
                         escapeCsv(taskNameMap.getOrDefault(c.getTaskId(), "")),
                         image.getParentImageId() != null ? image.getParentImageId().toString() : "",
+                        image.getExternalBoxId() != null ? image.getExternalBoxId().toString() : "",
                         escapeCsv(image.getSrcPath()),
                         escapeCsv(c.getUsername()),
                         escapeCsv(c.getUserRole() != null ? c.getUserRole() : ""),
@@ -196,8 +197,9 @@ public class ExportService {
 
     private String formatLegacyCsvRow(Classification classification, boolean isGoldStandard) {
         Image image = classification.getImage();
-        return String.format("%s,\"%s\",\"%s\",\"%s\",\"%s\",%b",
+        return String.format("%s,%s,\"%s\",\"%s\",\"%s\",\"%s\",%b",
                 image.getParentImageId() != null ? image.getParentImageId().toString() : "",
+                image.getExternalBoxId() != null ? image.getExternalBoxId().toString() : "",
                 escapeCsv(image.getSrcPath()),
                 escapeCsv(classification.getUsername()),
                 escapeCsv(classification.getUserResponse().name()),
@@ -209,6 +211,7 @@ public class ExportService {
         Image image = classification.getImage();
         Map<String, Object> obj = new HashMap<>();
         obj.put("imageId", image.getParentImageId());
+        obj.put("cropId", image.getExternalBoxId());
         obj.put("srcPath", image.getSrcPath());
         obj.put("username", classification.getUsername());
         obj.put("userResponse", classification.getUserResponse().name());
