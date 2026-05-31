@@ -36,12 +36,15 @@ services:
     build:
       context: ./frontend
       args:
-        - EXPO_PUBLIC_API_URL=http://132.73.84.74
+        - EXPO_PUBLIC_API_URL=https://swipelab.cs.bgu.ac.il
     container_name: swipelab-frontend
     depends_on:
       - backend
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
 
 volumes:
   postgres_data:
