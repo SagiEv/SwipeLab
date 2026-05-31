@@ -156,7 +156,7 @@ public class TaskService {
         }
 
         // Idempotency guard — prevents duplicate rows in task_assigned_users
-        if (taskRepository.existsByIdAndAssignedUsernamesContaining(taskId, username)) {
+        if (taskRepository.existsByIdAndUsernameInAssignedUsers(taskId, username)) {
             throw new DuplicateResourceException("User '" + username + "' is already assigned to task " + taskId);
         }
 

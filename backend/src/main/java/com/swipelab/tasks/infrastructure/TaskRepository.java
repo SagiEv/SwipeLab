@@ -40,11 +40,11 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     @org.springframework.data.jpa.repository.Query(
         "SELECT DISTINCT t FROM Task t " +
         "WHERE t.status = :status AND t.isPublic = true " +
-        "AND t.id NOT IN (" +
-        "  SELECT DISTINCT t2.id FROM Task t2 " +
+        "AND NOT EXISTS (" +
+        "  SELECT 1 FROM Task t2 " +
         "  LEFT JOIN t2.assignedUsernames au2 " +
         "  LEFT JOIN t2.recipientGroups rg2 " +
-        "  WHERE au2 = :username OR rg2 IN :groupIds" +
+        "  WHERE t2.id = t.id AND (au2 = :username OR rg2 IN :groupIds)" +
         ")"
     )
     org.springframework.data.domain.Page<Task> findPublicTasksExcludingAssignedUser(
@@ -53,6 +53,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @org.springframework.data.repository.query.Param("groupIds") java.util.Collection<Long> groupIds,
             org.springframework.data.domain.Pageable pageable);
 
-    boolean existsByIdAndAssignedUsernamesContaining(Long id, String username);
+    @org.springframework.data.jpa.repository.Query("SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END FROM Task t JOIN t.assignedUsernames au WHERE t.id = :id AND au = :username")
+    boolean existsByIdAndUsernameInAssignedUsers(@org.springframework.data.repository.query.Param("id") Long id, @org.springframework.data.repository.query.Param("username") String username);
 
 }
