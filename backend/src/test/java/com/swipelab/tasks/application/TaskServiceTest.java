@@ -268,7 +268,7 @@ class TaskServiceTest {
         task.setIsPublic(true);
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
         // Simulate the user already being in task_assigned_users
-        when(taskRepository.existsByIdAndAssignedUsernamesContaining(1L, "testuser")).thenReturn(true);
+        when(taskRepository.existsByIdAndUsernameInAssignedUsers(1L, "testuser")).thenReturn(true);
 
         assertThrows(DuplicateResourceException.class,
                 () -> taskService.assignTaskToUser(1L, "testuser"));
@@ -281,7 +281,7 @@ class TaskServiceTest {
         task.setIsPublic(true);
         task.setAssignedUsernames(new ArrayList<>());
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(taskRepository.existsByIdAndAssignedUsernamesContaining(1L, "testuser")).thenReturn(false);
+        when(taskRepository.existsByIdAndUsernameInAssignedUsers(1L, "testuser")).thenReturn(false);
         when(taskMapper.toResponse(task, true)).thenReturn(taskResponse);
 
         TaskResponse response = taskService.assignTaskToUser(1L, "testuser");
