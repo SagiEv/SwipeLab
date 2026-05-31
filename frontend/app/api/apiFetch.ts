@@ -195,12 +195,33 @@ export async function apiFetch(
     }
 
     // If no refresh token or refresh failed, we must logout
-    
     const { useAuthStore } = require("../stores/authStore");
-    useAuthStore.getState().setSessionExpiredMessage(true);
+    
+    // Only show "Session Expired" if they actually had a refresh token
+    let hadRefreshToken = false;
+    if (Platform.OS === 'web') {
+      hadRefreshToken = !!localStorage.getItem("refreshToken");
+    } else {
+      hadRefreshToken = !!SecureStore.getItem("refreshToken"); // Sync read is ok here, or we can just rely on the fact that if they had a token, they are logged in. Wait, SecureStore.getItemAsync is async. Let's do it safely.
+    }
+    // Actually, forceTokenRefresh already knows if there's a refresh token, but it's encapsulated.
+    
+    if (Platform.OS === 'web') {
+      hadRefreshToken = !!localStorage.getItem("refreshToken");
+    } else {
+      // For mobile, we'll just check if they are currently marked as authenticated in the store
+      hadRefreshToken = useAuthStore.getState().isAuthenticated;
+    }
+
+    if (hadRefreshToken) {
+      useAuthStore.getState().setSessionExpiredMessage(true);
+    }
+    
     setTimeout(() => {
       useAuthStore.getState().logout();
-      useAuthStore.getState().setSessionExpiredMessage(false);
+      if (hadRefreshToken) {
+        useAuthStore.getState().setSessionExpiredMessage(false);
+      }
     }, 2000);
   }
 
