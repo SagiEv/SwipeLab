@@ -72,8 +72,8 @@ export const API_ENDPOINTS = {
         RECIPIENTS_UPDATE: (groupId: string | number) => `/api/v1/dashboard/recipients/${groupId}`,
     },
     STARDBI: {
-        LOGIN: 'https://stardbi.cs.bgu.ac.il/auth/get_token/',
-        REFRESH: 'https://stardbi.cs.bgu.ac.il/auth/token_refresh/',
+        LOGIN: '/stardbi/auth/get_token/',
+        REFRESH: '/stardbi/auth/token_refresh/',
     },
     ADMIN: {
         NOTIFICATIONS: '/api/admin/notifications',

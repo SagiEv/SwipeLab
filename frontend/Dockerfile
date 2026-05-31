@@ -27,6 +27,13 @@ server { \
     ssl_certificate /etc/letsencrypt/live/swipelab.cs.bgu.ac.il/fullchain.pem; \
     ssl_certificate_key /etc/letsencrypt/live/swipelab.cs.bgu.ac.il/privkey.pem; \
     \
+    # Proxy requests to STARdbi to bypass CORS \
+    location /stardbi/ { \
+        proxy_pass https://stardbi.cs.bgu.ac.il/; \
+        proxy_set_header Host stardbi.cs.bgu.ac.il; \
+        proxy_ssl_server_name on; \
+    } \
+    \
     # Route all requests starting with /api to the backend \
     location /api/ { \
         proxy_pass http://swipelab-backend:8080; \
