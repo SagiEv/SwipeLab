@@ -1,6 +1,7 @@
 // Researcher screen for managing tasks
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Colors } from '../../../constants/theme';
 import { useAdminTasks, useUpdateTaskStatus } from '../../api/queries';
@@ -23,7 +24,13 @@ export default function TasksManagementScreen({ navigation }: any) {
   const themeColors = Colors[theme as keyof typeof Colors];
   const isDark = theme === 'dark';
 
-  const { data: tasks = [], isLoading } = useAdminTasks();
+  const { data: tasks = [], isLoading, refetch } = useAdminTasks();
+  
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
   const { mutate: updateStatus } = useUpdateTaskStatus();
 
   const [searchQuery, setSearchQuery] = useState('');
