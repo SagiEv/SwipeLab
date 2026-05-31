@@ -7,14 +7,14 @@ COPY . .
 ARG EXPO_PUBLIC_API_URL
 ENV EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL
 
-# בנייה של ה-SPA
+# Build the SPA
 RUN npx expo export -p web
 
 # Stage 2: Serve
 FROM --platform=linux/amd64 nginx:alpine
 RUN rm -rf /usr/share/nginx/html/*
 
-# קונפיגורציה של Nginx כ-Reverse Proxy עם תמיכה ב-HTTPS
+# Nginx Configuration as a Reverse Proxy with HTTPS support
 RUN echo 'server { \
     listen 80; \
     server_name swipelab.cs.bgu.ac.il; \
@@ -27,7 +27,7 @@ server { \
     ssl_certificate /etc/letsencrypt/live/swipelab.cs.bgu.ac.il/fullchain.pem; \
     ssl_certificate_key /etc/letsencrypt/live/swipelab.cs.bgu.ac.il/privkey.pem; \
     \
-    # כל בקשה שמתחילה ב-api תעבור לבקאנד \
+    # Route all requests starting with /api to the backend \
     location /api/ { \
         proxy_pass http://swipelab-backend:8080; \
         proxy_set_header Host $host; \
@@ -35,7 +35,7 @@ server { \
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
         proxy_set_header X-Forwarded-Proto $scheme; \
     } \
-    # שאר הבקשות ילכו לאתר \
+    # Route all other requests to the frontend app \
     location / { \
         root /usr/share/nginx/html; \
         index index.html index.htm; \
