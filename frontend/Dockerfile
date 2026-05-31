@@ -14,10 +14,20 @@ RUN npx expo export -p web
 FROM --platform=linux/amd64 nginx:alpine
 RUN rm -rf /usr/share/nginx/html/*
 
-# קונפיגורציה של Nginx כ-Reverse Proxy
+# קונפיגורציה של Nginx כ-Reverse Proxy עם תמיכה ב-HTTPS
 RUN echo 'server { \
     listen 80; \
-    # כל בקשה שמתחילה ב-api תעבור לבקאנד
+    server_name swipelab.cs.bgu.ac.il; \
+    return 301 https://$host$request_uri; \
+} \
+server { \
+    listen 443 ssl; \
+    server_name swipelab.cs.bgu.ac.il; \
+    \
+    ssl_certificate /etc/letsencrypt/live/swipelab.cs.bgu.ac.il/fullchain.pem; \
+    ssl_certificate_key /etc/letsencrypt/live/swipelab.cs.bgu.ac.il/privkey.pem; \
+    \
+    # כל בקשה שמתחילה ב-api תעבור לבקאנד \
     location /api/ { \
         proxy_pass http://swipelab-backend:8080; \
         proxy_set_header Host $host; \
@@ -25,7 +35,7 @@ RUN echo 'server { \
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
         proxy_set_header X-Forwarded-Proto $scheme; \
     } \
-    # שאר הבקשות ילכו לאתר
+    # שאר הבקשות ילכו לאתר \
     location / { \
         root /usr/share/nginx/html; \
         index index.html index.htm; \
@@ -35,5 +45,5 @@ RUN echo 'server { \
 
 COPY --from=builder /app/dist/ /usr/share/nginx/html/
 RUN chmod -R 755 /usr/share/nginx/html
-EXPOSE 80
+EXPOSE 80 443
 CMD ["nginx", "-g", "daemon off;"]
