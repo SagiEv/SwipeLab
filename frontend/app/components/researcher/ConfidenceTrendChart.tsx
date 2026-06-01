@@ -8,11 +8,12 @@ type Props = {
   data: ConfidenceTrendPoint[];
 };
 
-// Bar color based on credibility: red < 0.5, yellow 0.5-0.75, green > 0.75
+// Bar color based on credibility: red < 50, yellow 50-75, green > 75
+// averageCredibility is on the 0–100 scale from the backend
 function barColor(cred: number): string {
-  if (cred >= 0.75) return '#10B981'; // green
-  if (cred >= 0.5)  return '#F59E0B'; // amber
-  return '#EF4444';                   // red
+  if (cred >= 75) return '#10B981'; // green
+  if (cred >= 50) return '#F59E0B'; // amber
+  return '#EF4444';                 // red
 }
 
 export default function ConfidenceTrendChart({ data }: Props) {
@@ -32,8 +33,13 @@ export default function ConfidenceTrendChart({ data }: Props) {
 
   // Show last 30 points; truncate label to last 7 if more
   const points = data.slice(-30);
+  // Normalise to 0–1 for chart math (backend sends 0–100)
+  const normalised = points.map(p => ({
+    ...p,
+    norm: (p.averageCredibility ?? 0) / 100,
+  }));
   const avgCredibility =
-    points.reduce((sum, p) => sum + p.averageCredibility, 0) / points.length;
+    normalised.reduce((sum, p) => sum + p.norm, 0) / normalised.length;
 
   // First and last date for the x-axis label
   const firstDate = points[0]?.date?.slice(5) ?? ''; // "MM-DD"
@@ -61,8 +67,8 @@ export default function ConfidenceTrendChart({ data }: Props) {
 
       {/* Bars */}
       <View style={styles.chartArea}>
-        {points.map((point, i) => {
-          const height = Math.max(4, point.averageCredibility * 60);
+        {normalised.map((point, i) => {
+          const height = Math.max(4, point.norm * 60);
           return (
             <View key={i} style={styles.barWrapper}>
               <View style={styles.barTrack}>

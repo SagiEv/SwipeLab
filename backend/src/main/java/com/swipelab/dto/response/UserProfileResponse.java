@@ -27,4 +27,7 @@ public class UserProfileResponse {
     @JsonProperty("isSuperAdmin")
     private boolean isSuperAdmin;
     private boolean active;
+
+    // Credibility — composite 0–100 score (40% gold + 35% majority + 25% expert kappa)
+    private Double credibilityScore;
 }
