@@ -94,14 +94,18 @@ public class User {
         @Column(name = "profile_image_url")
         private String profileImageUrl;
 
-        // ========== CREDIBILITY TRACKING ==========
-
         /**
-         * Overall credibility score (can be used for weighted averaging later)
+         * Composite credibility score normalized to 0-100.
+         *  0  = consistently wrong / malicious
+         * 50  = neutral starting position (new users)
+         * 100 = perfect agreement with consensus and gold standards
+         *
+         * Components: 40% gold accuracy + 35% majority agreement + 25% expert kappa.
+         * Missing signals redistribute weight to available ones.
          */
         @Column(name = "credibility_score", nullable = false)
         @Builder.Default
-        private Double credibilityScore = 0.0;
+        private Double credibilityScore = 50.0;
 
         /**
          * Cohen's Kappa score showing agreement with expert (RESEARCHER)

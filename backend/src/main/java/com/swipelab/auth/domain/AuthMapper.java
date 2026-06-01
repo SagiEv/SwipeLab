@@ -36,7 +36,7 @@ public class AuthMapper {
                 .active(true)
                 .accountLocked(false)
                 .emailVerified(false)
-                .credibilityScore(0.0)
+                .credibilityScore(50.0)
                 .score(0L)
                 .badges("")
                 .rank("UNRANKED")

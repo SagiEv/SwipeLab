@@ -71,7 +71,7 @@ public class SuperAdminRoleInitializer implements CommandLineRunner {
             admin.setActive(true);
             admin.setAccountLocked(false);
             admin.setEmailVerified(true);
-            admin.setCredibilityScore(0.0);
+            admin.setCredibilityScore(50.0);
             admin.setScore(0L);
             admin.setRank("UNRANKED");
             admin.setCreatedAt(LocalDateTime.now());

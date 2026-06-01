@@ -29,4 +29,9 @@ public class ClassificationSubmittedEvent {
     private String species;
     private Long responseTimeMs;
     private Double userCredibility;
+
+    // Role at the time of classification — used by credibility and analytics listeners
+    // to distinguish expert (RESEARCHER) from regular user labels without an extra DB fetch.
+    private String userRole;
 }
+
