@@ -204,7 +204,8 @@ public class AuthenticationService {
     public void logout(String refreshToken) {
 
         if (!jwtService.isRefreshToken(refreshToken)) {
-            throw new UnauthorizedException("Invalid refresh token");
+            log.warn("logout: token is invalid or expired. Assuming already logged out.");
+            return;
         }
 
         // Username is already validated inside isRefreshToken — no extra SELECT needed.

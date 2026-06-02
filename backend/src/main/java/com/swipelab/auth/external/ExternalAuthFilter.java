@@ -43,11 +43,10 @@ public class ExternalAuthFilter extends OncePerRequestFilter {
                             SecurityContextHolder.getContext().setAuthentication(authentication);
                         } else {
                             // If it looked like a Stardbi token but validation failed, it's expired/invalid.
-                            log.warn("Stardbi token rejected or expired.");
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            response.setContentType("application/json");
-                            response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"External token expired or invalid. Please refresh.\"}");
-                            return; // Halt filter chain
+                            // We do NOT halt the filter chain here. If the endpoint requires authentication,
+                            // Spring Security will automatically reject it with 401. If it's permitAll (like /logout),
+                            // it will proceed.
+                            log.warn("Stardbi token rejected or expired. Letting filter chain proceed without authentication.");
                         }
                     }
                 }
