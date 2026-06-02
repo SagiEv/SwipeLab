@@ -22,6 +22,8 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
+      "name": "SwipeLab",
+      "shortName": "SwipeLab",
       "output": "single",
       "favicon": "./assets/images/favicon-32.png",
       "meta": {
