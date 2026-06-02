@@ -83,13 +83,14 @@ export const useAllStatistics = () => {
   return useQuery({
     queryKey: ['statistics', 'all'],
     queryFn: async () => {
-        const [summary, vsExperts, vsUsers, breakdown] = await Promise.all([
+        const [summary, vsExperts, vsUsers, breakdown, userInfo] = await Promise.all([
             fetchJson(API_ENDPOINTS.STATISTICS.ME),
             fetchJson(API_ENDPOINTS.STATISTICS.VS_EXPERTS),
             fetchJson(API_ENDPOINTS.STATISTICS.VS_USERS),
             fetchJson(API_ENDPOINTS.STATISTICS.BREAKDOWN),
+            fetchJson(API_ENDPOINTS.GAMIFICATION.USER_INFO).catch(() => ({ score: 0, badge: null, currentStreak: 0 })),
         ]);
-        return { summary, vsExperts, vsUsers, breakdown };
+        return { summary, vsExperts, vsUsers, breakdown, userInfo };
     },
     staleTime: 5 * 60 * 1000,
   });
