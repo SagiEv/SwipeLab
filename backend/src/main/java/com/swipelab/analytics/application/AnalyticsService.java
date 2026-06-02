@@ -112,6 +112,8 @@ public class AnalyticsService {
                                 .monthly(0)
                                 .build())
                         .rankPercentile(ranking.getPercentile())
+                        .currentStreak(0)
+                        .longestStreak(0)
                         .build())
                 .trend(UserStatisticsResponse.Trend.builder()
                         .byDay(trend)
@@ -133,6 +135,20 @@ public class AnalyticsService {
                 .difference(UserVsExpertsResponse.Stat.builder().accuracy(userAcc - expertAcc).build())
                 .build();
     }
+
+    @Transactional(readOnly = true)
+    public UserVsUsersResponse getUserVsUsers(String userId) {
+        UserRanking ranking = userRankingRepository.findByUserIdAndPeriod(userId, "ALL_TIME")
+                .orElse(UserRanking.builder().rank(0).percentile(0).build());
+        Double averageAccuracy = classificationFactRepository.getGlobalAverageAccuracy();
+        if (averageAccuracy == null) averageAccuracy = 0.0;
+
+        return UserVsUsersResponse.builder()
+                .percentile((double) ranking.getPercentile())
+                .averageUserAccuracy(averageAccuracy)
+                .build();
+    }
+
 
     @Transactional(readOnly = true)
     public PerformanceBreakdownResponse getPerformanceBreakdown(String userId) {

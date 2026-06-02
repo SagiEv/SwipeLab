@@ -41,9 +41,8 @@ public class AnalyticsController {
 
     @GetMapping("/api/v1/statistics/me/vs-users")
     @PreAuthorize("hasAnyRole('USER', 'RESEARCHER') or @securityAuthorizationService.isSuperAdmin(authentication.name)")
-    public ResponseEntity<UserVsExpertsResponse> getUserVsUsers(@AuthenticationPrincipal UserDetails userDetails) {
-        // Uses same logic as vs-experts for now (community average acts as the comparator)
-        return ResponseEntity.ok(analyticsService.getUserVsExperts(userDetails.getUsername()));
+    public ResponseEntity<UserVsUsersResponse> getUserVsUsers(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(analyticsService.getUserVsUsers(userDetails.getUsername()));
     }
 
     @GetMapping("/api/v1/statistics/me/breakdown")
