@@ -1,7 +1,16 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback } from 'react';
 import { useMyTasks, useAvailableTasks, useStatistics, useAssignTask } from "../../api/queries";
-import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+
+// Alert.alert is a no-op on web — use this wrapper instead.
+const showError = (title: string, message: string) => {
+    if (Platform.OS === 'web') {
+        window.alert(`${title}\n\n${message}`);
+    } else {
+        Alert.alert(title, message);
+    }
+};
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../constants/theme';
 
@@ -33,11 +42,12 @@ export default function UserMyTasksScreen() {
     const assignTask = useAssignTask();
 
     const handleAddTask = async (taskId: number) => {
+        if (assignTask.isPending) return; // prevent double-tap
         try {
             await assignTask.mutateAsync(taskId);
-            // Cache is refreshed via onSuccess in useAssignTask; nothing more needed here.
+            // Cache is refreshed via refetchQueries in useAssignTask.onSuccess.
         } catch (err: any) {
-            Alert.alert('Could not add task', err?.message ?? 'An unexpected error occurred.');
+            showError('Could not add task', err?.message ?? 'An unexpected error occurred.');
         }
     };
 
