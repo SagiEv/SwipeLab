@@ -9,5 +9,6 @@ public enum NotificationType {
     USER_WARNED,
     USER_BANNED,
     USER_RECOVERED,
+    MALICIOUS_LABELER,
     SYSTEM_ALERT
 }

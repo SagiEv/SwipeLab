@@ -46,7 +46,7 @@ class AuthMapperTest {
         assertTrue(user.getActive());
         assertFalse(user.getAccountLocked());
         assertFalse(user.getEmailVerified());
-        assertEquals(0.0, user.getCredibilityScore());
+        assertEquals(50.0, user.getCredibilityScore()); // neutral starting score
         assertEquals(0L, user.getScore());
         assertEquals("", user.getBadges());
         assertEquals("UNRANKED", user.getRank());

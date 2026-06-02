@@ -45,7 +45,7 @@ export async function forceTokenRefresh(): Promise<boolean> {
 
   try {
     if (authProvider === "STARDBI") {
-      const refreshResponse = await fetch(API_ENDPOINTS.STARDBI.REFRESH, {
+      const refreshResponse = await fetch(backendUrl + API_ENDPOINTS.STARDBI.REFRESH, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

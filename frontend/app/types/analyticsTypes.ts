@@ -12,7 +12,7 @@ export interface ActivitySummary {
 
 export interface ConfidenceTrendPoint {
   date: string;              // "YYYY-MM-DD"
-  averageCredibility: number; // 0.0–1.0
+  averageCredibility: number; // 0–100 (backend AVG of credibility_at_time column)
   classificationCount: number;
 }
 
@@ -95,7 +95,7 @@ export interface UserPerformance {
   goldImageClassifications?: number;
   correctGoldClassifications?: number;
   goldAccuracy: number;
-  credibilityScore: number;
+  credibilityScore: number; // composite 0–100 (40% gold + 35% majority + 25% expert kappa)
   currentStreak?: number;
   points?: number;
 }

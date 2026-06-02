@@ -33,7 +33,8 @@ type UsersManagementScreenNavigationProp = NativeStackNavigationProp<researcherS
 interface User {
     id: string;
     username: string;
-    score: number;
+    // credibilityScore: composite 0–100 score from backend UserProfileResponse
+    credibilityScore: number;
     active: boolean;
 }
 
@@ -51,8 +52,8 @@ const NEXT_SORT: Record<SortOrder, SortOrder> = {
 
 const SORT_LABELS: Record<SortOrder, string> = {
     default: 'Default',
-    asc: 'Score ↑',
-    desc: 'Score ↓',
+    asc: 'Credibility ↑',
+    desc: 'Credibility ↓',
 };
 
 
@@ -76,7 +77,9 @@ export default function UsersManagementScreen() {
         );
         if (sortOrder === 'default') return filtered;
         return [...filtered].sort((a: User, b: User) =>
-            sortOrder === 'asc' ? a.score - b.score : b.score - a.score
+            sortOrder === 'asc'
+                ? a.credibilityScore - b.credibilityScore
+                : b.credibilityScore - a.credibilityScore
         );
     }, [users, searchQuery, sortOrder]);
 
@@ -110,10 +113,10 @@ export default function UsersManagementScreen() {
                 <TouchableOpacity
                     style={[webStyles.headerCellBtn, webStyles.scoreCol]}
                     onPress={() => setSortOrder(NEXT_SORT[sortOrder])}
-                    accessibilityLabel={`Sort by score, current: ${SORT_LABELS[sortOrder]}`}
+                    accessibilityLabel={`Sort by credibility, current: ${SORT_LABELS[sortOrder]}`}
                 >
                     <Text style={[webStyles.headerCellText, { color: themeColors.textSecondary }]}>
-                        Score {SORT_ICONS[sortOrder]}
+                        Credibility {SORT_ICONS[sortOrder]}
                     </Text>
                 </TouchableOpacity>
                 <Text style={[webStyles.headerCell, webStyles.statusCol, { color: themeColors.textSecondary }]}>Status</Text>
@@ -140,7 +143,7 @@ export default function UsersManagementScreen() {
                             <Text style={[webStyles.usernameText, { color: themeColors.text }]}>{item.username}</Text>
                         </View>
                         <View style={[webStyles.cell, webStyles.scoreCol]}>
-                            <Text style={[webStyles.scoreText, { color: themeColors.text }]}>{item.score}</Text>
+                            <Text style={[webStyles.scoreText, { color: themeColors.text }]}>{item.credibilityScore ?? '—'}</Text>
                         </View>
                         <View style={[webStyles.cell, webStyles.statusCol]}>
                             <View style={[webStyles.statusBadge, { backgroundColor: item.active ? '#e6f7ff' : '#fff1f0' }]}>
@@ -182,10 +185,10 @@ export default function UsersManagementScreen() {
                 {item.username}
             </Text>
 
-            {/* Score row */}
+            {/* Credibility row */}
             <View style={mobileStyles.scoreRow}>
-                <Text style={[mobileStyles.scoreLabel, { color: themeColors.textSecondary }]}>Score </Text>
-                <Text style={[mobileStyles.scoreValue, { color: themeColors.text }]}>{item.score}</Text>
+                <Text style={[mobileStyles.scoreLabel, { color: themeColors.textSecondary }]}>Credibility </Text>
+                <Text style={[mobileStyles.scoreValue, { color: themeColors.text }]}>{item.credibilityScore ?? '—'}</Text>
             </View>
 
             {/* Status badge */}

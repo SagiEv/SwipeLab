@@ -62,13 +62,15 @@ public class UserEventListener {
 
         // Apply credibility penalty: WARNING_2 is more severe.
         double penalty = event.getLevel() == WarningLevel.WARNING_1 ? penaltyWarning1 : penaltyWarning2;
-        double currentScore = user.getCredibilityScore() != null ? user.getCredibilityScore() : 0.0;
-        user.setCredibilityScore(Math.max(0.0, currentScore - penalty));
+        double currentScore = user.getCredibilityScore() != null ? user.getCredibilityScore() : 50.0;
+        // Clamp to [0, 100] — score is normalized in that range
+        user.setCredibilityScore(Math.max(0.0, Math.min(100.0, currentScore - penalty)));
 
         userRepository.save(user);
 
         log.warn("User {} warned ({}): credibility reduced by {}, new score={}",
                 event.getUsername(), event.getLevel(), penalty, user.getCredibilityScore());
+
     }
 
     // ── System-ban handler ────────────────────────────────────────────────────

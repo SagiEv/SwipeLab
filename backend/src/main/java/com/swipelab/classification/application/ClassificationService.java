@@ -72,6 +72,7 @@ public class ClassificationService {
                     .userResponse(request.getDecision())
                     .responseTimeMs(request.getResponseTimeMs())
                     .userCredibility(userCredibility)
+                    .userRole(userRole)
                     .build();
         } else {
             TaskProvider.TaskInfo taskInfo = taskProvider.getTaskInfo(request.getTaskId());
@@ -107,6 +108,7 @@ public class ClassificationService {
                     .userResponse(request.getDecision())
                     .responseTimeMs(request.getResponseTimeMs())
                     .userCredibility(userCredibility)
+                    .userRole(userRole)
                     .build();
         }
 
@@ -145,6 +147,7 @@ public class ClassificationService {
                         .species(result.species())
                         .userResponse(response.getUserResponse())
                         .userCredibility(null)
+                        .userRole(userRole)
                         .build();
             } else {
                 TaskProvider.TaskInfo taskInfo = taskProvider.getTaskInfo(taskId);
@@ -175,6 +178,7 @@ public class ClassificationService {
                         .species(species)
                         .userResponse(response.getUserResponse())
                         .userCredibility(null)
+                        .userRole(userRole)
                         .build();
             }
 

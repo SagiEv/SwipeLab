@@ -111,6 +111,31 @@ public class AdminNotificationService {
         log.info("Admin notification created for recovery of user {}", username);
     }
 
+    /**
+     * Called by CredibilityService when a user's composite credibility score drops below
+     * the malicious-labeling threshold after accumulating enough classifications.
+     */
+    public void notifyMaliciousLabeler(String username, double credibilityScore) {
+        String title = "🚨 Potential malicious labeler: " + username;
+
+        String message = String.format(
+                "User \"%s\" has a credibility score of %.1f (threshold: below %.1f) after " +
+                        "accumulating enough classifications to be evaluated. " +
+                        "Their labels consistently disagree with community consensus and/or gold standards. " +
+                        "Review and consider manual ban.",
+                username, credibilityScore, credibilityScore + 1); // shows threshold contextually
+
+        persist(NotificationType.MALICIOUS_LABELER,
+                NotificationSeverity.CRITICAL,
+                title,
+                message,
+                username);
+
+        log.warn("Admin notification created for malicious labeling detected on user {}", username);
+    }
+
+
+
     // ─────────────────────────────────────────────────────────────────────────
 
     // ── Query methods (used by AdminNotificationController) ───────────────────

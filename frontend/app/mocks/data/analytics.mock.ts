@@ -33,7 +33,8 @@ export const MOCK_PLATFORM_OVERVIEW: PlatformOverview = {
     date.setDate(date.getDate() - (29 - i));
     return {
       date: date.toISOString().slice(0, 10),
-      averageCredibility: 0.65 + Math.random() * 0.3,
+      // Backend returns AVG(credibilityAtTime) which is stored on the 0–100 scale
+      averageCredibility: 65 + Math.random() * 30,
       classificationCount: Math.floor(20 + Math.random() * 60),
     };
   }),
@@ -70,7 +71,8 @@ const MOCK_USER_PERFORMANCE: UserPerformance[] = [
     goldImageClassifications: 12,
     correctGoldClassifications: 11,
     goldAccuracy: 91.7,
-    credibilityScore: 0.92,
+    // Backend composite score — 0 (bad) to 100 (perfect)
+    credibilityScore: 92,
     currentStreak: 5,
     points: 450,
   },
@@ -81,7 +83,7 @@ const MOCK_USER_PERFORMANCE: UserPerformance[] = [
     goldImageClassifications: 10,
     correctGoldClassifications: 9,
     goldAccuracy: 90.0,
-    credibilityScore: 0.89,
+    credibilityScore: 89,
     currentStreak: 3,
     points: 380,
   },
@@ -92,7 +94,7 @@ const MOCK_USER_PERFORMANCE: UserPerformance[] = [
     goldImageClassifications: 8,
     correctGoldClassifications: 7,
     goldAccuracy: 87.5,
-    credibilityScore: 0.86,
+    credibilityScore: 86,
     currentStreak: 2,
     points: 325,
   },
@@ -103,7 +105,7 @@ const MOCK_USER_PERFORMANCE: UserPerformance[] = [
     goldImageClassifications: 7,
     correctGoldClassifications: 6,
     goldAccuracy: 85.7,
-    credibilityScore: 0.84,
+    credibilityScore: 84,
     currentStreak: 1,
     points: 290,
   },
@@ -114,7 +116,7 @@ const MOCK_USER_PERFORMANCE: UserPerformance[] = [
     goldImageClassifications: 6,
     correctGoldClassifications: 5,
     goldAccuracy: 83.3,
-    credibilityScore: 0.81,
+    credibilityScore: 81,
     currentStreak: 0,
     points: 260,
   },

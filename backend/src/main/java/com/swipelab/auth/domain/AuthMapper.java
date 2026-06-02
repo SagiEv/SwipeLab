@@ -36,7 +36,7 @@ public class AuthMapper {
                 .active(true)
                 .accountLocked(false)
                 .emailVerified(false)
-                .credibilityScore(0.0)
+                .credibilityScore(50.0)
                 .score(0L)
                 .badges("")
                 .rank("UNRANKED")
@@ -61,6 +61,8 @@ public class AuthMapper {
                 .rank(user.getRank() != null ? user.getRank() : "UNRANKED")
                 .isSuperAdmin(securityAuthorizationService.isSuperAdmin(user.getUsername()))
                 .active(user.getActive() != null ? user.getActive() : true)
+                // Credibility composite score — 0 (bad) to 100 (perfect), default 50 for new users
+                .credibilityScore(user.getCredibilityScore())
                 .build();
     }
 

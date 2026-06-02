@@ -40,11 +40,12 @@ const fetchJson = async (endpoint: string) => {
   return res.json();
 };
 
-export const useProfile = () => {
+export const useProfile = (options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: QUERY_KEYS.userProfile,
     queryFn: () => fetchJson(API_ENDPOINTS.USERS.ME),
     staleTime: 5 * 60 * 1000,
+    ...options,
   });
 };
 

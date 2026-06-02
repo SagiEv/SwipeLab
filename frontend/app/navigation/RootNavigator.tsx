@@ -24,7 +24,7 @@ export default function RootNavigator() {
   const { mode } = useModeStore();
   const Stack = createNativeStackNavigator();
   
-  const { data: profile } = useProfile();
+  const { data: profile } = useProfile({ enabled: !!token });
   const isBanned = storeIsBanned || profile?.status === 'BANNED';
 
   if (sessionExpiredMessage) {

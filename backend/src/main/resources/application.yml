@@ -116,6 +116,20 @@ app:
     # ── Organic recovery ───────────────────────────────────────────────────────
     # Consecutive correct gold-image answers to remove one strike
     correct-golds-to-recover-strike: 10
+  credibility:
+    # Minimum classifications on an (imageId, querySpecies) pair before it
+    # contributes to credibility (below this, no consensus exists yet)
+    min-classifications-for-consensus: 3
+    # Composite score weights (must conceptually sum to 1.0)
+    weight-gold: 0.40
+    weight-majority: 0.35
+    weight-expert: 0.25
+    # Starting score for new users (neutral position on 0-100 scale)
+    default-score: 50.0
+    # Malicious-labeling detection: flag user when score drops below threshold
+    # after accumulating at least malicious-min-samples classifications
+    malicious-threshold: 15.0
+    malicious-min-samples: 20
 
 # Stardbi Configuration
 stardbi:

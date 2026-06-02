@@ -238,10 +238,11 @@ export default function AnalyticsScreen({ navigation }: any) {
               </View>
               <View style={styles.credBox}>
                 <Text style={[styles.credScore, { color: '#10B981' }]}>
-                  {Math.round((user.credibilityScore ?? 0) * 100)}
+                  {/* credibilityScore is 0–100 from the backend — no conversion needed */}
+                  {Math.round(user.credibilityScore ?? 0)}
                 </Text>
                 <Text style={[styles.credLabel, { color: themeColors.textSecondary }]}>
-                  score
+                  / 100
                 </Text>
               </View>
             </View>
@@ -500,7 +501,7 @@ function TaskAnalyticsDetail({
           <View style={styles.halfWidth}>
             <MetricCard
               label="Avg Credibility"
-              value={`${((q.averageCredibility ?? 0) * 100).toFixed(0)}%`}
+              value={`${(q.averageCredibility ?? 0).toFixed(0)}/100`}
               variant="success"
             />
           </View>

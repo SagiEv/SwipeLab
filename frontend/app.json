@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "SwipeLab",
+    "slug": "SwipeLab",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "frontend",
+    "scheme": "SwipeLab",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -22,6 +22,8 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
+      "name": "SwipeLab",
+      "shortName": "SwipeLab",
       "output": "single",
       "favicon": "./assets/images/favicon-32.png",
       "meta": {

@@ -101,4 +101,33 @@ public interface ClassificationRepository extends JpaRepository<Classification, 
      * Batch-fetch all classifications for multiple tasks — used by multi-task CSV export
      */
     List<Classification> findByTaskIdIn(List<Long> taskIds);
+
+    // ── Per-image-query credibility helpers ───────────────────────────────────
+
+    /**
+     * All classifications for a given (imageId, querySpecies) pair.
+     * Used to compute consensus and majority vote at the correct granularity.
+     */
+    @Query("SELECT c FROM Classification c WHERE c.image.id = :imageId AND c.querySpecies = :querySpecies")
+    List<Classification> findByImageIdAndQuerySpecies(
+            @Param("imageId") Long imageId,
+            @Param("querySpecies") String querySpecies);
+
+    /**
+     * Count of classifications for a given (imageId, querySpecies) pair.
+     * Used to check whether the consensus threshold has been reached.
+     */
+    @Query("SELECT COUNT(c) FROM Classification c WHERE c.image.id = :imageId AND c.querySpecies = :querySpecies")
+    long countByImageIdAndQuerySpecies(
+            @Param("imageId") Long imageId,
+            @Param("querySpecies") String querySpecies);
+
+    /**
+     * Distinct usernames that classified a given (imageId, querySpecies) pair.
+     * Used to trigger batch credibility recalculation when consensus is first reached.
+     */
+    @Query("SELECT DISTINCT c.username FROM Classification c WHERE c.image.id = :imageId AND c.querySpecies = :querySpecies")
+    List<String> findDistinctUsernamesByImageIdAndQuerySpecies(
+            @Param("imageId") Long imageId,
+            @Param("querySpecies") String querySpecies);
 }
