@@ -20,6 +20,9 @@ public interface ClassificationFactRepository extends JpaRepository<Classificati
     @Query("SELECT AVG(CASE WHEN c.isCorrect = true THEN 1.0 ELSE 0.0 END) FROM ClassificationFact c WHERE c.isExpert = true")
     Double getGlobalExpertAccuracy();
 
+    @Query("SELECT AVG(CASE WHEN c.isCorrect = true THEN 1.0 ELSE 0.0 END) FROM ClassificationFact c")
+    Double getGlobalAverageAccuracy();
+
     @Query("SELECT COUNT(DISTINCT c.imageId) FROM ClassificationFact c WHERE c.taskId = :taskId")
     Long countCompletedImages(@Param("taskId") Long taskId);
 

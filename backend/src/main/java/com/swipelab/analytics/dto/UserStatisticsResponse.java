@@ -19,6 +19,8 @@ public class UserStatisticsResponse {
         private Double contributionPercentage;
         private Rank rank; // {daily: 3, ...}
         private Integer rankPercentile;
+        private Integer currentStreak;
+        private Integer longestStreak;
     }
 
     @Data
