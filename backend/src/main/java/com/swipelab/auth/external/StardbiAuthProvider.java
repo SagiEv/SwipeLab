@@ -57,7 +57,11 @@ public class StardbiAuthProvider implements ExternalAuthProvider {
         try {
             String[] parts = accessToken.split("\\.");
             if (parts.length == 3) {
-                String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
+                String payloadBase64Url = parts[1];
+                while (payloadBase64Url.length() % 4 != 0) {
+                    payloadBase64Url += "=";
+                }
+                String payloadJson = new String(Base64.getUrlDecoder().decode(payloadBase64Url));
                 JsonNode payload = objectMapper.readTree(payloadJson);
 
                 String username = null;
