@@ -12,18 +12,30 @@ import { useAllStatistics } from '../../api/queries';
 const DEBUG_MODE = false; // Set to true for testing controls
 
 interface SummaryData {
-    score: number;
-    rankGlobal: number;
-    completedTasks: number;
-    accuracy: number;
-    currentStreakDays: number;
-    longestStreakDays: number;
+    summary: {
+        totalClassifications: number;
+        correctClassifications: number;
+        accuracy: number;
+        contributionPercentage: number;
+        rank: {
+            daily: number;
+            weekly: number;
+            monthly: number;
+            allTime: number;
+        };
+        rankPercentile: number;
+        currentStreak: number;
+        longestStreak: number;
+    };
+    trend: {
+        byDay: Array<{ date: string; accuracy: number }>;
+    };
 }
 
 interface VsExpertsData {
-    userAccuracy: number;
-    expertAccuracy: number;
-    difference: number;
+    user: { accuracy: number };
+    experts: { accuracy: number };
+    difference: { accuracy: number };
 }
 
 interface VsUsersData {
@@ -31,15 +43,20 @@ interface VsUsersData {
     averageUserAccuracy: number;
 }
 
-interface TaskBreakdown {
-    taskId: number;
-    taskName: string;
-    classifications: number;
+interface SpeciesBreakdown {
+    category: string;
+    total: number;
     accuracy: number;
 }
 
 interface BreakdownData {
-    byTask: TaskBreakdown[];
+    byCategory: SpeciesBreakdown[];
+}
+
+interface UserInfoData {
+    score: number;
+    badge: string | null;
+    currentStreak: number;
 }
 
 interface StatsData {
@@ -47,6 +64,7 @@ interface StatsData {
     vsExperts: VsExpertsData;
     vsUsers: VsUsersData;
     breakdown: BreakdownData;
+    userInfo: UserInfoData;
 }
 
 function ProgressBar({ value, color, label, maxValue = 1 }: { value: number; color: string; label: string; maxValue?: number }) {
@@ -122,18 +140,18 @@ export default function StatsScreen() {
 
                 {/* User Profile Summary */}
                 <View style={styles.grid}>
-                    <SummaryCard title="Global Rank" value={`#${data.summary?.rankGlobal ?? '-'}`} subtext="Top 1%" />
-                    <SummaryCard title="Score" value={data.summary?.score?.toLocaleString() ?? '0'} />
-                    <SummaryCard title="Tasks Done" value={data.summary?.completedTasks ?? 0} />
-                    <SummaryCard title="Accuracy" value={`${((data.summary?.accuracy ?? 0) * 100).toFixed(1)}%`} subtext="Overall" />
+                    <SummaryCard title="Global Rank" value={`#${data.summary?.summary?.rank?.allTime ?? '-'}`} subtext="Top 1%" />
+                    <SummaryCard title="Score" value={data.userInfo?.score?.toLocaleString() ?? '0'} />
+                    <SummaryCard title="Tasks Done" value={data.summary?.summary?.totalClassifications ?? 0} />
+                    <SummaryCard title="Accuracy" value={`${((data.summary?.summary?.accuracy ?? 0) * 100).toFixed(1)}%`} subtext="Overall" />
                 </View>
 
                 {/* Streak */}
                 <View style={styles.section}>
                     <Text style={[styles.sectionTitle, { color: themeColors.text }]}>🔥 Streak</Text>
                     <View style={[styles.streakContainer, { backgroundColor: themeColors.card }]}>
-                        <Text style={[styles.streakText, { color: themeColors.text }]}>Current: <Text style={styles.streakBold}>{data.summary?.currentStreakDays ?? 0} days</Text></Text>
-                        <Text style={[styles.streakText, { color: themeColors.text }]}>Longest: <Text style={styles.streakBold}>{data.summary?.longestStreakDays ?? 0} days</Text></Text>
+                        <Text style={[styles.streakText, { color: themeColors.text }]}>Current: <Text style={styles.streakBold}>{data.userInfo?.currentStreak ?? 0} days</Text></Text>
+                        <Text style={[styles.streakText, { color: themeColors.text }]}>Longest: <Text style={styles.streakBold}>{data.summary?.summary?.longestStreak ?? 0} days</Text></Text>
                     </View>
                 </View>
 
@@ -144,17 +162,17 @@ export default function StatsScreen() {
                         <Text style={[styles.chartTitle, { color: themeColors.text }]}>Vs Experts</Text>
                         <ProgressBar
                             label="Your Accuracy"
-                            value={data.vsExperts?.userAccuracy ?? 0}
+                            value={data.vsExperts?.user?.accuracy ?? 0}
                             color="#4B7BE5"
                         />
                         <ProgressBar
                             label="Expert Benchmark"
-                            value={data.vsExperts?.expertAccuracy ?? 0}
+                            value={data.vsExperts?.experts?.accuracy ?? 0}
                             color="#8B008B"
                         />
                         <Text style={[styles.insightText, { color: themeColors.textSecondary }]}>
-                            You are {Math.abs((data.vsExperts?.difference ?? 0) * 100).toFixed(1)}%
-                            {(data.vsExperts?.difference ?? 0) >= 0 ? ' above ' : ' below '}
+                            You are {Math.abs((data.vsExperts?.difference?.accuracy ?? 0) * 100).toFixed(1)}%
+                            {(data.vsExperts?.difference?.accuracy ?? 0) >= 0 ? ' above ' : ' below '}
                             expert level.
                         </Text>
 
@@ -167,22 +185,22 @@ export default function StatsScreen() {
                             color="#FFA500"
                         />
                         <Text style={[styles.insightText, { color: themeColors.textSecondary }]}>
-                            You're in the top {100 - (data.vsUsers?.percentile ?? 0)}% of contributors!
+                            You're in the top {Math.max(0, 100 - (data.vsUsers?.percentile ?? 0)).toFixed(0)}% of contributors!
                         </Text>
                     </View>
                 </View>
 
                 {/* Breakdown */}
                 <View style={styles.section}>
-                    <Text style={[styles.sectionTitle, { color: themeColors.text }]}>📝 Task Breakdown</Text>
-                    {data.breakdown?.byTask?.map((task: any) => (
-                        <View key={task.taskId} style={[styles.taskRow, { backgroundColor: themeColors.card }]}>
+                    <Text style={[styles.sectionTitle, { color: themeColors.text }]}>📝 Species Breakdown</Text>
+                    {data.breakdown?.byCategory?.map((item: any, index: number) => (
+                        <View key={index} style={[styles.taskRow, { backgroundColor: themeColors.card }]}>
                             <View style={styles.taskInfo}>
-                                <Text style={[styles.taskName, { color: themeColors.text }]}>{task.taskName}</Text>
-                                <Text style={styles.taskCount}>{task.classifications} classifications</Text>
+                                <Text style={[styles.taskName, { color: themeColors.text }]}>{item.category}</Text>
+                                <Text style={styles.taskCount}>{item.total} classifications</Text>
                             </View>
                             <View style={styles.taskStat}>
-                                <Text style={styles.taskAccuracy}>{((task.accuracy ?? 0) * 100).toFixed(1)}%</Text>
+                                <Text style={styles.taskAccuracy}>{((item.accuracy ?? 0) * 100).toFixed(1)}%</Text>
                             </View>
                         </View>
                     ))}

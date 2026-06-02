@@ -47,6 +47,7 @@ export const API_ENDPOINTS = {
         // ADD removed — collection entries are created server-side on YES classification
     },
     GAMIFICATION: {
+        USER_INFO: '/api/v1/gamification/user-info',
         LEADERBOARD: '/api/v1/gamification/leaderboard',
         CHALLENGES: '/api/v1/gamification/challenges',
         MY_BADGES: '/api/v1/gamification/me/badges',
