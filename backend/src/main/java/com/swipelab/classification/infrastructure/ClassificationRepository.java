@@ -102,6 +102,15 @@ public interface ClassificationRepository extends JpaRepository<Classification, 
      */
     List<Classification> findByTaskIdIn(List<Long> taskIds);
 
+    /**
+     * Count distinct images in a task that have at least one classification.
+     * Used to compute TaskProgressResponse.imagesClassified.
+     * NOTE: threshold-gated "done" count is a future enhancement — this is a
+     * simple "touched" count until the consensus threshold feature is built.
+     */
+    @Query("SELECT COUNT(DISTINCT c.image.id) FROM Classification c WHERE c.taskId = :taskId")
+    long countDistinctImagesByTaskId(@Param("taskId") Long taskId);
+
     // ── Per-image-query credibility helpers ───────────────────────────────────
 
     /**

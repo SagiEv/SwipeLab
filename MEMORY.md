@@ -29,12 +29,13 @@ Architecture: Modular Hexagonal/DDD.
 * Frontend/Backend: Fixed immediate logout bug for Researchers (Issue #225) by correcting the Stardbi token refresh flow. Updated `apiFetch` to use `backendUrl` for the refresh request (fixing React Native relative URL crashes) and fixed backend `StardbiAuthProvider` to properly pad incoming Base64Url JWT payloads before decoding, allowing newly refreshed tokens to be cached and validated.
 
 
+* Backend: Fixed task image count display in `TasksManagementScreen` (Issue #222). Replaced hardcoded zeros in `TaskMapper` by injecting `ImageRepository` and `ClassificationRepository` into `TaskService` to query real task image totals and distinct classified image counts.
+
 ## Current Focus (Active GitHub Issues)
 * Issue #201: Refactor Backend roles to include Researchers and Super Admin.
 * Issue #226: [Frontend] fix recipients list not deleting users.
 * Issue #225: [System] fix refresh token for Researcher.
 * Issue #224: [Frontend] Mobile Vs. Web compatibility enhancement.
-* Issue #222: [Frontend] fix TasksManagementScreen UI.
 * Issue #219: [Frontend] Add to UsersScreen ONLY for Admin role control buttons.
 
 ## Architecture & Design Decisions
