@@ -236,6 +236,9 @@ export default function SwipeScreen() {
 
     const referenceImagesUrls =
       currentImage?.referenceImages?.map((ref: any) => {
+        if (ref.imageUrl) {
+            return ref.imageUrl.startsWith('http') || ref.imageUrl.startsWith('/') ? `${BACKEND_BASE_URL}${ref.imageUrl}` : ref.imageUrl;
+        }
         if (ref.data?.startsWith('http')) return ref.data;
         return `data:${ref.contentType || 'image/jpeg'};base64,${ref.data}`;
       }) || [];

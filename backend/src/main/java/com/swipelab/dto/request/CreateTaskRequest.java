@@ -23,4 +23,10 @@ public class CreateTaskRequest {
     private Boolean isPublic;
     private int minClassificationsPerImage;
     private double consensusThreshold;
+
+    /**
+     * Map of Species Name -> List of SpeciesReferenceImage IDs
+     * Selected from the species image pool for this specific task.
+     */
+    private java.util.Map<String, List<Long>> speciesReferenceImageIds;
 }

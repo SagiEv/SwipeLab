@@ -102,6 +102,13 @@ public class Task {
     @Builder.Default
     private List<Long> targetSpeciesIds = new ArrayList<>();
 
+    @BatchSize(size = 20)
+    @ElementCollection
+    @CollectionTable(name = "task_species_reference_images", joinColumns = @JoinColumn(name = "task_id"))
+    @Column(name = "species_reference_image_id")
+    @Builder.Default
+    private List<Long> speciesReferenceImageIds = new ArrayList<>();
+
     @Column(name = "created_by", nullable = false)
     private String createdBy;
 

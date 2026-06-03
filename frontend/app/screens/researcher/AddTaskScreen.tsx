@@ -18,6 +18,7 @@ import StepName from "../../components/researcher/addTask/StepName";
 import StepRecipients from "../../components/researcher/addTask/StepRecipients";
 import StepSpecies from "../../components/researcher/addTask/StepSpecies";
 import StepExperiments from "../../components/researcher/addTask/StepExperiments";
+import { useSpeciesPoolImages } from "../../api/queries";
 
 const STEPS = ["Name", "Description", "Experiments", "Species", "Recipients", "Confirm"];
 
@@ -34,6 +35,7 @@ export default function AddTaskScreen({ route, navigation }: any) {
     description: "",
     selectedExperiments: [],
     speciesList: route?.params?.initialSpecies || [],
+    speciesReferenceImages: {},
     isPublic: false,
     selectedRecipients: [],
     sharedWithResearchers: [],
@@ -45,6 +47,9 @@ export default function AddTaskScreen({ route, navigation }: any) {
   const [availableSpecies, setAvailableSpecies] = useState<{ id: string; label: string }[]>([]);
   const [optionsLoading, setOptionsLoading] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Fetch pool images for all currently-selected species (batch, cached)
+  const { data: poolImagesRaw, isLoading: poolImagesLoading } = useSpeciesPoolImages(formData.speciesList);
 
   useEffect(() => {
     const fetchOptions = async () => {
@@ -115,31 +120,80 @@ export default function AddTaskScreen({ route, navigation }: any) {
       return;
     }
 
-    const payload = {
-      name: formData.name,
-      description: formData.description,
-      experiments: formData.selectedExperiments.map(Number),
-      targetSpecies: formData.speciesList.map((s) => ({ name: s })),
-      isPublic: formData.isPublic,
-      recipientGroups: formData.selectedRecipients.filter(id => id.startsWith("G-")).map(id => Number(id.replace("G-", ""))),
-      assignedUsernames: formData.selectedRecipients.filter(id => id.startsWith("U-")).map(id => id.replace("U-", "")),
-      sharedWithResearchers: formData.sharedWithResearchers,
-    };
-
     try {
       setLoading(true);
+
+      // ── Step 1: Upload any new (local) reference images to the pool ──────────
+      // For each species, find images that are NOT yet in the pool (fromPool=false),
+      // upload them, and replace their entry with the returned pool ID.
+      const finalSpeciesImages: Record<string, number[]> = {};
+
+      await Promise.all(
+        formData.speciesList.map(async (speciesId) => {
+          const imgs = formData.speciesReferenceImages[speciesId] ?? [];
+          const poolIds: number[] = [];
+
+          for (const img of imgs) {
+            if (img.fromPool && img.poolId != null) {
+              poolIds.push(img.poolId);
+            } else {
+              // Build FormData for the multipart upload
+              const fd = new FormData();
+              if (Platform.OS === 'web') {
+                // On web, img._file is the raw File object stored by SpeciesImagePicker
+                const file = (img as any)._file as File | undefined;
+                if (file) fd.append('files', file);
+              } else {
+                fd.append('files', {
+                  uri: img.uri,
+                  name: 'ref.jpg',
+                  type: 'image/jpeg',
+                } as any);
+              }
+              if (img.caption) fd.append('caption', img.caption);
+
+              const res = await apiFetch(API_ENDPOINTS.SPECIES.REF_IMAGES(speciesId), {
+                method: 'POST',
+                body: fd,
+              });
+              if (res.ok) {
+                const saved: { id: number }[] = await res.json();
+                saved.forEach((s) => poolIds.push(s.id));
+              }
+            }
+          }
+          finalSpeciesImages[speciesId] = poolIds;
+        })
+      );
+
+      // ── Step 2: Create the task including the selected pool image IDs ─────────
+      const payload = {
+        name: formData.name,
+        description: formData.description,
+        experiments: formData.selectedExperiments.map(Number),
+        targetSpecies: formData.speciesList.map((s) => {
+          const found = availableSpecies.find(as => String(as.id) === s);
+          return { name: found ? found.label : s };
+        }),
+        speciesReferenceImageIds: finalSpeciesImages,
+        isPublic: formData.isPublic,
+        recipientGroups: formData.selectedRecipients
+          .filter((id) => id.startsWith("G-"))
+          .map((id) => Number(id.replace("G-", ""))),
+        assignedUsernames: formData.selectedRecipients
+          .filter((id) => id.startsWith("U-"))
+          .map((id) => id.replace("U-", "")),
+        sharedWithResearchers: formData.sharedWithResearchers,
+      };
 
       const authState = useAuthStore.getState();
       const isStardbi = authState.authProvider === "STARDBI";
       let headers: any = { "Content-Type": "application/json" };
-      
       if (isStardbi && authState.token) {
         headers["X-Stardbi-Access-Token"] = authState.token;
         if (Platform.OS === 'web') {
           headers["X-Stardbi-Refresh-Token"] = localStorage.getItem("refreshToken") || "";
         }
-        // In React Native environment, getting SecureStore synchronously is tricky,
-        // but typically refreshToken is stored securely. For web, localStorage is fast.
       }
 
       const res = await apiFetch(API_ENDPOINTS.TASKS.CREATE_TASK, {
@@ -148,17 +202,14 @@ export default function AddTaskScreen({ route, navigation }: any) {
         headers,
       });
 
-      if (!res.ok) {
-        throw new Error("Failed response");
-      }
+      if (!res.ok) throw new Error("Failed response");
 
       const resData = await res.json();
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-
       setCreatedTaskId(resData.taskId);
     } catch (err) {
       console.error("Error creating task:", err);
-      Alert.alert("Error", "Failed to create task");
+      Alert.alert("Error", "Failed to create task. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -184,6 +235,7 @@ export default function AddTaskScreen({ route, navigation }: any) {
                   description: "",
                   selectedExperiments: [],
                   speciesList: [],
+                  speciesReferenceImages: {},
                   isPublic: false,
                   selectedRecipients: [],
                   sharedWithResearchers: [],
@@ -228,6 +280,8 @@ export default function AddTaskScreen({ route, navigation }: any) {
             onBack={prevStep}
             availableSpecies={availableSpecies}
             optionsLoading={optionsLoading}
+            poolImages={poolImagesRaw ?? {}}
+            poolImagesLoading={poolImagesLoading}
           />
         );
       case 4:

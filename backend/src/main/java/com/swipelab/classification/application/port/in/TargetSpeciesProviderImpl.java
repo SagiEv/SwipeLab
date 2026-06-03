@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 public class TargetSpeciesProviderImpl implements TargetSpeciesProvider {
 
     private final LabelRepository labelRepository;
+    private final com.swipelab.classification.infrastructure.SpeciesReferenceImageRepository speciesReferenceImageRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -44,5 +45,41 @@ public class TargetSpeciesProviderImpl implements TargetSpeciesProvider {
                     .orElseGet(() -> labelRepository.save(Label.builder().name(name).build()));
             return label.getId();
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TargetSpeciesResponse> getSpeciesByIdsAndRefImages(List<Long> speciesIds, List<Long> refImageIds) {
+        if (speciesIds == null || speciesIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        
+        List<Label> labels = labelRepository.findAllById(speciesIds);
+        
+        List<com.swipelab.classification.domain.SpeciesReferenceImage> allRefImages = Collections.emptyList();
+        if (refImageIds != null && !refImageIds.isEmpty()) {
+            allRefImages = speciesReferenceImageRepository.findAllById(refImageIds);
+        }
+        
+        java.util.Map<Long, List<com.swipelab.classification.domain.SpeciesReferenceImage>> refImagesByLabelId = allRefImages.stream()
+                .collect(Collectors.groupingBy(com.swipelab.classification.domain.SpeciesReferenceImage::getLabelId));
+                
+        return labels.stream()
+                .map(label -> {
+                    List<com.swipelab.classification.domain.SpeciesReferenceImage> imagesForLabel = refImagesByLabelId.getOrDefault(label.getId(), Collections.emptyList());
+                    List<com.swipelab.dto.response.ReferenceImageResponse> refImageResponses = imagesForLabel.stream()
+                            .map(img -> com.swipelab.dto.response.ReferenceImageResponse.builder()
+                                    .imageUrl("/api/v1/species/reference-images/" + img.getId() + "/image")
+                                    .caption(img.getCaption())
+                                    .build())
+                            .collect(Collectors.toList());
+                            
+                    return TargetSpeciesResponse.builder()
+                            .name(label.getName())
+                            .commonName(label.getCommonName())
+                            .referenceImages(refImageResponses)
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 }

@@ -26,9 +26,10 @@ public class TaskProviderImpl implements TaskProvider {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found: " + taskId));
         
-        List<TargetSpeciesResponse> species = targetSpeciesProvider.getSpeciesByIds(task.getTargetSpeciesIds());
+        // Fetch species with their task-selected reference images
+        List<TargetSpeciesResponse> species = targetSpeciesProvider.getSpeciesByIdsAndRefImages(task.getTargetSpeciesIds(), task.getSpeciesReferenceImageIds());
         List<String> speciesNames = species.stream().map(TargetSpeciesResponse::getName).collect(Collectors.toList());
 
-        return new TaskInfo(task.getId(), task.getQuestion(), task.getQuerySpecies(), speciesNames);
+        return new TaskInfo(task.getId(), task.getQuestion(), task.getQuerySpecies(), speciesNames, species);
     }
 }

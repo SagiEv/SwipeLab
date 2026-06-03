@@ -217,6 +217,13 @@ public class TaskService {
             List<Long> speciesIds = targetSpeciesProvider.getOrCreateSpeciesIds(speciesNames);
             task.setTargetSpeciesIds(speciesIds);
         }
+
+        if (request.getSpeciesReferenceImageIds() != null) {
+            List<Long> refImageIds = request.getSpeciesReferenceImageIds().values().stream()
+                    .flatMap(List::stream)
+                    .collect(Collectors.toList());
+            task.setSpeciesReferenceImageIds(refImageIds);
+        }
         
         task = taskRepository.save(task);
         
@@ -268,6 +275,13 @@ public class TaskService {
                     .collect(Collectors.toList());
             List<Long> speciesIds = targetSpeciesProvider.getOrCreateSpeciesIds(speciesNames);
             task.setTargetSpeciesIds(speciesIds);
+        }
+
+        if (request.getSpeciesReferenceImageIds() != null) {
+            List<Long> refImageIds = request.getSpeciesReferenceImageIds().values().stream()
+                    .flatMap(List::stream)
+                    .collect(Collectors.toList());
+            task.setSpeciesReferenceImageIds(refImageIds);
         }
         
         // Trigger a background sync in case task external experiments were added

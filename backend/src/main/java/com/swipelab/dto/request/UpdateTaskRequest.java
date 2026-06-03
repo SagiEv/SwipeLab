@@ -14,4 +14,10 @@ public class UpdateTaskRequest {
     private List<String> assignedUsernames;
     private List<String> sharedWithResearchers;
     private Boolean isPublic;
+
+    /**
+     * Map of Species Name -> List of SpeciesReferenceImage IDs
+     * Selected from the species image pool for this specific task.
+     */
+    private java.util.Map<String, List<Long>> speciesReferenceImageIds;
 }

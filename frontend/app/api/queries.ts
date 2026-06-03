@@ -315,7 +315,37 @@ export const useExportClassificationsCsv = () => {
   });
 };
 
+/**
+ * Batch-fetches pool images for multiple species at once.
+ * Enabled only when at least one labelId is provided.
+ * Returns a map of labelId → list of pool image DTOs.
+ */
+export const useSpeciesPoolImages = (labelIds: (string | number)[]) => {
+  return useQuery({
+    queryKey: ['species', 'pool', ...labelIds.map(String).sort()],
+    queryFn: () => fetchJson(API_ENDPOINTS.SPECIES.REF_IMAGES_BATCH(labelIds)),
+    staleTime: 5 * 60 * 1000,
+    enabled: labelIds.length > 0,
+  });
+};
+
+/** Deletes a reference image from the species pool. */
+export const useDeleteSpeciesRefImage = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (imageId: number) => {
+      const res = await apiFetch(API_ENDPOINTS.SPECIES.REF_IMAGE_DELETE(imageId), { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete reference image');
+    },
+    onSuccess: () => {
+      // Invalidate all species pool queries so the UI refreshes
+      queryClient.invalidateQueries({ queryKey: ['species', 'pool'] });
+    },
+  });
+};
+
 import { queryClient } from '../queryClient';
+
 
 export const preloadAfterLogin = async (role: string) => {
   try {

@@ -116,7 +116,7 @@ public class TaskMapper {
                 .assignedUsernames(task.getAssignedUsernames())
                 .sharedWithResearchers(task.getSharedWithResearchers())
                 .isPublic(task.getIsPublic())
-                .targetSpecies(targetSpeciesProvider.getSpeciesByIds(task.getTargetSpeciesIds()))
+                .targetSpecies(targetSpeciesProvider.getSpeciesByIdsAndRefImages(task.getTargetSpeciesIds(), task.getSpeciesReferenceImageIds()))
                 .progress(TaskProgressResponse.empty())
                 // New fields
                 .createdAt(task.getCreatedAt() != null
