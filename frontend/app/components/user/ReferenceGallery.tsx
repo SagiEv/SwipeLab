@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { PinchGestureHandler } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import { useAuthStore } from '../../stores/authStore';
 
 interface ReferenceGalleryProps {
   images: string[];
@@ -21,6 +22,7 @@ interface ReferenceGalleryProps {
 
 export default function ReferenceGallery({ images, onClose }: ReferenceGalleryProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const token = useAuthStore(state => state.token);
   const scale = useSharedValue(1);
   const screenWidth = Dimensions.get('window').width;
   const isDesktop = Platform.OS === 'web' && screenWidth > 500;
@@ -59,7 +61,14 @@ export default function ReferenceGallery({ images, onClose }: ReferenceGalleryPr
               style={{ marginRight: index !== displayedImages.length - 1 ? 12 : 0 }}
             >
               <View style={[styles.imageContainer, { width: imageWidth }]}>
-                <Image source={{ uri: img }} style={styles.image} resizeMode="cover" />
+                <Image 
+                  source={{ 
+                    uri: img,
+                    ...(img.startsWith('http') && token ? { headers: { Authorization: `Bearer ${token}` } } : {})
+                  }} 
+                  style={styles.image} 
+                  resizeMode="cover" 
+                />
               </View>
             </TouchableOpacity>
           ))}
@@ -93,7 +102,10 @@ export default function ReferenceGallery({ images, onClose }: ReferenceGalleryPr
               >
                 <Animated.Image
                   key={selectedImage} // ensures re-render on change
-                  source={{ uri: selectedImage }}
+                  source={{ 
+                    uri: selectedImage,
+                    ...(selectedImage.startsWith('http') && token ? { headers: { Authorization: `Bearer ${token}` } } : {})
+                  }}
                   style={[{ width: '100%', height: '100%', borderRadius: 16 }, animatedStyle]}
                   resizeMode="contain"
                 />

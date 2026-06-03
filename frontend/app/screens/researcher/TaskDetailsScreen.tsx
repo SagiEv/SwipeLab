@@ -4,6 +4,7 @@ import React from "react";
 import {
   ActivityIndicator,
   Image,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,6 +15,7 @@ import {
 import { Colors } from '../../../constants/theme';
 import { researcherStackParamList } from "../../navigation/researcherStack.types";
 import { useThemeStore } from '../../stores/themeStore';
+import { useAuthStore } from "../../stores/authStore";
 import { useTaskDetails, useExperiments, useUpdateTaskStatus } from "../../api/queries";
 
 type Props = NativeStackScreenProps<researcherStackParamList, "TaskDetails">;
@@ -45,6 +47,7 @@ const STATUS_CONFIG = {
 export default function TaskDetailsScreen({ route, navigation }: Props) {
   const { taskId } = route.params;
   const { theme } = useThemeStore();
+  const token = useAuthStore(state => state.token);
   const themeColors = Colors[theme as keyof typeof Colors];
   const isDark = theme === 'dark';
 
@@ -258,10 +261,22 @@ export default function TaskDetailsScreen({ route, navigation }: Props) {
                   style={{ marginTop: 12 }}
                   contentContainerStyle={{ gap: 10 }}
                 >
-                  {(species.referenceImages || []).map((img: any, idx: number) => (
+                  {(species.referenceImages || []).map((img: any, idx: number) => {
+                    let imageUri = '';
+                    if (img.imageUrl) {
+                      const backendBase = Platform.OS === 'web' ? 'http://localhost:8080' : 'http://192.168.1.133:8080';
+                      imageUri = img.imageUrl.startsWith('http') ? img.imageUrl : `${backendBase}${img.imageUrl}`;
+                    } else if (img.data) {
+                      imageUri = `data:${img.contentType || 'image/jpeg'};base64,${img.data}`;
+                    }
+
+                    return (
                     <View key={idx} style={styles.imageCard}>
                       <Image
-                        source={{ uri: `data:${img.contentType};base64,${img.data}` }}
+                        source={{ 
+                          uri: imageUri,
+                          ...(imageUri.startsWith('http') && token ? { headers: { Authorization: `Bearer ${token}` } } : {})
+                        }}
                         style={[styles.image, { borderColor: borderCol }]}
                       />
                       {!!img.caption && (
@@ -270,7 +285,7 @@ export default function TaskDetailsScreen({ route, navigation }: Props) {
                         </Text>
                       )}
                     </View>
-                  ))}
+                  )})}
                 </ScrollView>
               ) : (
                 <View style={styles.noImages}>
