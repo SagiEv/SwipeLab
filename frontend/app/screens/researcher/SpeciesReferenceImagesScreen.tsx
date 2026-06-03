@@ -24,6 +24,11 @@ import { apiFetch } from "../../api/apiFetch";
 import { API_ENDPOINTS } from "../../api/apiEndpoints";
 import { researcherStackParamList } from "../../navigation/researcherStack.types";
 
+
+const BACKEND_BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL ||
+  (Platform.OS === "web" ? "http://localhost:8080" : "http://192.168.1.133:8080");
+
 import taxonomyImg from "../../../assets/images/taxonomy.png";
 import { queryClient } from "../../queryClient";
 
@@ -49,11 +54,8 @@ export default function SpeciesReferenceImagesScreen() {
   const images = poolImagesMap?.[speciesId] ?? [];
   const atMax = images.length >= MAX_IMAGES;
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-
-  const backendUrl = (relPath: string) => {
-    const base = Platform.OS === 'web' ? 'http://localhost:8080' : 'http://192.168.1.133:8080';
-    return `${base}${relPath}`;
+  const resolveUrl = (relPath: string) => {
+    return relPath.startsWith('http') ? relPath : `${BACKEND_BASE_URL}${relPath}`;
   };
 
   // ── Delete ─────────────────────────────────────────────────────────────────
@@ -151,10 +153,10 @@ export default function SpeciesReferenceImagesScreen() {
     <View style={[styles.imageCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
       <TouchableOpacity 
         style={styles.imageWrap}
-        onPress={() => setPreviewUri(backendUrl(item.imageUrl))}
+        onPress={() => setPreviewUri(resolveUrl(item.imageUrl))}
       >
         <AuthenticatedImage 
-          uri={backendUrl(item.thumbnailUrl)}
+          uri={resolveUrl(item.thumbnailUrl)}
           style={styles.thumbnail} 
         />
         <View style={styles.zoomOverlay}>

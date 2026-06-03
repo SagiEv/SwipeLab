@@ -5,8 +5,8 @@ export type ScreenHeaderLayoutProps = {
   leftTitle: string;
   onLeftPress?: () => void;
 
-  rightIcon: ImageSourcePropType | React.ReactNode;
-  rightTitle: string;
+  rightIcon?: ImageSourcePropType | React.ReactNode;
+  rightTitle?: string;
   onRightPress?: () => void;
 
   centerIcon?: ImageSourcePropType | React.ReactNode;

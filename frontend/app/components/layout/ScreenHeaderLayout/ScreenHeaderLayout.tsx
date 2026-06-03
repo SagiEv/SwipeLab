@@ -53,14 +53,16 @@ export default function ScreenHeaderLayout({
 
         {/* Right (navigation action) */}
         <View style={styles.rightHeaderItem}>
-          <TouchableOpacity
-            style={styles.rightContentWrapper}
-            onPress={onRightPress}
-            disabled={!onRightPress}
-          >
-            {React.isValidElement(rightIcon) ? rightIcon : <Image source={rightIcon as any} style={styles.icon} />}
-            <Text style={[styles.button, { color: themeColors.text }]} numberOfLines={1}>{rightTitle}</Text>
-          </TouchableOpacity>
+          {(rightIcon || rightTitle) && (
+            <TouchableOpacity
+              style={styles.rightContentWrapper}
+              onPress={onRightPress}
+              disabled={!onRightPress}
+            >
+              {rightIcon && (React.isValidElement(rightIcon) ? rightIcon : <Image source={rightIcon as any} style={styles.icon} />)}
+              {rightTitle && <Text style={[styles.button, { color: themeColors.text }]} numberOfLines={1}>{rightTitle}</Text>}
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
