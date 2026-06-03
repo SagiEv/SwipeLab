@@ -284,9 +284,12 @@ export const useAssignTask = () => {
       return res.json();
     },
     onSuccess: () => {
-      // Refresh both lists so the task moves from Explore → Assigned
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.myTasks });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.availableTasks });
+      // Force an immediate refetch (not just stale-invalidation) so the task
+      // moves from Explore → Assigned without waiting for the background cycle.
+      queryClient.refetchQueries({ queryKey: QUERY_KEYS.myTasks, type: 'active' });
+      queryClient.refetchQueries({ queryKey: QUERY_KEYS.availableTasks, type: 'active' });
+      // Also refresh stat chips (Assigned / Classified counters in the header)
+      queryClient.refetchQueries({ queryKey: QUERY_KEYS.statistics, type: 'active' });
     },
   });
 };

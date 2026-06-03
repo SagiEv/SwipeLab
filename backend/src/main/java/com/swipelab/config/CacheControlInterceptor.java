@@ -102,6 +102,16 @@ public class CacheControlInterceptor implements HandlerInterceptor {
             return true;
         }
 
+        // ── Personalised task lists (change on every assignment) ──────────────
+        // These are per-user and mutate the moment the user self-assigns a task.
+        // Any HTTP cache here would race with the frontend refetch and serve
+        // stale data, so they must always go to the network.
+        if (path.equals("/api/v1/tasks/my-tasks")
+                || path.equals("/api/v1/tasks/available-tasks")) {
+            response.setHeader(CACHE_CONTROL, NO_STORE);
+            return true;
+        }
+
         // ── User public profile ────────────────────────────────────────────────
         if (path.matches("/api/v1/users/[^/]+")) {
             response.setHeader(CACHE_CONTROL, PRIVATE_120S);

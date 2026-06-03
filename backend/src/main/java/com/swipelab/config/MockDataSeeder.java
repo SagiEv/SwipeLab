@@ -173,6 +173,7 @@ public class MockDataSeeder implements CommandLineRunner {
                     .status(TaskStatus.ACTIVE)
                     .minClassificationsPerImage(3)
                     .consensusThreshold(80.0)
+                    .isPublic(false)
                     .deadline(LocalDateTime.now().plusDays(30))
                     .build();
 
@@ -190,8 +191,32 @@ public class MockDataSeeder implements CommandLineRunner {
                     .priority(1)
                     .build();
 
-            imageRepository.saveAll(List.of(img1, img2));
-            log.info("Seeded Tasks and Images.");
+            // Seed a second, public task that is not assigned to user_mock
+            // to allow testing of the task assignment and cache-update flow.
+            Task exploreTask = Task.builder()
+                    .title("Explore Mock Task")
+                    .name("explore_mock_task")
+                    .description("Identify birds in these mock images")
+                    .querySpecies("Birds")
+                    .question("Is this a Bird?")
+                    .createdBy(admin.getUsername())
+                    .status(TaskStatus.ACTIVE)
+                    .minClassificationsPerImage(3)
+                    .consensusThreshold(80.0)
+                    .isPublic(true)
+                    .deadline(LocalDateTime.now().plusDays(30))
+                    .build();
+
+            taskRepository.save(exploreTask);
+
+            Image img3 = Image.builder()
+                    .srcPath("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=")
+                    .taskId(exploreTask.getId())
+                    .priority(1)
+                    .build();
+
+            imageRepository.saveAll(List.of(img1, img2, img3));
+            log.info("Seeded Tasks and Images (including public explore task).");
         }
     }
     

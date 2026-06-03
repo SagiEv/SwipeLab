@@ -1,12 +1,13 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useMyTasks, useAvailableTasks, useStatistics, useAssignTask } from "../../api/queries";
-import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../constants/theme';
 
 import ScreenHeaderLayout from '../../components/layout/ScreenHeaderLayout/ScreenHeaderLayout';
 import TaskCard from '../../components/user/TaskCard';
+import ErrorToast from '../../components/ui/ErrorToast';
 import { useThemeStore } from '../../stores/themeStore';
 import { useSwipeStore } from '../../stores/swipeStore';
 
@@ -17,6 +18,8 @@ export default function UserMyTasksScreen() {
     const themeColors = Colors[theme as keyof typeof Colors];
     const isDark = theme === 'dark';
     const { setActiveTaskId } = useSwipeStore();
+
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useStatistics();
     const { data: tasks = [], isLoading: tasksLoading, refetch: refetchTasks } = useMyTasks();
@@ -33,11 +36,12 @@ export default function UserMyTasksScreen() {
     const assignTask = useAssignTask();
 
     const handleAddTask = async (taskId: number) => {
+        if (assignTask.isPending) return; // prevent double-tap
         try {
             await assignTask.mutateAsync(taskId);
-            // Cache is refreshed via onSuccess in useAssignTask; nothing more needed here.
+            // Cache is refreshed via refetchQueries in useAssignTask.onSuccess.
         } catch (err: any) {
-            Alert.alert('Could not add task', err?.message ?? 'An unexpected error occurred.');
+            setErrorMsg(err?.message ?? 'Could not add task. Please try again.');
         }
     };
 
@@ -77,6 +81,13 @@ export default function UserMyTasksScreen() {
             rightTitle={`Completion: ${completionPercent}%`}
             contentContainerStyle={{ padding: 0 }}
         >
+            {/* App-native error toast — shown when task assignment fails */}
+            {errorMsg && (
+                <ErrorToast
+                    message={errorMsg}
+                    onDismiss={() => setErrorMsg(null)}
+                />
+            )}
             <ScrollView
                 style={{ backgroundColor: themeColors.background }}
                 contentContainerStyle={[styles.scrollContent, { backgroundColor: themeColors.background }]}

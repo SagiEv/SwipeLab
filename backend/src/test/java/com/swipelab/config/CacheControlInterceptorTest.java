@@ -35,15 +35,17 @@ class CacheControlInterceptorTest {
     // ── Happy paths ────────────────────────────────────────────────────────────
 
     @Test
-    void GET_tasksList_ShouldSetPrivate60s() throws Exception {
+    void GET_tasksList_ShouldSetNoStore() throws Exception {
+        // my-tasks is per-user and mutates on self-assignment — must never be browser-cached
         handle("GET", "/api/v1/tasks/my-tasks");
-        assertThat(response.getHeader("Cache-Control")).isEqualTo("max-age=60, private");
+        assertThat(response.getHeader("Cache-Control")).isEqualTo("no-store");
     }
 
     @Test
-    void GET_availableTasks_ShouldSetPrivate60s() throws Exception {
+    void GET_availableTasks_ShouldSetNoStore() throws Exception {
+        // available-tasks shrinks immediately after assignment — must never be browser-cached
         handle("GET", "/api/v1/tasks/available-tasks");
-        assertThat(response.getHeader("Cache-Control")).isEqualTo("max-age=60, private");
+        assertThat(response.getHeader("Cache-Control")).isEqualTo("no-store");
     }
 
     @Test
