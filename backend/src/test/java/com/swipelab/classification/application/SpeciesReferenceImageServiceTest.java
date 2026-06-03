@@ -1,7 +1,9 @@
 package com.swipelab.classification.application;
 
+import com.swipelab.classification.domain.Label;
 import com.swipelab.classification.domain.SpeciesReferenceImage;
 import com.swipelab.classification.dto.api.SpeciesReferenceImageDto;
+import com.swipelab.classification.infrastructure.LabelRepository;
 import com.swipelab.classification.infrastructure.SpeciesReferenceImageRepository;
 import com.swipelab.exception.ResourceNotFoundException;
 import com.swipelab.infrastructure.ImageProcessingService;
@@ -30,6 +32,9 @@ class SpeciesReferenceImageServiceTest {
 
     @Mock
     private SpeciesReferenceImageRepository repository;
+
+    @Mock
+    private LabelRepository labelRepository;
 
     @Mock
     private ImageProcessingService imageProcessingService;
@@ -63,11 +68,13 @@ class SpeciesReferenceImageServiceTest {
         var processed = new ImageProcessingService.ProcessedImageResult(
                 "/uploads/ref/uuid1.jpg", "/uploads/ref/thumb/uuid1.jpg", 80000L);
 
+        Label label = Label.builder().id(42L).name("speciesA").build();
+        when(labelRepository.findByName("speciesA")).thenReturn(Optional.of(label));
         when(repository.countByLabelId(42L)).thenReturn(0L);
         when(imageProcessingService.processAndStore(file)).thenReturn(processed);
         when(repository.save(any())).thenReturn(sampleEntity);
 
-        List<SpeciesReferenceImageDto> result = service.uploadImages(42L, List.of(file), "researcher1", "caption");
+        List<SpeciesReferenceImageDto> result = service.uploadImages("speciesA", List.of(file), "researcher1", "caption");
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getLabelId()).isEqualTo(42L);
@@ -79,9 +86,11 @@ class SpeciesReferenceImageServiceTest {
 
     @Test
     void getImagesForSpecies_returnsAllPoolImages() {
+        Label label = Label.builder().id(42L).name("speciesA").build();
+        when(labelRepository.findByName("speciesA")).thenReturn(Optional.of(label));
         when(repository.findByLabelId(42L)).thenReturn(List.of(sampleEntity));
 
-        List<SpeciesReferenceImageDto> result = service.getImagesForSpecies(42L);
+        List<SpeciesReferenceImageDto> result = service.getImagesForSpecies("speciesA");
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getId()).isEqualTo(1L);
@@ -89,20 +98,25 @@ class SpeciesReferenceImageServiceTest {
 
     @Test
     void getImagesForSpeciesBatch_groupsByLabelId() {
+        Label labelA = Label.builder().id(42L).name("speciesA").build();
+        Label labelB = Label.builder().id(99L).name("speciesB").build();
+
         SpeciesReferenceImage second = SpeciesReferenceImage.builder()
                 .id(2L).labelId(99L)
                 .imagePath("/uploads/ref/x.jpg").thumbnailPath("/uploads/ref/thumb/x.jpg")
                 .uploadedBy("researcher1").createdAt(LocalDateTime.now()).build();
 
+        when(labelRepository.findByNameIn(List.of("speciesA", "speciesB")))
+                .thenReturn(List.of(labelA, labelB));
         when(repository.findByLabelIdIn(List.of(42L, 99L)))
                 .thenReturn(List.of(sampleEntity, second));
 
-        Map<Long, List<SpeciesReferenceImageDto>> result =
-                service.getImagesForSpeciesBatch(List.of(42L, 99L));
+        Map<String, List<SpeciesReferenceImageDto>> result =
+                service.getImagesForSpeciesBatch(List.of("speciesA", "speciesB"));
 
-        assertThat(result).containsKeys(42L, 99L);
-        assertThat(result.get(42L)).hasSize(1);
-        assertThat(result.get(99L)).hasSize(1);
+        assertThat(result).containsKeys("speciesA", "speciesB");
+        assertThat(result.get("speciesA")).hasSize(1);
+        assertThat(result.get("speciesB")).hasSize(1);
     }
 
     @Test
@@ -127,7 +141,7 @@ class SpeciesReferenceImageServiceTest {
 
     @Test
     void uploadImages_rejectsEmptyFileList() {
-        assertThatThrownBy(() -> service.uploadImages(42L, List.of(), "researcher1", null))
+        assertThatThrownBy(() -> service.uploadImages("speciesA", List.of(), "researcher1", null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("At least one");
     }
@@ -138,7 +152,7 @@ class SpeciesReferenceImageServiceTest {
         List<org.springframework.web.multipart.MultipartFile> files =
                 List.of(file, file, file, file); // 4 files
 
-        assertThatThrownBy(() -> service.uploadImages(42L, files, "researcher1", null))
+        assertThatThrownBy(() -> service.uploadImages("speciesA", files, "researcher1", null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Maximum 3");
     }
@@ -146,9 +160,11 @@ class SpeciesReferenceImageServiceTest {
     @Test
     void uploadImages_rejectsWhenPoolFull() {
         var file = new MockMultipartFile("f", "a.jpg", "image/jpeg", new byte[1]);
+        Label label = Label.builder().id(42L).name("speciesA").build();
+        when(labelRepository.findByName("speciesA")).thenReturn(Optional.of(label));
         when(repository.countByLabelId(42L)).thenReturn(10L); // already at max
 
-        assertThatThrownBy(() -> service.uploadImages(42L, List.of(file), "researcher1", null))
+        assertThatThrownBy(() -> service.uploadImages("speciesA", List.of(file), "researcher1", null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Max pool size");
     }

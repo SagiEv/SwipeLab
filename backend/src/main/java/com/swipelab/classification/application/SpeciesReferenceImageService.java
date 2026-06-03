@@ -1,7 +1,9 @@
 package com.swipelab.classification.application;
 
+import com.swipelab.classification.domain.Label;
 import com.swipelab.classification.domain.SpeciesReferenceImage;
 import com.swipelab.classification.dto.api.SpeciesReferenceImageDto;
+import com.swipelab.classification.infrastructure.LabelRepository;
 import com.swipelab.classification.infrastructure.SpeciesReferenceImageRepository;
 import com.swipelab.exception.ResourceNotFoundException;
 import com.swipelab.infrastructure.ImageProcessingService;
@@ -32,6 +34,7 @@ public class SpeciesReferenceImageService {
     private static final int MAX_POOL_SIZE = 10;
 
     private final SpeciesReferenceImageRepository repository;
+    private final LabelRepository                  labelRepository;
     private final ImageProcessingService           imageProcessingService;
 
     // ── Upload ────────────────────────────────────────────────────────────────
@@ -48,7 +51,7 @@ public class SpeciesReferenceImageService {
      */
     @Transactional
     public List<SpeciesReferenceImageDto> uploadImages(
-            Long labelId,
+            String speciesName,
             List<MultipartFile> files,
             String username,
             String caption) {
@@ -59,6 +62,10 @@ public class SpeciesReferenceImageService {
         if (files.size() > 3) {
             throw new IllegalArgumentException("Maximum 3 images per upload batch.");
         }
+
+        Long labelId = labelRepository.findByName(speciesName)
+                .orElseGet(() -> labelRepository.save(Label.builder().name(speciesName).build()))
+                .getId();
 
         long existingCount = repository.countByLabelId(labelId);
         if (existingCount + files.size() > MAX_POOL_SIZE) {
@@ -92,22 +99,38 @@ public class SpeciesReferenceImageService {
 
     /** Returns all pool images for a single species, ordered by upload date. */
     @Transactional(readOnly = true)
-    public List<SpeciesReferenceImageDto> getImagesForSpecies(Long labelId) {
-        return repository.findByLabelId(labelId).stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+    public List<SpeciesReferenceImageDto> getImagesForSpecies(String speciesName) {
+        return labelRepository.findByName(speciesName)
+                .map(label -> repository.findByLabelId(label.getId()).stream()
+                        .map(this::toDto)
+                        .collect(Collectors.toList()))
+                .orElse(List.of());
     }
 
     /**
      * Batch-loads images for multiple species in a single query.
      *
-     * @return map of labelId → list of DTOs
+     * @return map of speciesName → list of DTOs
      */
     @Transactional(readOnly = true)
-    public Map<Long, List<SpeciesReferenceImageDto>> getImagesForSpeciesBatch(List<Long> labelIds) {
+    public Map<String, List<SpeciesReferenceImageDto>> getImagesForSpeciesBatch(List<String> speciesNames) {
+        if (speciesNames == null || speciesNames.isEmpty()) {
+            return Map.of();
+        }
+
+        List<Label> labels = labelRepository.findByNameIn(speciesNames);
+        if (labels.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<Long, String> labelIdToName = labels.stream()
+                .collect(Collectors.toMap(Label::getId, Label::getName));
+
+        List<Long> labelIds = labels.stream().map(Label::getId).collect(Collectors.toList());
+
         return repository.findByLabelIdIn(labelIds).stream()
                 .collect(Collectors.groupingBy(
-                        SpeciesReferenceImage::getLabelId,
+                        image -> labelIdToName.get(image.getLabelId()),
                         Collectors.mapping(this::toDto, Collectors.toList())
                 ));
     }

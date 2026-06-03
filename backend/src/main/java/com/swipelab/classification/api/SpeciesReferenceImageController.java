@@ -27,9 +27,9 @@ import java.util.Map;
  * REST API for the per-species reference-image pool.
  *
  * <pre>
- * POST   /api/v1/species/{labelId}/reference-images          – upload 1-3 images
- * GET    /api/v1/species/{labelId}/reference-images          – list pool for one species
- * GET    /api/v1/species/reference-images?labelIds=1,2,3     – batch fetch
+ * POST   /api/v1/species/{speciesName}/reference-images          – upload 1-3 images
+ * GET    /api/v1/species/{speciesName}/reference-images          – list pool for one species
+ * GET    /api/v1/species/reference-images?speciesNames=A,B,C     – batch fetch
  * DELETE /api/v1/species/reference-images/{id}               – delete from pool
  * GET    /api/v1/species/reference-images/{id}/image         – stream full image
  * GET    /api/v1/species/reference-images/{id}/thumbnail     – stream thumbnail
@@ -51,26 +51,26 @@ public class SpeciesReferenceImageController {
      * Images are compressed server-side; no raw bytes are stored.
      */
     @PostMapping(
-            value = "/{labelId}/reference-images",
+            value = "/{speciesName}/reference-images",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     @PreAuthorize("hasRole('RESEARCHER') or @securityAuthorizationService.isSuperAdmin(authentication.name)")
     public ResponseEntity<List<SpeciesReferenceImageDto>> uploadImages(
-            @PathVariable Long labelId,
+            @PathVariable String speciesName,
             @RequestParam("files") List<MultipartFile> files,
             @RequestParam(value = "caption", required = false) String caption,
             @AuthenticationPrincipal UserDetails user) {
 
-        List<SpeciesReferenceImageDto> saved = service.uploadImages(labelId, files, user.getUsername(), caption);
+        List<SpeciesReferenceImageDto> saved = service.uploadImages(speciesName, files, user.getUsername(), caption);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     // ── Read — single species ─────────────────────────────────────────────────
 
-    @GetMapping("/{labelId}/reference-images")
+    @GetMapping("/{speciesName}/reference-images")
     @PreAuthorize("hasRole('RESEARCHER') or @securityAuthorizationService.isSuperAdmin(authentication.name)")
-    public ResponseEntity<List<SpeciesReferenceImageDto>> getForSpecies(@PathVariable Long labelId) {
-        return ResponseEntity.ok(service.getImagesForSpecies(labelId));
+    public ResponseEntity<List<SpeciesReferenceImageDto>> getForSpecies(@PathVariable String speciesName) {
+        return ResponseEntity.ok(service.getImagesForSpecies(speciesName));
     }
 
     // ── Read — batch (task creation) ──────────────────────────────────────────
@@ -81,9 +81,9 @@ public class SpeciesReferenceImageController {
      */
     @GetMapping("/reference-images")
     @PreAuthorize("hasRole('RESEARCHER') or @securityAuthorizationService.isSuperAdmin(authentication.name)")
-    public ResponseEntity<Map<Long, List<SpeciesReferenceImageDto>>> getBatch(
-            @RequestParam List<Long> labelIds) {
-        return ResponseEntity.ok(service.getImagesForSpeciesBatch(labelIds));
+    public ResponseEntity<Map<String, List<SpeciesReferenceImageDto>>> getBatch(
+            @RequestParam List<String> speciesNames) {
+        return ResponseEntity.ok(service.getImagesForSpeciesBatch(speciesNames));
     }
 
     // ── Delete ────────────────────────────────────────────────────────────────
