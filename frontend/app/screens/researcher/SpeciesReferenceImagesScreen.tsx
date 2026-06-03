@@ -17,8 +17,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from "@expo/vector-icons";
 import ScreenHeaderLayout from "../../components/layout/ScreenHeaderLayout/ScreenHeaderLayout";
 import { useThemeStore } from "../../stores/themeStore";
-import { useAuthStore } from "../../stores/authStore";
 import { Colors } from "../../../constants/theme";
+import AuthenticatedImage from "../../components/ui/AuthenticatedImage";
 import { useSpeciesPoolImages, useDeleteSpeciesRefImage } from "../../api/queries";
 import { apiFetch } from "../../api/apiFetch";
 import { API_ENDPOINTS } from "../../api/apiEndpoints";
@@ -38,7 +38,6 @@ export default function SpeciesReferenceImagesScreen() {
   const { speciesId, speciesLabel } = route.params;
 
   const { theme } = useThemeStore();
-  const token = useAuthStore(state => state.token);
   const themeColors = Colors[theme as keyof typeof Colors];
 
   const { data: poolImagesMap, isLoading } = useSpeciesPoolImages([speciesId]);
@@ -154,11 +153,8 @@ export default function SpeciesReferenceImagesScreen() {
         style={styles.imageWrap}
         onPress={() => setPreviewUri(backendUrl(item.imageUrl))}
       >
-        <Image 
-          source={{ 
-            uri: backendUrl(item.thumbnailUrl),
-            ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {})
-          }} 
+        <AuthenticatedImage 
+          uri={backendUrl(item.thumbnailUrl)}
           style={styles.thumbnail} 
         />
         <View style={styles.zoomOverlay}>
@@ -254,11 +250,8 @@ export default function SpeciesReferenceImagesScreen() {
               activeOpacity={1}
               onPress={() => setPreviewUri(null)}
             >
-              <Image 
-                source={{ 
-                  uri: previewUri,
-                  ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {})
-                }} 
+              <AuthenticatedImage 
+                uri={previewUri}
                 style={styles.previewImage} 
                 resizeMode="contain" 
               />

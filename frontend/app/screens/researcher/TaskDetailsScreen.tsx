@@ -15,7 +15,7 @@ import {
 import { Colors } from '../../../constants/theme';
 import { researcherStackParamList } from "../../navigation/researcherStack.types";
 import { useThemeStore } from '../../stores/themeStore';
-import { useAuthStore } from "../../stores/authStore";
+import AuthenticatedImage from '../../components/ui/AuthenticatedImage';
 import { useTaskDetails, useExperiments, useUpdateTaskStatus } from "../../api/queries";
 
 type Props = NativeStackScreenProps<researcherStackParamList, "TaskDetails">;
@@ -47,7 +47,6 @@ const STATUS_CONFIG = {
 export default function TaskDetailsScreen({ route, navigation }: Props) {
   const { taskId } = route.params;
   const { theme } = useThemeStore();
-  const token = useAuthStore(state => state.token);
   const themeColors = Colors[theme as keyof typeof Colors];
   const isDark = theme === 'dark';
 
@@ -272,11 +271,8 @@ export default function TaskDetailsScreen({ route, navigation }: Props) {
 
                     return (
                     <View key={idx} style={styles.imageCard}>
-                      <Image
-                        source={{ 
-                          uri: imageUri,
-                          ...(imageUri.startsWith('http') && token ? { headers: { Authorization: `Bearer ${token}` } } : {})
-                        }}
+                      <AuthenticatedImage
+                        uri={imageUri}
                         style={[styles.image, { borderColor: borderCol }]}
                       />
                       {!!img.caption && (

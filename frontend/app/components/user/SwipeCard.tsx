@@ -10,8 +10,8 @@ import {
 } from 'react-native';
 import { SwipeDirection } from '../../types';
 import { useThemeStore } from '../../stores/themeStore';
-import { useAuthStore } from '../../stores/authStore';
 import { Colors } from '../../../constants/theme';
+import AuthenticatedImage from '../ui/AuthenticatedImage';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SWIPE_THRESHOLD = 120;
@@ -30,7 +30,6 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
   ({ question, imageUrl, onSwipe }, ref) => {
     const position = useRef(new Animated.ValueXY()).current;
     const { theme } = useThemeStore();
-    const token = useAuthStore(state => state.token);
     const themeColors = Colors[theme as keyof typeof Colors];
 
     const rotate = position.x.interpolate({
@@ -100,11 +99,8 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
         <Animated.View style={getCardStyle()} {...panResponder.panHandlers}>
           <View style={styles.imageContainer}>
             {imageUrl ? (
-              <Image 
-                source={{ 
-                  uri: imageUrl,
-                  ...(imageUrl.startsWith('http') && token ? { headers: { Authorization: `Bearer ${token}` } } : {})
-                }} 
+              <AuthenticatedImage 
+                uri={imageUrl} 
                 style={styles.image} 
               />
             ) : (
