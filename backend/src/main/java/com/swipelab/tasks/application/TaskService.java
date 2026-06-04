@@ -14,6 +14,9 @@ import com.swipelab.tasks.domain.TaskStatus;
 import com.swipelab.tasks.infrastructure.TaskRepository;
 import com.swipelab.tasks.application.port.out.TargetSpeciesProvider;
 import com.swipelab.integration.stardbi.StardbiSyncService;
+import com.swipelab.classification.infrastructure.ImageRepository;
+import com.swipelab.classification.infrastructure.ClassificationRepository;
+import com.swipelab.dto.response.TaskProgressResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,6 +42,8 @@ public class TaskService {
     private final TaskMapper taskMapper;
     private final StardbiSyncService stardbiSyncService;
     private final SecurityAuthorizationService securityAuthorizationService;
+    private final ImageRepository imageRepository;
+    private final ClassificationRepository classificationRepository;
 
 
     // =========================
@@ -180,7 +185,7 @@ public class TaskService {
                 .collect(Collectors.toList());
         }
         return tasks.stream()
-                .map(task -> taskMapper.toResponse(task, false))
+                .map(task -> taskMapper.toResponse(task, false, buildProgress(task.getId())))
                 .collect(Collectors.toList());
     }
 
@@ -188,7 +193,7 @@ public class TaskService {
     public TaskResponse getTaskDetailsResearcher(Long taskId, String username) {
         Task task = getTask(taskId);
         verifyTaskAccess(task, username);
-        return mapToResponse(task);
+        return taskMapper.toResponse(task, false, buildProgress(taskId));
     }
 
     @Transactional
@@ -280,13 +285,24 @@ public class TaskService {
     // Helpers
     // =========================
 
+    /**
+     * Computes real image progress for a task by querying the images and
+     * classifications tables. imagesClassified is a simple "touched" count
+     * (any classification exists) until the threshold-gated logic is built.
+     */
+    private TaskProgressResponse buildProgress(Long taskId) {
+        long total = imageRepository.countByTaskId(taskId);
+        long classified = classificationRepository.countDistinctImagesByTaskId(taskId);
+        return new TaskProgressResponse((int) total, (int) classified);
+    }
+
     private Task getTask(Long id) {
         return taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
     }
 
     private TaskResponse mapToResponse(Task task) {
-        return taskMapper.toResponse(task, false);
+        return taskMapper.toResponse(task, false, buildProgress(task.getId()));
     }
 
     // Legacy support if needed, but preferably use new methods
