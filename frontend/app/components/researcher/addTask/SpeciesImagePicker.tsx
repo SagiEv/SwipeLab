@@ -16,6 +16,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Colors } from '../../../../constants/theme';
 import { useThemeStore } from '../../../stores/themeStore';
 import { SpeciesRefImage } from './addTaskTypes';
+import AuthenticatedImage from '../../ui/AuthenticatedImage';
 
 const MAX_IMAGES = 3;
 const MIN_IMAGES = 1;
@@ -173,10 +174,14 @@ export default function SpeciesImagePicker({
             <TouchableOpacity
               key={idx}
               style={styles.thumbWrap}
-              onPress={() => setPreviewUri(img.uri)}
+              onPress={() => setPreviewUri(img.fromPool ? img.uri : img.uri)}
               onLongPress={() => removeImage(idx)}
             >
-              <Image source={{ uri: img.uri }} style={styles.thumb} />
+              {img.fromPool ? (
+                <AuthenticatedImage uri={img.uri} style={styles.thumb} />
+              ) : (
+                <Image source={{ uri: img.uri }} style={styles.thumb} />
+              )}
               <TouchableOpacity style={styles.removeBtn} onPress={() => removeImage(idx)}>
                 <Ionicons name="close-circle" size={18} color="#ef4444" />
               </TouchableOpacity>
@@ -226,8 +231,8 @@ export default function SpeciesImagePicker({
                           onPress={() => togglePoolImage(pool)}
                           onLongPress={() => setPreviewUri(backendThumbUrl(pool.imageUrl))}
                         >
-                          <Image
-                            source={{ uri: backendThumbUrl(pool.thumbnailUrl) }}
+                          <AuthenticatedImage
+                            uri={backendThumbUrl(pool.thumbnailUrl)}
                             style={styles.poolThumb}
                           />
                           {selected && (
@@ -293,7 +298,7 @@ export default function SpeciesImagePicker({
             activeOpacity={1}
             onPress={() => setPreviewUri(null)}
           >
-            <Image source={{ uri: previewUri }} style={styles.previewImage} resizeMode="contain" />
+            <AuthenticatedImage uri={previewUri} style={styles.previewImage} resizeMode="contain" />
             <Text style={styles.previewHint}>Tap anywhere to close</Text>
           </TouchableOpacity>
         </Modal>
