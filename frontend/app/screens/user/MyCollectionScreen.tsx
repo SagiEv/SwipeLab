@@ -1,8 +1,6 @@
 import React, { useCallback, useEffect } from 'react';
 import {
     ActivityIndicator,
-    Image,
-    Platform,
     RefreshControl,
     ScrollView,
     StyleSheet,
@@ -14,6 +12,7 @@ import { useCollectionStore, CollectionEntry } from '../../stores/collectionStor
 import { useNavigation } from '@react-navigation/native';
 import { useThemeStore } from '../../stores/themeStore';
 import { Colors } from '../../../constants/theme';
+import AuthenticatedImage from '../../components/ui/AuthenticatedImage';
 
 function formatDate(iso: string): string {
     const d = new Date(iso);
@@ -21,18 +20,10 @@ function formatDate(iso: string): string {
 }
 
 function CollectionCard({ item, themeColors }: { item: CollectionEntry; themeColors: any }) {
-    const backendBaseUrl =
-        process.env.EXPO_PUBLIC_API_URL ||
-        (Platform.OS === 'web' ? 'http://localhost:8080' : 'http://192.168.1.133:8080');
-
     let parsedImageUrl = item.imageUrl;
     if (parsedImageUrl) {
-        if (parsedImageUrl.startsWith('http')) {
-            // valid URL
-        } else if (parsedImageUrl.startsWith('data:image')) {
-            // valid base64
-        } else if (parsedImageUrl.startsWith('/')) {
-            parsedImageUrl = `${backendBaseUrl}${parsedImageUrl}`;
+        if (parsedImageUrl.startsWith('http') || parsedImageUrl.startsWith('data:image') || parsedImageUrl.startsWith('/')) {
+            // Already a valid URL, data URI, or relative API path — AuthenticatedImage handles resolution
         } else if (/^[A-Za-z0-9+/]/.test(parsedImageUrl) || parsedImageUrl.startsWith('/9')) {
             // raw base64 jpeg
             parsedImageUrl = `data:image/jpeg;base64,${parsedImageUrl}`;
@@ -42,8 +33,8 @@ function CollectionCard({ item, themeColors }: { item: CollectionEntry; themeCol
     return (
         <View style={[styles.card, { backgroundColor: themeColors.card }]}>
             {parsedImageUrl ? (
-                <Image
-                    source={{ uri: parsedImageUrl }}
+                <AuthenticatedImage
+                    uri={parsedImageUrl}
                     style={styles.cardImage}
                     resizeMode="cover"
                 />

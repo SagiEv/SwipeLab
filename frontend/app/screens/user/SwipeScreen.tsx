@@ -26,9 +26,6 @@ import { useThemeStore } from '../../stores/themeStore';
 import { SwipeDirection } from '../../types';
 import { ClassificationWarning } from '../../types/fraudTypes';
 
-const BACKEND_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL ||
-  (Platform.OS === 'web' ? 'http://localhost:8080' : 'http://192.168.1.133:8080');
 
 // ─── Accent used across Quick Start UI ──────────────────────────────────────
 const ACCENT = '#4B7BE5';
@@ -230,14 +227,13 @@ export default function SwipeScreen() {
         const contentType = currentImage?.image?.contentType || 'image/jpeg';
         imageUrl = `data:${contentType};base64,${rawImageData}`;
       } else if (rawImageData.startsWith('/')) {
-        imageUrl = `${BACKEND_BASE_URL}${rawImageData}`;
+        imageUrl = rawImageData;
       }
     }
-
     const referenceImagesUrls =
       currentImage?.referenceImages?.map((ref: any) => {
         if (ref.imageUrl) {
-            return ref.imageUrl.startsWith('http') || ref.imageUrl.startsWith('/') ? `${BACKEND_BASE_URL}${ref.imageUrl}` : ref.imageUrl;
+            return ref.imageUrl;
         }
         if (ref.data?.startsWith('http')) return ref.data;
         return `data:${ref.contentType || 'image/jpeg'};base64,${ref.data}`;

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Image, ImageProps, Platform, StyleSheet, View, ActivityIndicator } from 'react-native';
 import { useAuthStore } from '../../stores/authStore';
+import { backendUrl } from '../../api/apiFetch';
 
 interface AuthenticatedImageProps extends Omit<ImageProps, 'source'> {
   uri: string | null | undefined;
@@ -34,6 +35,9 @@ export default function AuthenticatedImage({
       return;
     }
 
+    // Resolve relative API paths to full URLs using the centralized backend base
+    const resolvedUri = uri.startsWith('http') ? uri : `${backendUrl}${uri}`;
+
     if (Platform.OS === 'web') {
       let isActive = true;
       let objectUrl: string | null = null;
@@ -46,7 +50,7 @@ export default function AuthenticatedImage({
           if (token) {
             headers['Authorization'] = `Bearer ${token}`;
           }
-          const response = await fetch(uri, { headers });
+          const response = await fetch(resolvedUri, { headers });
           if (!response.ok) {
             throw new Error(`Failed to fetch image: ${response.statusText}`);
           }
@@ -59,7 +63,7 @@ export default function AuthenticatedImage({
           console.error('Failed to load authenticated image:', e);
           if (isActive) {
             setError(true);
-            setLocalUri(uri); // Fallback to raw uri
+            setLocalUri(resolvedUri); // Fallback to resolved uri
           }
         } finally {
           if (isActive) setLoading(false);
@@ -76,7 +80,7 @@ export default function AuthenticatedImage({
       };
     } else {
       // On Native, we let React Native's Image component handle headers
-      setLocalUri(uri);
+      setLocalUri(resolvedUri);
       setError(false);
     }
   }, [uri, token]);

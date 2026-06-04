@@ -4,7 +4,6 @@ import React from "react";
 import {
   ActivityIndicator,
   Image,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -263,8 +262,7 @@ export default function TaskDetailsScreen({ route, navigation }: Props) {
                   {(species.referenceImages || []).map((img: any, idx: number) => {
                     let imageUri = '';
                     if (img.imageUrl) {
-                      const backendBase = Platform.OS === 'web' ? 'http://localhost:8080' : 'http://192.168.1.133:8080';
-                      imageUri = img.imageUrl.startsWith('http') ? img.imageUrl : `${backendBase}${img.imageUrl}`;
+                      imageUri = img.imageUrl;
                     } else if (img.data) {
                       imageUri = `data:${img.contentType || 'image/jpeg'};base64,${img.data}`;
                     }

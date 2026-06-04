@@ -56,11 +56,6 @@ export default function SpeciesImagePicker({
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
-  const backendThumbUrl = (relPath: string) => {
-    const base = Platform.OS === 'web' ? 'http://localhost:8080' : 'http://192.168.1.133:8080';
-    return `${base}${relPath}`;
-  };
-
   const isPoolImageSelected = (poolId: number) =>
     selectedImages.some((img) => img.fromPool && img.poolId === poolId);
 
@@ -76,7 +71,7 @@ export default function SpeciesImagePicker({
       }
       onImagesChange(speciesId, [
         ...selectedImages,
-        { poolId: pool.id, uri: backendThumbUrl(pool.thumbnailUrl), fromPool: true, caption: pool.caption },
+        { poolId: pool.id, uri: pool.thumbnailUrl, fromPool: true, caption: pool.caption },
       ]);
     }
   };
@@ -229,10 +224,10 @@ export default function SpeciesImagePicker({
                           key={pool.id}
                           style={[styles.poolThumbWrap, selected && styles.poolThumbSelected]}
                           onPress={() => togglePoolImage(pool)}
-                          onLongPress={() => setPreviewUri(backendThumbUrl(pool.imageUrl))}
+                          onLongPress={() => setPreviewUri(pool.imageUrl)}
                         >
                           <AuthenticatedImage
-                            uri={backendThumbUrl(pool.thumbnailUrl)}
+                            uri={pool.thumbnailUrl}
                             style={styles.poolThumb}
                           />
                           {selected && (
