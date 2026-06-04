@@ -3,6 +3,7 @@ package com.swipelab.tasks.application;
 import com.swipelab.dto.request.CreateTaskRequest;
 import com.swipelab.dto.request.UpdateTaskRequest;
 import com.swipelab.dto.response.TaskPageResponse;
+import com.swipelab.dto.response.TaskProgressResponse;
 import com.swipelab.dto.response.TaskResponse;
 import com.swipelab.exception.DuplicateResourceException;
 import com.swipelab.exception.ResourceNotFoundException;
@@ -13,6 +14,8 @@ import com.swipelab.tasks.domain.Task;
 import com.swipelab.tasks.domain.TaskMapper;
 import com.swipelab.tasks.domain.TaskStatus;
 import com.swipelab.tasks.infrastructure.TaskRepository;
+import com.swipelab.classification.infrastructure.ImageRepository;
+import com.swipelab.classification.infrastructure.ClassificationRepository;
 import com.swipelab.classification.infrastructure.LabelRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,7 +58,11 @@ class TaskServiceTest {
     @Mock
     private com.swipelab.auth.application.SecurityAuthorizationService securityAuthorizationService;
 
+    @Mock
+    private ImageRepository imageRepository;
 
+    @Mock
+    private ClassificationRepository classificationRepository;
 
     @InjectMocks
     private TaskService taskService;
@@ -154,7 +161,9 @@ class TaskServiceTest {
     void getResearcherDashboard_ShouldReturnAllTasks() {
         when(securityAuthorizationService.isSuperAdmin(anyString())).thenReturn(true);
         when(taskRepository.findAll()).thenReturn(Collections.singletonList(task));
-        when(taskMapper.toResponse(task, false)).thenReturn(taskResponse);
+        when(imageRepository.countByTaskId(1L)).thenReturn(10L);
+        when(classificationRepository.countDistinctImagesByTaskId(1L)).thenReturn(6L);
+        when(taskMapper.toResponse(eq(task), eq(false), any(TaskProgressResponse.class))).thenReturn(taskResponse);
 
         List<TaskResponse> responses = taskService.getResearcherDashboard("superadmin");
 
@@ -166,12 +175,13 @@ class TaskServiceTest {
         CreateTaskRequest request = new CreateTaskRequest();
         request.setName("New Task");
         request.setDescription("Valid desc");
-        
-        when(taskRepository.existsByCreatedByAndName(anyString(), anyString())).thenReturn(false);
 
+        when(taskRepository.existsByCreatedByAndName(anyString(), anyString())).thenReturn(false);
         when(taskMapper.toEntity(request)).thenReturn(task);
         when(taskRepository.save(task)).thenReturn(task);
-        when(taskMapper.toResponse(task, false)).thenReturn(taskResponse);
+        when(imageRepository.countByTaskId(1L)).thenReturn(0L);
+        when(classificationRepository.countDistinctImagesByTaskId(1L)).thenReturn(0L);
+        when(taskMapper.toResponse(eq(task), eq(false), any(TaskProgressResponse.class))).thenReturn(taskResponse);
 
         TaskResponse response = taskService.createTask(request, "admin_mock", null, null);
 
@@ -197,7 +207,9 @@ class TaskServiceTest {
     void archiveTask_ShouldSetStatusArchived() {
         when(securityAuthorizationService.isSuperAdmin(anyString())).thenReturn(true);
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(taskMapper.toResponse(task, false)).thenReturn(taskResponse);
+        when(imageRepository.countByTaskId(1L)).thenReturn(5L);
+        when(classificationRepository.countDistinctImagesByTaskId(1L)).thenReturn(3L);
+        when(taskMapper.toResponse(eq(task), eq(false), any(TaskProgressResponse.class))).thenReturn(taskResponse);
 
         taskService.archiveTask(1L, "superadmin");
 
@@ -209,7 +221,9 @@ class TaskServiceTest {
         task.setStatus(TaskStatus.PAUSED);
         when(securityAuthorizationService.isSuperAdmin(anyString())).thenReturn(true);
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(taskMapper.toResponse(task, false)).thenReturn(taskResponse);
+        when(imageRepository.countByTaskId(1L)).thenReturn(5L);
+        when(classificationRepository.countDistinctImagesByTaskId(1L)).thenReturn(2L);
+        when(taskMapper.toResponse(eq(task), eq(false), any(TaskProgressResponse.class))).thenReturn(taskResponse);
 
         taskService.activateTask(1L, "superadmin");
 
@@ -220,7 +234,9 @@ class TaskServiceTest {
     void pauseTask_ShouldSetStatusPaused() {
         when(securityAuthorizationService.isSuperAdmin(anyString())).thenReturn(true);
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(taskMapper.toResponse(task, false)).thenReturn(taskResponse);
+        when(imageRepository.countByTaskId(1L)).thenReturn(5L);
+        when(classificationRepository.countDistinctImagesByTaskId(1L)).thenReturn(1L);
+        when(taskMapper.toResponse(eq(task), eq(false), any(TaskProgressResponse.class))).thenReturn(taskResponse);
 
         taskService.pauseTask(1L, "superadmin");
 
@@ -232,7 +248,9 @@ class TaskServiceTest {
         when(securityAuthorizationService.isSuperAdmin(anyString())).thenReturn(true);
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
         UpdateTaskRequest request = new UpdateTaskRequest();
-        when(taskMapper.toResponse(task, false)).thenReturn(taskResponse);
+        when(imageRepository.countByTaskId(1L)).thenReturn(5L);
+        when(classificationRepository.countDistinctImagesByTaskId(1L)).thenReturn(0L);
+        when(taskMapper.toResponse(eq(task), eq(false), any(TaskProgressResponse.class))).thenReturn(taskResponse);
 
         taskService.updateTask(1L, request, "superadmin");
 
@@ -288,5 +306,53 @@ class TaskServiceTest {
 
         assertNotNull(response);
         assertTrue(task.getAssignedUsernames().contains("testuser"));
+    }
+
+    // ===================================================
+    // buildProgress — image count correctness
+    // ===================================================
+
+    @Test
+    void getResearcherDashboard_ShouldReflectRealImageCounts_WhenImagesExist() {
+        // Happy flow: task has 10 images, 6 have been classified
+        when(securityAuthorizationService.isSuperAdmin(anyString())).thenReturn(true);
+        when(taskRepository.findAll()).thenReturn(Collections.singletonList(task));
+        when(imageRepository.countByTaskId(1L)).thenReturn(10L);
+        when(classificationRepository.countDistinctImagesByTaskId(1L)).thenReturn(6L);
+
+        TaskProgressResponse[] captured = new TaskProgressResponse[1];
+        when(taskMapper.toResponse(eq(task), eq(false), any(TaskProgressResponse.class)))
+                .thenAnswer(inv -> {
+                    captured[0] = inv.getArgument(2);
+                    return taskResponse;
+                });
+
+        taskService.getResearcherDashboard("superadmin");
+
+        assertNotNull(captured[0]);
+        assertEquals(10, captured[0].getTotalImages(),   "totalImages should be 10");
+        assertEquals(6,  captured[0].getImagesClassified(), "imagesClassified should be 6");
+    }
+
+    @Test
+    void getResearcherDashboard_ShouldReturnZeroProgress_WhenNoImagesExist() {
+        // Edge case: brand-new task with no images synced yet
+        when(securityAuthorizationService.isSuperAdmin(anyString())).thenReturn(true);
+        when(taskRepository.findAll()).thenReturn(Collections.singletonList(task));
+        when(imageRepository.countByTaskId(1L)).thenReturn(0L);
+        when(classificationRepository.countDistinctImagesByTaskId(1L)).thenReturn(0L);
+
+        TaskProgressResponse[] captured = new TaskProgressResponse[1];
+        when(taskMapper.toResponse(eq(task), eq(false), any(TaskProgressResponse.class)))
+                .thenAnswer(inv -> {
+                    captured[0] = inv.getArgument(2);
+                    return taskResponse;
+                });
+
+        taskService.getResearcherDashboard("superadmin");
+
+        assertNotNull(captured[0]);
+        assertEquals(0, captured[0].getTotalImages(),    "totalImages should be 0 for empty task");
+        assertEquals(0, captured[0].getImagesClassified(), "imagesClassified should be 0 for empty task");
     }
 }

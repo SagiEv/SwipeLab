@@ -14,6 +14,8 @@ public interface ImageRepository extends JpaRepository<Image, Long> {
 
     List<Image> findByTaskId(Long taskId);
 
+    long countByTaskId(Long taskId);
+
     boolean existsByExternalBoxId(Long externalBoxId);
     Image findByExternalBoxId(Long externalBoxId);
 

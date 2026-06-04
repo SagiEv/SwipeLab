@@ -98,10 +98,14 @@ public class TaskMapper {
     // =========================
 
     public TaskResponse toResponse(Task task) {
-        return toResponse(task, false);
+        return toResponse(task, false, TaskProgressResponse.empty());
     }
 
     public TaskResponse toResponse(Task task, boolean assignedToUser) {
+        return toResponse(task, assignedToUser, TaskProgressResponse.empty());
+    }
+
+    public TaskResponse toResponse(Task task, boolean assignedToUser, TaskProgressResponse progress) {
         if (task == null) {
             return null;
         }
