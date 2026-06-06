@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Ionicons } from '@expo/vector-icons';
 import { apiFetch } from "../api/apiFetch";
 import { useAuthStore } from "../stores/authStore";
 import { useModeStore } from "../stores/modeStore";
@@ -102,6 +103,10 @@ export default function RegisterForm({ onClose }: Props) {
   return (
     <View style={styles.overlay}>
       <View style={styles.container}>
+        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+          <Ionicons name="close" size={24} color="#000000" />
+        </TouchableOpacity>
+
         {!success ? (
           <>
             <Text style={styles.title}>Register</Text>
@@ -111,7 +116,7 @@ export default function RegisterForm({ onClose }: Props) {
               value={username}
               onChangeText={setUsername}
               style={styles.input}
-              placeholderTextColor="#888"
+              placeholderTextColor="#333"
             />
             <TextInput
               placeholder="Email address"
@@ -120,14 +125,14 @@ export default function RegisterForm({ onClose }: Props) {
               style={styles.input}
               keyboardType="email-address"
               autoCapitalize="none"
-              placeholderTextColor="#888"
+              placeholderTextColor="#333"
             />
             <TextInput
               placeholder="Display Name (e.g., John Doe)"
               value={displayName}
               onChangeText={setDisplayName}
               style={styles.input}
-              placeholderTextColor="#888"
+              placeholderTextColor="#333"
             />
             <TextInput
               placeholder="Create a strong password"
@@ -135,9 +140,9 @@ export default function RegisterForm({ onClose }: Props) {
               onChangeText={setPassword}
               style={styles.input}
               secureTextEntry
-              placeholderTextColor="#888"
+              placeholderTextColor="#333"
             />
-            <Text style={{ fontSize: 12, color: "#666", marginBottom: 12, marginTop: -8, marginLeft: 4 }}>
+            <Text style={{ fontSize: 13, color: "#000", marginBottom: 16, marginTop: -6, marginLeft: 4 }}>
               Must be at least 8 chars, include an uppercase, a lowercase, a number, a special symbol, and no spaces.
             </Text>
             
@@ -147,7 +152,7 @@ export default function RegisterForm({ onClose }: Props) {
               onChangeText={setConfirmPassword}
               style={styles.input}
               secureTextEntry
-              placeholderTextColor="#888"
+              placeholderTextColor="#333"
             />
 
             {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -162,10 +167,6 @@ export default function RegisterForm({ onClose }: Props) {
               ) : (
                 <Text style={styles.registerText}>Register</Text>
               )}
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={onClose} style={{ marginTop: 10 }}>
-              <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
           </>
         ) : (
@@ -192,36 +193,48 @@ export default function RegisterForm({ onClose }: Props) {
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(255,255,255,0.25)", // 75% opacity white behind
+    backgroundColor: "rgba(0,0,0,0.6)",
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 1000,
   },
   container: {
-    width: "85%",
+    width: "90%",
+    maxWidth: 550,
     backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 24,
+    paddingHorizontal: 24,
+    paddingTop: 36,
+    paddingBottom: 24,
     shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 8,
+    position: 'relative',
   },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 12, textAlign: "center" },
+  closeButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    zIndex: 10,
+    padding: 4,
+  },
+  title: { fontSize: 28, fontWeight: "900", marginBottom: 24, textAlign: "center", color: "#000000" },
   input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 12,
+    backgroundColor: "#f3f4f6", // Soft grey background
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 16,
     fontSize: 16,
+    color: "#000000", // Darker text
   },
   registerButton: {
     backgroundColor: "#4B7BE5",
-    padding: 12,
+    padding: 14,
     borderRadius: 12,
     alignItems: "center",
+    marginTop: 8,
   },
-  registerText: { color: "#fff", fontWeight: "600", fontSize: 16 },
-  error: { color: "red", marginBottom: 8, textAlign: "center" },
-  cancelText: { color: "#4B7BE5", textAlign: "center", marginTop: 5 },
+  registerText: { color: "#fff", fontWeight: "bold", fontSize: 18 },
+  error: { color: "red", marginBottom: 12, textAlign: "center", fontWeight: "500" },
 });

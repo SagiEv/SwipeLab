@@ -84,14 +84,21 @@ function ProgressBar({ value, color, label, maxValue = 1 }: { value: number; col
     );
 }
 
-function SummaryCard({ title, value, subtext }: { title: string; value: string | number; subtext?: string }) {
+function SummaryCard({ title, value, subtext, icon }: { title: string; value: string | number; subtext?: string, icon?: string }) {
     const { theme } = useThemeStore();
     const themeColors = Colors[theme as keyof typeof Colors];
     return (
         <View style={[styles.summaryCard, { backgroundColor: themeColors.card }]}>
-            <Text style={[styles.cardTitle, { color: themeColors.textSecondary }]}>{title}</Text>
+            <View style={styles.cardHeader}>
+                <Text style={[styles.cardTitle, { color: themeColors.textSecondary }]}>{title}</Text>
+                {icon && <Text style={styles.cardIcon}>{icon}</Text>}
+            </View>
             <Text style={[styles.cardValue, { color: themeColors.text }]}>{value}</Text>
-            {subtext && <Text style={styles.cardSubtext}>{subtext}</Text>}
+            {subtext && (
+                <View style={styles.badgeContainer}>
+                    <Text style={styles.badgeText}>{subtext}</Text>
+                </View>
+            )}
         </View>
     );
 }
@@ -140,10 +147,10 @@ export default function StatsScreen() {
 
                 {/* User Profile Summary */}
                 <View style={styles.grid}>
-                    <SummaryCard title="Global Rank" value={`#${data.summary?.summary?.rank?.allTime ?? '-'}`} subtext="Top 1%" />
-                    <SummaryCard title="Score" value={data.userInfo?.score?.toLocaleString() ?? '0'} />
-                    <SummaryCard title="Tasks Done" value={data.summary?.summary?.totalClassifications ?? 0} />
-                    <SummaryCard title="Accuracy" value={`${((data.summary?.summary?.accuracy ?? 0) * 100).toFixed(1)}%`} subtext="Overall" />
+                    <SummaryCard title="Global Rank" value={`#${data.summary?.summary?.rank?.allTime ?? '-'}`} subtext="Top 1%" icon="🌍" />
+                    <SummaryCard title="Score" value={data.userInfo?.score?.toLocaleString() ?? '0'} icon="🌟" />
+                    <SummaryCard title="Tasks Done" value={data.summary?.summary?.totalClassifications ?? 0} icon="✅" />
+                    <SummaryCard title="Accuracy" value={`${((data.summary?.summary?.accuracy ?? 0) * 100).toFixed(1)}%`} subtext="Overall" icon="🎯" />
                 </View>
 
                 {/* Streak */}
@@ -258,38 +265,61 @@ const styles = StyleSheet.create({
     summaryCard: {
         width: '48%',
         backgroundColor: '#fff',
-        padding: 16,
-        borderRadius: 12,
-        marginBottom: 12,
+        padding: 20,
+        borderRadius: 16,
+        marginBottom: 16,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 2,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 4,
+        borderWidth: 1,
+        borderColor: '#f0f0f0',
+    },
+    cardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    cardIcon: {
+        fontSize: 20,
     },
     cardTitle: {
         fontSize: 14,
+        fontWeight: '600',
         color: '#666',
-        marginBottom: 8,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
     cardValue: {
-        fontSize: 24,
-        fontWeight: 'bold',
+        fontSize: 32,
+        fontWeight: '900',
         color: '#1a1a2e',
     },
-    cardSubtext: {
+    badgeContainer: {
+        marginTop: 8,
+        alignSelf: 'flex-start',
+        backgroundColor: '#e8f5e9', // Light green
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    badgeText: {
         fontSize: 12,
-        color: '#4B7BE5',
-        marginTop: 4,
+        fontWeight: 'bold',
+        color: '#2e7d32', // Dark green
     },
     section: {
         marginBottom: 24,
     },
     sectionTitle: {
         fontSize: 20,
-        fontWeight: 'bold',
+        fontWeight: '900',
         color: '#1a1a2e',
         marginBottom: 12,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
     card: {
         backgroundColor: '#fff',

@@ -35,25 +35,12 @@ const getMedalEmoji = (rank: number): string => {
 };
 
 const getRowStyle = (rank: number, type: 'allTime' | 'monthly', themeColors: any, isDark: boolean) => {
-    // Relaxed Pastel Colors
-    // Rank 1: Soft Gold
-    // Rank 2: Soft Silver/Gray
-    // Rank 3: Soft Bronze/Orange
-    // Rank 4+: Default/Transparent
+    let bgColor = isDark ? themeColors.card : '#ffffff'; // Default
 
-    // Light Mode Pastels
-    const lightColors = ['#FFF9C4', '#F5F5F5', '#FFCCBC'];
-    // Dark Mode Muted Colors (Darker pastels so text is readable)
-    const darkColors = ['#5D4037', '#424242', '#3E2723']; // Just examples, better to use semi-transparent
-
-    // Better approach: Use opacity on base colors?
-    // Let's use relaxed solid colors that work for both or switch based on theme
-
-    let bgColor = isDark ? themeColors.card : '#fff'; // Default
-
-    if (rank === 1) bgColor = isDark ? '#4A3B00' : '#FFF59D'; // Gold-ish
-    else if (rank === 2) bgColor = isDark ? '#37474F' : '#CFD8DC'; // Silver-ish
-    else if (rank === 3) bgColor = isDark ? '#3E2723' : '#FFAB91'; // Bronze-ish
+    // Vibrant medal colors for top 3
+    if (rank === 1) bgColor = isDark ? '#B8860B' : '#FFD700'; // Vibrant Gold
+    else if (rank === 2) bgColor = isDark ? '#4169E1' : '#AEE2FF'; // Frosty Blue (replacing grey/silver)
+    else if (rank === 3) bgColor = isDark ? '#A0522D' : '#F4A460'; // Rich Bronze
 
     return { backgroundColor: bgColor };
 };
@@ -67,8 +54,10 @@ interface LeaderboardTableProps {
 function LeaderboardTable({ title, data, type }: LeaderboardTableProps) {
     const { theme } = useThemeStore();
     const themeColors = Colors[theme as keyof typeof Colors];
-    const headerBg = theme === 'dark' ? themeColors.card : '#e0e0e0';
-    const cellColor = theme === 'dark' ? themeColors.text : '#333';
+    // Use a vibrant primary color for the header
+    const headerBg = theme === 'dark' ? '#312E81' : '#4B7BE5'; // Indigo in dark, Blue in light
+    const headerTextColor = '#ffffff'; 
+    const cellColor = theme === 'dark' ? themeColors.text : '#2d3748'; // Richer dark gray for text in light mode
 
     return (
         <View style={styles.tableContainer}>
@@ -76,27 +65,32 @@ function LeaderboardTable({ title, data, type }: LeaderboardTableProps) {
             <View style={[styles.table, { backgroundColor: themeColors.card }]}>
                 {/* Header Row */}
                 <View style={[styles.headerRow, { backgroundColor: headerBg }]}>
-                    <Text style={[styles.headerCell, styles.rankCol, { color: cellColor }]}>Rank</Text>
-                    <Text style={[styles.headerCell, styles.userCol, { color: cellColor }]}>User</Text>
-                    <Text style={[styles.headerCell, styles.scoreCol, { color: cellColor }]}>Score</Text>
+                    <Text style={[styles.headerCell, styles.rankCol, { color: headerTextColor }]}>Rank</Text>
+                    <Text style={[styles.headerCell, styles.userCol, { color: headerTextColor }]}>User</Text>
+                    <Text style={[styles.headerCell, styles.scoreCol, { color: headerTextColor }]}>Score</Text>
                 </View>
 
                 {/* Data Rows */}
-                {data.map((entry) => (
-                    <View
-                        key={entry.rank}
-                        style={[styles.dataRow, getRowStyle(entry.rank, type, themeColors, theme === 'dark'), { borderBottomColor: themeColors.border }]}
-                    >
-                        <Text style={[styles.dataCell, styles.rankCol, { color: cellColor }]}>{entry.rank}</Text>
-                        <Text style={[styles.dataCell, styles.userCol, { color: cellColor }]}>{entry.username}</Text>
-                        <View style={styles.scoreContainer}>
-                            <Text style={[styles.dataCell, styles.scoreText, { color: cellColor }]}>
-                                {entry.score.toLocaleString()}
-                            </Text>
-                            <Text style={styles.medal}>{getMedalEmoji(entry.rank)}</Text>
+                {data.map((entry) => {
+                    const isTop3 = entry.rank <= 3;
+                    // For top 3, make text color slightly darker in light mode for better contrast
+                    const rowTextColor = (isTop3 && theme !== 'dark') ? '#1a202c' : cellColor;
+                    return (
+                        <View
+                            key={entry.rank}
+                            style={[styles.dataRow, getRowStyle(entry.rank, type, themeColors, theme === 'dark'), { borderBottomColor: themeColors.border }]}
+                        >
+                            <Text style={[styles.dataCell, styles.rankCol, { color: rowTextColor, fontWeight: 'bold' }]}>{entry.rank}</Text>
+                            <Text style={[styles.dataCell, styles.userCol, { color: rowTextColor, fontWeight: '700' }]}>{entry.username}</Text>
+                            <View style={styles.scoreContainer}>
+                                <Text style={[styles.dataCell, styles.scoreText, { color: rowTextColor, fontWeight: 'bold' }]}>
+                                    {entry.score.toLocaleString()}
+                                </Text>
+                                <Text style={styles.medal}>{getMedalEmoji(entry.rank)}</Text>
+                            </View>
                         </View>
-                    </View>
-                ))}
+                    );
+                })}
             </View>
         </View>
     );
@@ -104,7 +98,7 @@ function LeaderboardTable({ title, data, type }: LeaderboardTableProps) {
 
 
 const RANK_COLORS: Record<string, string> = {
-    UNRANKED: '#9ca3af',
+    UNRANKED: '#818CF8', // Indigo instead of grey
     BEGINNER: '#60a5fa',
     EXPERT: '#34d399',
     PRO: '#a78bfa',
@@ -235,11 +229,8 @@ export default function LeaderboardScreen() {
 
     return (
         <ScreenHeaderLayout
-            leftIcon={require('../../../assets/images/challenges.png')}
-            leftTitle="Challenges"
-            onLeftPress={() => navigation.navigate('Challenges')}
-            centerIcon={require('../../../assets/images/leaderboard.png')}
-            centerTitle="Leaderboard"
+            leftIcon={require('../../../assets/images/leaderboard.png')}
+            leftTitle="Leaderboard"
             rightIcon={require('../../../assets/images/profile.png')}
             rightTitle={data ? `Your Spot: #${data.currentUser.rank}` : 'Your Spot: -'}
             contentContainerStyle={{ padding: 0 }}
@@ -278,14 +269,14 @@ export default function LeaderboardScreen() {
 
                 {/* All Time Leaderboard */}
                 <LeaderboardTable
-                    title="Greatest Of All Time"
+                    title="🏆 Greatest Of All Time"
                     data={data.allTime}
                     type="allTime"
                 />
 
                 {/* Monthly Leaderboard */}
                 <LeaderboardTable
-                    title="Greatest Of The Month"
+                    title="🔥 Greatest Of The Month"
                     data={data.monthly}
                     type="monthly"
                 />
@@ -340,46 +331,49 @@ const styles = StyleSheet.create({
     },
     tableTitle: {
         fontSize: 22,
-        fontWeight: 'bold',
-        fontStyle: 'italic',
+        fontWeight: '900',
         color: '#1a1a2e',
         marginBottom: 12,
         textAlign: 'center',
+        letterSpacing: 0.5,
+        textTransform: 'uppercase',
     },
     table: {
-        borderRadius: 12,
+        borderRadius: 16,
         overflow: 'hidden',
         backgroundColor: '#fff',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        shadowColor: '#4B7BE5',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 5,
+        borderWidth: 1,
+        borderColor: 'rgba(75, 123, 229, 0.1)',
     },
     headerRow: {
         flexDirection: 'row',
-        backgroundColor: '#e0e0e0',
-        paddingVertical: 10,
+        backgroundColor: '#4B7BE5',
+        paddingVertical: 14,
         paddingHorizontal: 8,
-        borderBottomWidth: 2,
-        borderBottomColor: '#ccc',
     },
     headerCell: {
-        fontWeight: 'bold',
-        fontSize: 14,
-        color: '#333',
+        fontWeight: '800',
+        fontSize: 15,
+        color: '#fff',
         textAlign: 'center',
+        letterSpacing: 0.5,
+        textTransform: 'uppercase',
     },
     dataRow: {
         flexDirection: 'row',
-        paddingVertical: 12,
+        paddingVertical: 14,
         paddingHorizontal: 8,
         borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.3)',
+        borderBottomColor: 'rgba(0,0,0,0.05)',
+        alignItems: 'center',
     },
     dataCell: {
-        fontSize: 14,
-        fontWeight: '600',
+        fontSize: 15,
         textAlign: 'center',
     },
     rankCol: {
