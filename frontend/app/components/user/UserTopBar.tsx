@@ -71,10 +71,11 @@ export default function UserTopBar({
         </View>
       </TouchableOpacity>
 
-      <TouchableOpacity style={[styles.statsBlock, isPhone && { paddingHorizontal: 12, height: 60, flexShrink: 1, marginHorizontal: 8 }]} onPress={() => navigation.navigate("Challenges")}>
+      <TouchableOpacity style={[styles.statsBlock, isPhone && { paddingHorizontal: 12, paddingVertical: 10, flexShrink: 1, marginHorizontal: 8 }]} onPress={() => navigation.navigate("Challenges")}>
         <Text style={[styles.statsText, isPhone && { fontSize: 11 }]} numberOfLines={1}>Score: {formattedScore}</Text>
         <Text style={[styles.statsText, isPhone && { fontSize: 11 }]} numberOfLines={1}>Rank: {displayRank}</Text>
         {!isPhone && <Text style={styles.statsText}>{displayStreak} days streak</Text>}
+        <Text style={[styles.statsText, { fontSize: 10, opacity: 0.85, marginTop: 4, fontStyle: 'italic' }]}>Move to Challenges ▸</Text>
       </TouchableOpacity>
 
       <View style={styles.rightSection}>
@@ -112,8 +113,8 @@ const styles = StyleSheet.create({
   username: { fontSize: 12, fontWeight: '600' },
   statsBlock: {
     backgroundColor: '#4B7BE5',
-    paddingHorizontal: 20, paddingVertical: 8,
-    borderRadius: 12, alignItems: 'center', justifyContent: 'center', height: 70,
+    paddingHorizontal: 20, paddingVertical: 10,
+    borderRadius: 12, alignItems: 'center', justifyContent: 'center',
   },
   statsText: { color: '#fff', fontSize: 12, fontWeight: '600', lineHeight: 18 },
   rightSection: { flexDirection: 'row', alignItems: 'center' },

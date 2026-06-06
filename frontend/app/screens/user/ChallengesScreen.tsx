@@ -31,18 +31,40 @@ interface ChallengeDto {
     } | null;
 }
 
-function ChallengeCard({ challenge }: { challenge: ChallengeDto }) {
+const CARD_COLORS = [
+    '#FFD700', // Gamified Gold/Yellow
+    '#00FA9A', // Vibrant Spring Green
+    '#00BFFF', // Deep Sky Blue
+    '#FF69B4', // Hot Pink
+    '#FFA500', // Bright Orange
+    '#ADFF2F', // Electric Lime
+];
+
+function ChallengeCard({ challenge, index }: { challenge: ChallengeDto, index: number }) {
     const progressPercent = Math.min(100, Math.max(0, (challenge.progress / challenge.target) * 100));
+    const bgColor = CARD_COLORS[index % CARD_COLORS.length];
 
     return (
-        <View style={[styles.card, { backgroundColor: '#fff' }]}>
+        <View style={[styles.card, { backgroundColor: bgColor }]}>
             {/* Header Row: Title */}
             <Text style={styles.cardTitle}>{challenge.name}</Text>
 
             {/* Description */}
             <Text style={styles.cardDesc}>{challenge.description}</Text>
 
-            {/* Content Row: Progress & Icon */}
+            {/* Reward/Icon Container */}
+            <View style={styles.iconContainer}>
+                {challenge.badge?.iconUrl ? (
+                     <Image 
+                        source={{ uri: challenge.badge.iconUrl }}
+                        style={{ width: 48, height: 48, resizeMode: 'contain' }}
+                     />
+                ) : (
+                     <Text style={styles.iconText}>🏆</Text>
+                )}
+            </View>
+
+            {/* Content Row: Progress */}
             <View style={styles.cardContent}>
                 <View style={styles.progressSection}>
                     <Text style={styles.progressText}>
@@ -60,18 +82,6 @@ function ChallengeCard({ challenge }: { challenge: ChallengeDto }) {
                             ]}
                         />
                     </View>
-                </View>
-
-                {/* Reward/Icon Container */}
-                <View style={styles.iconContainer}>
-                    {challenge.badge?.iconUrl ? (
-                         <Image 
-                            source={{ uri: challenge.badge.iconUrl }}
-                            style={{ width: 48, height: 48, resizeMode: 'contain' }}
-                         />
-                    ) : (
-                         <Text style={styles.iconText}>🏆</Text>
-                    )}
                 </View>
             </View>
         </View>
@@ -102,9 +112,6 @@ export default function ChallengesScreen() {
         <ScreenHeaderLayout
             leftIcon={require('../../../assets/images/challenges.png')}
             leftTitle="Challenges"
-            centerIcon={require('../../../assets/images/leaderboard.png')}
-            centerTitle="Leaderboard"
-            onCenterPress={() => navigation.navigate('Leaderboard')}
             rightIcon={<Ionicons name="play" size={28} color={themeColors.text} />}
             rightTitle="Play"
             onRightPress={() => navigation.navigate('SwipeLab')}
@@ -120,14 +127,14 @@ export default function ChallengesScreen() {
 
                 {/* In Progress Section */}
                 <Text style={[styles.sectionHeader, { color: themeColors.text }]}>In Progress</Text>
-                {challenges.filter((c: ChallengeDto) => !c.completed).map((challenge: ChallengeDto) => (
-                    <ChallengeCard key={challenge.challengeId} challenge={challenge} />
+                {challenges.filter((c: ChallengeDto) => !c.completed).map((challenge: ChallengeDto, index: number) => (
+                    <ChallengeCard key={challenge.challengeId} challenge={challenge} index={index} />
                 ))}
 
                 {/* Completed Section */}
                 <Text style={[styles.sectionHeader, { color: themeColors.text }]}>Completed</Text>
-                {challenges.filter((c: ChallengeDto) => c.completed).map((challenge: ChallengeDto) => (
-                    <ChallengeCard key={challenge.challengeId} challenge={challenge} />
+                {challenges.filter((c: ChallengeDto) => c.completed).map((challenge: ChallengeDto, index: number) => (
+                    <ChallengeCard key={challenge.challengeId} challenge={challenge} index={index} />
                 ))}
 
                 <View style={{ height: 40 }} />
@@ -177,62 +184,63 @@ const styles = StyleSheet.create({
     },
     card: {
         borderRadius: 16,
-        padding: 16,
+        padding: 20,
         marginBottom: 16,
         // Shadow
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-        borderWidth: 1,
-        borderColor: 'rgba(0,0,0,0.05)',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 5,
     },
     cardTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#000',
-        marginBottom: 4,
+        fontSize: 20,
+        fontWeight: '900',
+        color: '#1a1a2e',
+        marginBottom: 8,
         textAlign: 'center',
+        letterSpacing: 0.5,
+        textTransform: 'uppercase',
     },
     cardDesc: {
-        fontSize: 14,
-        color: '#333',
+        fontSize: 15,
+        color: '#333333',
+        marginBottom: 16,
+        lineHeight: 22,
         textAlign: 'center',
-        marginBottom: 12,
     },
     cardContent: {
-        flexDirection: 'row',
-        alignItems: 'flex-end',
-        justifyContent: 'space-between',
+        alignItems: 'center',
+        width: '100%',
     },
     progressSection: {
-        flex: 1,
-        marginRight: 16,
+        width: '100%',
+        alignItems: 'center',
     },
     progressText: {
-        fontSize: 12,
-        color: '#444',
-        marginBottom: 2,
+        fontSize: 13,
+        color: '#1a1a2e',
+        marginBottom: 4,
+        fontWeight: '700',
+        textAlign: 'center',
     },
     progressBarTrack: {
-        height: 8,
-        backgroundColor: 'rgba(255,255,255,0.5)', // Semi-transparent white
-        borderRadius: 4,
-        marginTop: 6,
+        height: 10,
+        width: '80%',
+        backgroundColor: 'rgba(0,0,0,0.1)', // Subtle dark track
+        borderRadius: 5,
+        marginTop: 8,
         overflow: 'hidden',
-        borderWidth: 0.5,
-        borderColor: 'rgba(0,0,0,0.1)',
     },
     progressBarFill: {
         height: '100%',
-        backgroundColor: '#4B7BE5', // Default fill, maybe override?
-        borderRadius: 4,
+        backgroundColor: '#1a1a2e', // Dark fill for contrast
+        borderRadius: 5,
     },
     iconContainer: {
         justifyContent: 'center',
         alignItems: 'center',
-
+        marginBottom: 16,
     },
     iconText: {
         fontSize: 32,
