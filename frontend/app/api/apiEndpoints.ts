@@ -85,4 +85,12 @@ export const API_ENDPOINTS = {
         SUSPICIOUS_ACTIVITY_USER: (username: string) => `/api/admin/suspicious-activity/${username}`,
         SUSPICIOUS_ACTIVITY_RESET: (username: string) => `/api/admin/suspicious-activity/${username}/reset`,
     },
+    SPECIES: {
+        REF_IMAGES:       (speciesName: string | number) => `/api/v1/species/${encodeURIComponent(String(speciesName))}/reference-images`,
+        REF_IMAGES_BATCH: (speciesNames: (string | number)[]) =>
+            `/api/v1/species/reference-images?speciesNames=${speciesNames.map(name => encodeURIComponent(String(name))).join(',')}`,
+        REF_IMAGE_DELETE: (imageId: string | number) => `/api/v1/species/reference-images/${imageId}`,
+        REF_IMAGE_URL:    (imageId: string | number) => `/api/v1/species/reference-images/${imageId}/image`,
+        REF_THUMB_URL:    (imageId: string | number) => `/api/v1/species/reference-images/${imageId}/thumbnail`,
+    },
 };

@@ -12,6 +12,7 @@ export type researcherStackParamList = {
   UsersManagement: undefined;
   AddUser: undefined;
   Taxonomy: undefined;
+  SpeciesReferenceImages: { speciesId: string, speciesLabel: string };
   UserSettings: undefined;
   Profile: undefined;
 };

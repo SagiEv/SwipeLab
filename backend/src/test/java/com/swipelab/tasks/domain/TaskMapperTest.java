@@ -68,7 +68,7 @@ class TaskMapperTest {
         task.setCreatedAt(LocalDateTime.now());
 
         TargetSpeciesResponse speciesResponse = TargetSpeciesResponse.builder().name("Dog").build();
-        Mockito.when(targetSpeciesProvider.getSpeciesByIds(Collections.singletonList(2L)))
+        Mockito.when(targetSpeciesProvider.getSpeciesByIdsAndRefImages(Collections.singletonList(2L), Collections.emptyList()))
                .thenReturn(Collections.singletonList(speciesResponse));
 
         TaskResponse response = taskMapper.toResponse(task);

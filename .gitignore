@@ -8,6 +8,10 @@ target/
 *.class
 *.log
 
+# Runtime upload directories (gold images, reference images)
+# Generated at runtime — never commit
+backend/uploads/
+
 # OS
 .DS_Store
 Git-Workflow-Guidelines.md

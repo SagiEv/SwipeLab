@@ -134,10 +134,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     // 3. Call the backend to invalidate the refresh token (fire-and-forget)
     if (refreshToken) {
-      const backendUrl = process.env.EXPO_PUBLIC_API_URL ||
-        (Platform.OS === "web"
-          ? "http://localhost:8080"
-          : "http://192.168.1.133:8080");
+      const { backendUrl } = require("../api/apiFetch");
 
       fetch(backendUrl + API_ENDPOINTS.AUTH.LOGOUT, {
         method: "POST",

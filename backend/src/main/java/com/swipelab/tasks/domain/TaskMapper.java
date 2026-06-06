@@ -120,8 +120,8 @@ public class TaskMapper {
                 .assignedUsernames(task.getAssignedUsernames())
                 .sharedWithResearchers(task.getSharedWithResearchers())
                 .isPublic(task.getIsPublic())
-                .targetSpecies(targetSpeciesProvider.getSpeciesByIds(task.getTargetSpeciesIds()))
-                .progress(progress)
+                .targetSpecies(targetSpeciesProvider.getSpeciesByIdsAndRefImages(task.getTargetSpeciesIds(), task.getSpeciesReferenceImageIds()))
+                .progress(TaskProgressResponse.empty())
                 // New fields
                 .createdAt(task.getCreatedAt() != null
                         ? java.time.OffsetDateTime.of(task.getCreatedAt(), java.time.ZoneOffset.UTC)

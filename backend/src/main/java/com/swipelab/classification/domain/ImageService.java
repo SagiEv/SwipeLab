@@ -83,6 +83,23 @@ public class ImageService {
                         question = "Classify this image";
                 }
 
+                List<ReferenceImageDto> refImagesDto = new ArrayList<>();
+                if (species != null) {
+                        taskInfo.targetSpeciesResponses().stream()
+                                .filter(ts -> species.equals(ts.getName()) || species.equals(ts.getCommonName()))
+                                .findFirst()
+                                .ifPresent(ts -> {
+                                        if (ts.getReferenceImages() != null) {
+                                                ts.getReferenceImages().forEach(ri -> {
+                                                        refImagesDto.add(ReferenceImageDto.builder()
+                                                                .imageUrl(ri.getImageUrl())
+                                                                .caption(ri.getCaption())
+                                                                .build());
+                                                });
+                                        }
+                                });
+                }
+
                 return BatchImageDto.builder()
                                 .imageId(image.getId())
                                 .taskId(taskInfo.id())
@@ -91,7 +108,7 @@ public class ImageService {
                                                 .contentType(contentType)
                                                 .data(src)
                                                 .build())
-                                .referenceImages(List.of())
+                                .referenceImages(refImagesDto)
                                 .build();
         }
 

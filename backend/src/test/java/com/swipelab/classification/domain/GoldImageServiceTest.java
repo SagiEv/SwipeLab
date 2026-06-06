@@ -56,7 +56,7 @@ class GoldImageServiceTest {
         // Inject @Value field that Mockito cannot set automatically
         ReflectionTestUtils.setField(goldImageService, "appBaseUrl", APP_BASE_URL);
 
-        taskInfo = new TaskProvider.TaskInfo(1L, "Question", "Lion", Collections.emptyList());
+        taskInfo = new TaskProvider.TaskInfo(1L, "Question", "Lion", Collections.emptyList(), Collections.emptyList());
 
         image = new Image();
         image.setId(1L);

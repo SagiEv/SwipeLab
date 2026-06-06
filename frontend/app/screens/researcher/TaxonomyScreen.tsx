@@ -89,13 +89,23 @@ export default function TaxonomyScreen() {
                     </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
-                    style={[styles.createBtn, { backgroundColor: '#10B981' }]} 
-                    onPress={() => handleCreateSingle(item.id)}
-                >
-                    <Ionicons name="add-outline" size={18} color="#fff" />
-                    <Text style={styles.createBtnText}>Create Task</Text>
-                </TouchableOpacity>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <TouchableOpacity 
+                        style={[styles.createBtn, { backgroundColor: '#3b82f6' }]} 
+                        onPress={() => navigation.navigate("SpeciesReferenceImages", { speciesId: item.id, speciesLabel: item.label })}
+                    >
+                        <Ionicons name="images-outline" size={18} color="#fff" />
+                        <Text style={styles.createBtnText}>Pool</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                        style={[styles.createBtn, { backgroundColor: '#10B981' }]} 
+                        onPress={() => handleCreateSingle(item.id)}
+                    >
+                        <Ionicons name="add-outline" size={18} color="#fff" />
+                        <Text style={styles.createBtnText}>Task</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
         );
     };

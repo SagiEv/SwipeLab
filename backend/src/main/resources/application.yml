@@ -4,6 +4,13 @@ spring:
   config:
     import: optional:file:.env[.properties]
 
+  # Reference-image uploads: cap raw upload size before ImageProcessingService
+  # compresses further. 5 MB per file / 20 MB per multipart request.
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 20MB
+
   flyway:
     enabled: true
     baseline-on-migrate: true

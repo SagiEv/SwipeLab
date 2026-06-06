@@ -22,6 +22,7 @@ import UsersManagementScreen from "../screens/researcher/UsersManagementScreen";
 import TaxonomyScreen from "../screens/researcher/TaxonomyScreen";
 import SettingsScreen from "../screens/shared/SettingsScreen";
 import ProfileScreen from "../screens/shared/ProfileScreen";
+import SpeciesReferenceImagesScreen from "../screens/researcher/SpeciesReferenceImagesScreen";
 
 import { researcherStackParamList } from "./researcherStack.types";
 
@@ -136,6 +137,12 @@ export default function ResearcherNavigator() {
               name="Taxonomy"
               component={TaxonomyScreen}
               options={{ title: "Taxonomy" }}
+            />
+            
+            <Stack.Screen
+              name="SpeciesReferenceImages"
+              component={SpeciesReferenceImagesScreen}
+              options={{ title: "Reference Images" }}
             />
           </Stack.Navigator>
 

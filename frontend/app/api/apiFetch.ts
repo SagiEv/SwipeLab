@@ -15,7 +15,7 @@ const onRefreshed = (token: string | null) => {
 const addRefreshSubscriber = (cb: (token: string | null) => void) => {
   refreshSubscribers.push(cb);
 };
-const backendUrl = process.env.EXPO_PUBLIC_API_URL ||
+export const backendUrl = process.env.EXPO_PUBLIC_API_URL ||
   (Platform.OS === "web"
     ? "http://localhost:8080"
     : "http://192.168.1.133:8080"); //real IP for IOS&ANDROID
@@ -114,12 +114,6 @@ export async function apiFetch(
   //     return mockResponse
   //   }
   // }
-
-
-  const backendUrl = process.env.EXPO_PUBLIC_API_URL ||
-    (Platform.OS === "web"
-      ? "http://localhost:8080"
-      : "http://192.168.1.133:8080"); //real IP for IOS&ANDROID
 
 
   // Get token from storage

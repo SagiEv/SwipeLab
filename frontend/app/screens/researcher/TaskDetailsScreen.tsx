@@ -14,6 +14,7 @@ import {
 import { Colors } from '../../../constants/theme';
 import { researcherStackParamList } from "../../navigation/researcherStack.types";
 import { useThemeStore } from '../../stores/themeStore';
+import AuthenticatedImage from '../../components/ui/AuthenticatedImage';
 import { useTaskDetails, useExperiments, useUpdateTaskStatus } from "../../api/queries";
 
 type Props = NativeStackScreenProps<researcherStackParamList, "TaskDetails">;
@@ -258,10 +259,18 @@ export default function TaskDetailsScreen({ route, navigation }: Props) {
                   style={{ marginTop: 12 }}
                   contentContainerStyle={{ gap: 10 }}
                 >
-                  {(species.referenceImages || []).map((img: any, idx: number) => (
+                  {(species.referenceImages || []).map((img: any, idx: number) => {
+                    let imageUri = '';
+                    if (img.imageUrl) {
+                      imageUri = img.imageUrl;
+                    } else if (img.data) {
+                      imageUri = `data:${img.contentType || 'image/jpeg'};base64,${img.data}`;
+                    }
+
+                    return (
                     <View key={idx} style={styles.imageCard}>
-                      <Image
-                        source={{ uri: `data:${img.contentType};base64,${img.data}` }}
+                      <AuthenticatedImage
+                        uri={imageUri}
                         style={[styles.image, { borderColor: borderCol }]}
                       />
                       {!!img.caption && (
@@ -270,7 +279,7 @@ export default function TaskDetailsScreen({ route, navigation }: Props) {
                         </Text>
                       )}
                     </View>
-                  ))}
+                  )})}
                 </ScrollView>
               ) : (
                 <View style={styles.noImages}>

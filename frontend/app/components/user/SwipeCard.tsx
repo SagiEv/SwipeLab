@@ -11,6 +11,7 @@ import {
 import { SwipeDirection } from '../../types';
 import { useThemeStore } from '../../stores/themeStore';
 import { Colors } from '../../../constants/theme';
+import AuthenticatedImage from '../ui/AuthenticatedImage';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SWIPE_THRESHOLD = 120;
@@ -98,7 +99,10 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
         <Animated.View style={getCardStyle()} {...panResponder.panHandlers}>
           <View style={styles.imageContainer}>
             {imageUrl ? (
-              <Image source={{ uri: imageUrl }} style={styles.image} />
+              <AuthenticatedImage 
+                uri={imageUrl} 
+                style={styles.image} 
+              />
             ) : (
               <View style={styles.placeholder}>
                 <Text style={styles.placeholderText}>📷</Text>
