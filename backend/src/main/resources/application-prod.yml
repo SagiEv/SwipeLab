@@ -22,7 +22,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update               # Use 'update' initially; switch to 'validate' once schema is stable
     show-sql: false                   # Don't show SQL in production logs
     properties:
       hibernate:
