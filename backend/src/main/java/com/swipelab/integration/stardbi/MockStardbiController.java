@@ -164,7 +164,9 @@ public class MockStardbiController {
 
     @PostMapping("/swipe_lab/labels/")
     public ResponseEntity<Object> postLabel(@RequestBody Map<String, Object> label) {
-        log.info("Mock Stardbi post label: {}", label);
-        return ResponseEntity.ok(Map.of("label_id", 1L));
+        log.info("[MockStardbi] Label received → box_id={}, image_id={}, species_id={}, user={}, grade={}",
+                label.get("box_id"), label.get("image_id"), label.get("species_id"),
+                label.get("swipe_lab_user_id"), label.get("user_grade"));
+        return ResponseEntity.status(201).body(Map.of("label_id", 1L));
     }
 }
