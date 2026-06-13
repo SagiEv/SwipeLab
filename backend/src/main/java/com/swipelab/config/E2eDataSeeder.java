@@ -43,6 +43,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -181,6 +182,7 @@ public class E2eDataSeeder implements CommandLineRunner {
                     .isPublic(false)
                     .deadline(LocalDateTime.now().plusDays(30))
                     .targetSpeciesIds(speciesIds)
+                    .sharedWithResearchers(new ArrayList<>(List.of("swipe_lab_test_user")))
                     .build();
 
             taskRepository.save(task);
