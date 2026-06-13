@@ -34,12 +34,15 @@ services:
       - DB_PASSWORD=${DB_PASSWORD:-postgres}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - STARDBI_SERVICE_ACCOUNT_USERNAME=${STARDBI_SERVICE_ACCOUNT_USERNAME}
+      - STARDBI_SERVICE_ACCOUNT_PASSWORD=${STARDBI_SERVICE_ACCOUNT_PASSWORD}
 
   frontend:
     build:
       context: ./frontend
       args:
         - EXPO_PUBLIC_API_URL=https://swipelab.cs.bgu.ac.il
+        - EXPO_PUBLIC_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
     container_name: swipelab-frontend
     depends_on:
       - backend
@@ -51,3 +54,4 @@ services:
 
 volumes:
   postgres_data:
+  crops_data:
