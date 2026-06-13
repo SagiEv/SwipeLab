@@ -117,11 +117,12 @@ public class MockStardbiController {
     public ResponseEntity<Resource> getCropImage(@PathVariable("id") Long id) {
         log.info("Mock Stardbi get crop image {}", id);
         try {
-            Path imagePath = Paths.get("src/main/resources/mock-images/" + id + ".png");
+            // E2E mock crops are stored in e2e-crops, fallback to random IDs if specific image doesn't exist
+            Path imagePath = Paths.get("src/main/resources/e2e-crops/1_201_" + id + ".png");
             MediaType mediaType = MediaType.IMAGE_PNG;
             
             if (!Files.exists(imagePath)) {
-                imagePath = Paths.get("src/main/resources/mock-images/" + id + ".jpg");
+                imagePath = Paths.get("src/main/resources/e2e-crops/1_201_" + id + ".jpg");
                 mediaType = MediaType.IMAGE_JPEG;
             }
             
@@ -131,6 +132,12 @@ public class MockStardbiController {
                         .contentType(mediaType)
                         .body(resource);
             }
+            
+            // Fallback so it never returns empty 404
+            byte[] fallback = Base64.getDecoder().decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==");
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_PNG)
+                    .body(new org.springframework.core.io.ByteArrayResource(fallback));
         } catch (Exception e) {
             log.warn("Could not load mock image {}", id, e);
         }
@@ -138,12 +145,67 @@ public class MockStardbiController {
         return ResponseEntity.notFound().build();
     }
 
+    @GetMapping("/swipe_lab/crops/download/")
+    public ResponseEntity<byte[]> downloadExperimentCropsZip(@RequestParam("experiment") Long experimentId) {
+        log.info("Mock Stardbi download crops zip for experiment {}", experimentId);
+        try (java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+             java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos)) {
+            
+            java.io.File folder = new java.io.File("src/main/resources/e2e-crops");
+            boolean filesAdded = false;
+            if (folder.exists() && folder.isDirectory()) {
+                java.io.File[] files = folder.listFiles();
+                if (files != null) {
+                    for (java.io.File file : files) {
+                        if (file.isFile() && (file.getName().endsWith(".jpg") || file.getName().endsWith(".png"))) {
+                            try {
+                                String nameWithoutExt = file.getName().substring(0, file.getName().lastIndexOf('.'));
+                                String[] parts = nameWithoutExt.split("_");
+                                if (parts.length >= 3) {
+                                    Long boxId = Long.parseLong(parts[parts.length - 1]);
+                                    Long parentImageId = Long.parseLong(String.join("", java.util.Arrays.copyOfRange(parts, 1, parts.length - 1)));
+                                    long randomShift = (long)(Math.random() * 1000000);
+                                    Long uniqueBoxId = boxId + (experimentId * 1000) + randomShift;
+                                    String ext = file.getName().substring(file.getName().lastIndexOf('.'));
+                                    java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(parentImageId + "_" + uniqueBoxId + ext);
+                                    zos.putNextEntry(entry);
+                                    zos.write(java.nio.file.Files.readAllBytes(file.toPath()));
+                                    zos.closeEntry();
+                                    filesAdded = true;
+                                }
+                            } catch (Exception e) {
+                                log.warn("Could not parse image name for zip: {}", file.getName());
+                            }
+                        }
+                    }
+                }
+            }
+            if (!filesAdded) {
+                for (long i = 1; i <= 5; i++) {
+                    java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry((i * 100) + "_" + (i * 10) + ".png");
+                    zos.putNextEntry(entry);
+                    byte[] fallback = Base64.getDecoder().decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==");
+                    zos.write(fallback);
+                    zos.closeEntry();
+                }
+            }
+            zos.finish();
+            return ResponseEntity.ok()
+                    .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"experiment_" + experimentId + "_crops.zip\"")
+                    .contentType(org.springframework.http.MediaType.valueOf("application/zip"))
+                    .body(baos.toByteArray());
+        } catch (Exception e) {
+            log.error("Error generating mock zip", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     @GetMapping("/swipe_lab/taxonomy/")
     public ResponseEntity<Object> getTaxonomy() {
         log.info("Mock Stardbi get taxonomy");
         return ResponseEntity.ok(List.of(
                 Map.of(
-                        "species_id", 1L,
+                        "specis_id", 1L, // Must match the ExternalTaxonomyDto exact typo "specis_id"
                         "clazz", "insecta", // Notice it maps to clazz or class depending on how the DTO is written. We will use `class` if possible, but map.of won't care. Wait: Jackson usually serializes map string as is. DTO might annotate it as @JsonProperty("class").
                         "class", "insecta", 
                         "order", "Lepidoptera",
@@ -152,7 +214,7 @@ public class MockStardbiController {
                         "species", "D. plexippus"
                 ),
                 Map.of(
-                        "species_id", 2L,
+                        "specis_id", 2L,
                         "class", "insecta",
                         "order", "Coleoptera",
                         "family", "Coccinellidae",
@@ -164,7 +226,9 @@ public class MockStardbiController {
 
     @PostMapping("/swipe_lab/labels/")
     public ResponseEntity<Object> postLabel(@RequestBody Map<String, Object> label) {
-        log.info("Mock Stardbi post label: {}", label);
-        return ResponseEntity.ok(Map.of("label_id", 1L));
+        log.info("[MockStardbi] Label received → box_id={}, image_id={}, species_id={}, user={}, grade={}",
+                label.get("box_id"), label.get("image_id"), label.get("species_id"),
+                label.get("swipe_lab_user_id"), label.get("user_grade"));
+        return ResponseEntity.status(201).body(Map.of("label_id", 1L));
     }
 }

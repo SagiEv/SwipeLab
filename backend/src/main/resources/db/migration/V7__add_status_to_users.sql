@@ -1,4 +1,3 @@
-ALTER TABLE users ADD COLUMN status VARCHAR(50);
-UPDATE users SET status = 'ACTIVE' WHERE status IS NULL;
-ALTER TABLE users ALTER COLUMN status SET NOT NULL;
-ALTER TABLE users ALTER COLUMN status SET DEFAULT 'PENDING_VERIFICATION';
+-- V7: status column is now part of the initial schema (V1).
+-- This migration is intentionally a no-op to preserve version numbering.
+SELECT 1;
