@@ -9,9 +9,9 @@ import com.swipelab.auth.application.SecurityAuthorizationService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
@@ -28,7 +28,11 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(MaliciousLabelingConfigController.class)
+import org.springframework.test.context.ActiveProfiles;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("integration")
 @DisplayName("MaliciousLabelingConfigController")
 class MaliciousLabelingConfigControllerTest {
 

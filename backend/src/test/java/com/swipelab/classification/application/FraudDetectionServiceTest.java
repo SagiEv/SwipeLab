@@ -4,6 +4,8 @@ import com.swipelab.classification.domain.FraudDetectionService;
 import com.swipelab.classification.domain.WarningLevel;
 import com.swipelab.auth.application.SecurityAuthorizationService;
 import com.swipelab.classification.infrastructure.SuspiciousActivityRepository;
+import com.swipelab.config.application.MaliciousLabelingConfigService;
+import com.swipelab.config.application.dto.MaliciousLabelingConfigResponse;
 import com.swipelab.model.enums.UserRole;
 import com.swipelab.model.enums.UserStatus;
 import com.swipelab.users.domain.User;
@@ -41,6 +43,7 @@ class FraudDetectionServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private SecurityAuthorizationService securityAuthorizationService;
     @Mock private SuspiciousActivityRepository suspiciousActivityRepository;
+    @Mock private MaliciousLabelingConfigService maliciousLabelingConfigService;
 
     @InjectMocks
     private FraudDetectionService fraudDetectionService;
@@ -49,15 +52,18 @@ class FraudDetectionServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Mirror application.yml defaults using actual field names from FraudDetectionService
-        ReflectionTestUtils.setField(fraudDetectionService, "minResponseTimeMs",           300L);
-        ReflectionTestUtils.setField(fraudDetectionService, "researcherMinResponseTimeMs",  150L);
-        ReflectionTestUtils.setField(fraudDetectionService, "suspiciousCountForStrike",       3);
-        ReflectionTestUtils.setField(fraudDetectionService, "slidingWindowMinutes",           10);
-        ReflectionTestUtils.setField(fraudDetectionService, "strikesForWarning1",             5);
-        ReflectionTestUtils.setField(fraudDetectionService, "strikesForWarning2",            10);
-        ReflectionTestUtils.setField(fraudDetectionService, "strikesForBan",                15);
-        ReflectionTestUtils.setField(fraudDetectionService, "warningCooldownMinutes",        30);
+        MaliciousLabelingConfigResponse mockConfig = MaliciousLabelingConfigResponse.builder()
+                .minResponseTimeMs(300L)
+                .researcherMinResponseTimeMs(150L)
+                .suspiciousCountForStrike(3)
+                .slidingWindowMinutes(10)
+                .strikesForWarning1(5)
+                .strikesForWarning2(10)
+                .strikesForBan(15)
+                .warningCooldownMinutes(30)
+                .autoBanEnabled(true)
+                .build();
+        when(maliciousLabelingConfigService.getMaliciousLabelingConfig()).thenReturn(mockConfig);
 
 
         activeUser = User.builder()

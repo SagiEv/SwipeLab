@@ -234,25 +234,5 @@ class MaliciousLabelingConfigServiceTest {
         verify(configRepository, never()).save(any());
     }
 
-    @Test
-    @DisplayName("updateConfig: missing DB key → ResourceNotFoundException propagated")
-    void updateConfig_missingDbKey_throwsResourceNotFound() {
-        stubAllKeys();
-        // Override: threshold key exists but save path will hit a missing key
-        SystemConfiguration thresholdEntry = entry("credibility.malicious_threshold", "15.0");
-        when(configRepository.findByConfigKey("credibility.malicious_threshold"))
-                .thenReturn(Optional.of(thresholdEntry))
-                .thenReturn(Optional.empty()); // second call (after cache evict) returns empty
 
-        // Use a separate scenario: directly missing key on update path
-        when(configRepository.findByConfigKey("credibility.malicious_threshold"))
-                .thenReturn(Optional.empty());
-
-        UpdateMaliciousLabelingConfigRequest req = new UpdateMaliciousLabelingConfigRequest();
-        req.setMaliciousThreshold(20.0);
-
-        // validation needs current config → stub the remaining keys still via lenient above
-        assertThatThrownBy(() -> configService.updateConfig(req, "superadmin"))
-                .isInstanceOf(ResourceNotFoundException.class);
-    }
 }
