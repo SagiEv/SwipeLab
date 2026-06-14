@@ -2,6 +2,8 @@ package com.swipelab.classification.domain;
 
 import com.swipelab.auth.application.SecurityAuthorizationService;
 import com.swipelab.classification.infrastructure.SuspiciousActivityRepository;
+import com.swipelab.config.application.MaliciousLabelingConfigService;
+import com.swipelab.config.application.dto.MaliciousLabelingConfigResponse;
 import com.swipelab.model.enums.UserRole;
 import com.swipelab.model.enums.UserStatus;
 import com.swipelab.users.domain.User;
@@ -17,7 +19,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -34,23 +35,33 @@ class FraudDetectionServiceTest {
     @Mock private SuspiciousActivityRepository suspiciousActivityRepository;
     @Mock private UserRepository userRepository;
     @Mock private SecurityAuthorizationService securityAuthorizationService;
+    @Mock private MaliciousLabelingConfigService maliciousLabelingConfigService;
 
     @InjectMocks
     private FraudDetectionService fraudDetectionService;
 
     private User regularUser;
+    private MaliciousLabelingConfigResponse defaultCfg;
 
     @BeforeEach
     void setUp() {
-        // Bind @Value fields via ReflectionTestUtils (Spring not loaded in unit tests)
-        ReflectionTestUtils.setField(fraudDetectionService, "minResponseTimeMs", 300L);
-        ReflectionTestUtils.setField(fraudDetectionService, "researcherMinResponseTimeMs", 150L);
-        ReflectionTestUtils.setField(fraudDetectionService, "suspiciousCountForStrike", 3);
-        ReflectionTestUtils.setField(fraudDetectionService, "slidingWindowMinutes", 10);
-        ReflectionTestUtils.setField(fraudDetectionService, "strikesForWarning1", 5);
-        ReflectionTestUtils.setField(fraudDetectionService, "strikesForWarning2", 10);
-        ReflectionTestUtils.setField(fraudDetectionService, "strikesForBan", 15);
-        ReflectionTestUtils.setField(fraudDetectionService, "warningCooldownMinutes", 30);
+        // Build the config DTO that the mock configService will return.
+        // This replaces the old ReflectionTestUtils @Value injection.
+        defaultCfg = MaliciousLabelingConfigResponse.builder()
+                .minResponseTimeMs(300L)
+                .researcherMinResponseTimeMs(150L)
+                .suspiciousCountForStrike(3)
+                .slidingWindowMinutes(10)
+                .strikesForWarning1(5)
+                .strikesForWarning2(10)
+                .strikesForBan(15)
+                .warningCooldownMinutes(30)
+                .autoBanEnabled(true)
+                .maliciousThreshold(15.0)
+                .maliciousMinSamples(20)
+                .build();
+
+        lenient().when(maliciousLabelingConfigService.getMaliciousLabelingConfig()).thenReturn(defaultCfg);
 
         regularUser = User.builder()
                 .username("testuser")
@@ -238,6 +249,54 @@ class FraudDetectionServiceTest {
 
         verify(suspiciousActivityRepository).save(any()); // audit record still saved
         verifyNoInteractions(userRepository);             // but no escalation
+        verifyNoInteractions(eventPublisher);
+    }
+
+    // ── Auto-ban toggle ───────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("Auto-ban ENABLED: strikes reach ban threshold → UserBannedBySystemEvent published")
+    void autoBanEnabled_strikesAtThreshold_banPublished() {
+        when(suspiciousActivityRepository
+                .countByUsernameAndSeverityAndCreatedAtAfter(any(), any(), any()))
+                .thenReturn(3L);
+        regularUser.setStrikeCount(14); // new strike = 15 = strikesForBan, auto-ban enabled
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(regularUser));
+        // defaultCfg has autoBanEnabled=true — already stubbed in setUp
+
+        fraudDetectionService.analyzeClassification("testuser", "USER", 100L, 1L);
+
+        ArgumentCaptor<UserBannedBySystemEvent> captor =
+                ArgumentCaptor.forClass(UserBannedBySystemEvent.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertThat(captor.getValue().getUsername()).isEqualTo("testuser");
+    }
+
+    @Test
+    @DisplayName("Auto-ban DISABLED: strikes reach ban threshold → NO ban event, strike still saved")
+    void autoBanDisabled_strikesAtThreshold_noBanPublished() {
+        // Override config: auto-ban off
+        MaliciousLabelingConfigResponse noBanCfg = MaliciousLabelingConfigResponse.builder()
+                .minResponseTimeMs(300L).researcherMinResponseTimeMs(150L)
+                .suspiciousCountForStrike(3).slidingWindowMinutes(10)
+                .strikesForWarning1(5).strikesForWarning2(10)
+                .strikesForBan(15).warningCooldownMinutes(30)
+                .autoBanEnabled(false) // <── key difference
+                .maliciousThreshold(15.0).maliciousMinSamples(20)
+                .build();
+        when(maliciousLabelingConfigService.getMaliciousLabelingConfig()).thenReturn(noBanCfg);
+
+        when(suspiciousActivityRepository
+                .countByUsernameAndSeverityAndCreatedAtAfter(any(), any(), any()))
+                .thenReturn(3L);
+        regularUser.setStrikeCount(14); // would normally trigger ban
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(regularUser));
+
+        fraudDetectionService.analyzeClassification("testuser", "USER", 100L, 1L);
+
+        // Strike count incremented to 15
+        assertThat(regularUser.getStrikeCount()).isEqualTo(15);
+        // But NO ban event published
         verifyNoInteractions(eventPublisher);
     }
 }

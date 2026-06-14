@@ -84,6 +84,8 @@ export const API_ENDPOINTS = {
         SUSPICIOUS_ACTIVITY: '/api/admin/suspicious-activity',
         SUSPICIOUS_ACTIVITY_USER: (username: string) => `/api/admin/suspicious-activity/${username}`,
         SUSPICIOUS_ACTIVITY_RESET: (username: string) => `/api/admin/suspicious-activity/${username}/reset`,
+        MALICIOUS_LABELING_CONFIG: '/api/admin/malicious-labeling-config',
+        MALICIOUS_LABELING_AUDIT: '/api/admin/malicious-labeling-config/audit-log',
     },
     SPECIES: {
         REF_IMAGES:       (speciesName: string | number) => `/api/v1/species/${encodeURIComponent(String(speciesName))}/reference-images`,

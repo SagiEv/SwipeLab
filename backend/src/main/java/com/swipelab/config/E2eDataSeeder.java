@@ -55,6 +55,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Component
 @Profile("e2e")
+@org.springframework.core.annotation.Order(1)
 public class E2eDataSeeder implements CommandLineRunner {
 
     private final UserRepository userRepository;

@@ -4,6 +4,7 @@ import com.swipelab.classification.domain.Classification;
 import com.swipelab.classification.domain.util.CredibilityCalculator;
 import com.swipelab.classification.infrastructure.ClassificationRepository;
 import com.swipelab.classification.infrastructure.CredibilityRepository;
+import com.swipelab.config.application.MaliciousLabelingConfigService;
 import com.swipelab.model.enums.UserRole;
 import com.swipelab.model.enums.UserStatus;
 import com.swipelab.users.domain.User;
@@ -42,6 +43,9 @@ public class CredibilityService {
     private final UserRepository userRepository;
     private final CredibilityCalculator credibilityCalculator;
     private final AdminNotificationService adminNotificationService;
+    // Provides runtime-adjustable maliciousThreshold and maliciousMinSamples.
+    // Parameters are DB-backed and cached; superadmins can change them live.
+    private final MaliciousLabelingConfigService maliciousLabelingConfigService;
 
     // ── Configuration (bound from application.yml) ────────────────────────────
 
@@ -52,14 +56,6 @@ public class CredibilityService {
     /** Starting score for new users (neutral position) */
     @Value("${app.credibility.default-score:50.0}")
     private double defaultScore;
-
-    /** Score below which a user is considered a potentially malicious labeler */
-    @Value("${app.credibility.malicious-threshold:15.0}")
-    private double maliciousThreshold;
-
-    /** Minimum total classifications before malicious-labeling detection kicks in */
-    @Value("${app.credibility.malicious-min-samples:20}")
-    private int maliciousMinSamples;
 
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -274,11 +270,12 @@ public class CredibilityService {
      * configured threshold after accumulating enough classifications.
      */
     private void checkForMaliciousLabeling(User user) {
+        var cfg = maliciousLabelingConfigService.getMaliciousLabelingConfig();
         int totalClassifications = classificationRepository.countByUsername(user.getUsername()).intValue();
-        if (totalClassifications < maliciousMinSamples) {
+        if (totalClassifications < cfg.getMaliciousMinSamples()) {
             return;
         }
-        if (user.getCredibilityScore() < maliciousThreshold && !Boolean.TRUE.equals(user.getIsFlagged())) {
+        if (user.getCredibilityScore() < cfg.getMaliciousThreshold() && !Boolean.TRUE.equals(user.getIsFlagged())) {
             log.warn("Malicious labeling detected for user {}: score={} after {} classifications",
                     user.getUsername(), user.getCredibilityScore(), totalClassifications);
             user.setIsFlagged(true);

@@ -34,14 +34,16 @@ public class CacheConfig {
 
     // ── Cache names ────────────────────────────────────────────────────────────
 
-    public static final String CACHE_LEADERBOARD      = "leaderboard";
-    public static final String CACHE_TAXONOMY         = "taxonomy";
-    public static final String CACHE_COLLECTION_STATS = "collectionStats";
-    public static final String CACHE_GAMIFICATION     = "gamificationInfo";
-    public static final String CACHE_ACTIVE_TASKS     = "activeTasks";
-    public static final String CACHE_TASK_DETAILS     = "taskDetails";
-    public static final String CACHE_USER_PROFILE     = "userProfile";
-    public static final String CACHE_PLATFORM_OVERVIEW = "platformOverview";
+    public static final String CACHE_LEADERBOARD            = "leaderboard";
+    public static final String CACHE_TAXONOMY               = "taxonomy";
+    public static final String CACHE_COLLECTION_STATS       = "collectionStats";
+    public static final String CACHE_GAMIFICATION           = "gamificationInfo";
+    public static final String CACHE_ACTIVE_TASKS           = "activeTasks";
+    public static final String CACHE_TASK_DETAILS           = "taskDetails";
+    public static final String CACHE_USER_PROFILE           = "userProfile";
+    public static final String CACHE_PLATFORM_OVERVIEW      = "platformOverview";
+    /** Single-entry cache for malicious-labeling + fraud-detection config. */
+    public static final String CACHE_MALICIOUS_LABELING_CFG = "maliciousLabelingConfig";
 
     // ── CacheManager ──────────────────────────────────────────────────────────
 
@@ -98,6 +100,14 @@ public class CacheConfig {
                 Caffeine.newBuilder()
                         .maximumSize(1)
                         .expireAfterWrite(2, TimeUnit.MINUTES)
+                        .build());
+
+        // Single-entry cache; primary eviction is @CacheEvict in MaliciousLabelingConfigService.
+        // 5-minute TTL is a safety net in case eviction is skipped on an unexpected code path.
+        manager.registerCustomCache(CACHE_MALICIOUS_LABELING_CFG,
+                Caffeine.newBuilder()
+                        .maximumSize(1)
+                        .expireAfterWrite(5, TimeUnit.MINUTES)
                         .build());
 
         return manager;

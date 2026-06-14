@@ -35,6 +35,7 @@ class CacheConfigTest {
         assertThat(manager.getCache(CacheConfig.CACHE_TASK_DETAILS)).isNotNull();
         assertThat(manager.getCache(CacheConfig.CACHE_USER_PROFILE)).isNotNull();
         assertThat(manager.getCache(CacheConfig.CACHE_PLATFORM_OVERVIEW)).isNotNull();
+        assertThat(manager.getCache(CacheConfig.CACHE_MALICIOUS_LABELING_CFG)).isNotNull();
     }
 
     @Test
