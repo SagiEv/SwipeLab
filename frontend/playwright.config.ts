@@ -6,7 +6,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  reporter: [['html', { outputFolder: '../playwright-report' }]],
+  outputDir: '../test-results',
   use: {
     baseURL: 'http://localhost:8081',
     trace: 'on-first-retry',
@@ -37,7 +38,7 @@ export default defineConfig({
     // },
   ],
   webServer: {
-    command: 'npm start',
+    command: 'npm run start:e2e -- --web',
     url: 'http://localhost:8081',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,

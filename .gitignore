@@ -30,3 +30,8 @@ project_tree.txt
 LOCAL_SCRATCHPAD.md
 MAINTENANCE_GUIDE.md
 SwipeLab Maintenance Guide.pdf
+
+# Playwright generated files
+test-results/
+playwright-report/
+playwright/.cache/
