@@ -5,6 +5,8 @@ import com.swipelab.classification.domain.Image;
 import com.swipelab.classification.domain.util.CredibilityCalculator;
 import com.swipelab.classification.infrastructure.ClassificationRepository;
 import com.swipelab.classification.infrastructure.CredibilityRepository;
+import com.swipelab.config.application.MaliciousLabelingConfigService;
+import com.swipelab.config.application.dto.MaliciousLabelingConfigResponse;
 import com.swipelab.model.enums.UserRole;
 import com.swipelab.model.enums.UserStatus;
 import com.swipelab.users.domain.User;
@@ -33,6 +35,7 @@ class CredibilityServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private CredibilityCalculator credibilityCalculator;
     @Mock private AdminNotificationService adminNotificationService;
+    @Mock private MaliciousLabelingConfigService maliciousLabelingConfigService;
 
     @InjectMocks
     private CredibilityService credibilityService;
@@ -44,11 +47,21 @@ class CredibilityServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Inject @Value fields
+        // Inject remaining @Value fields (not moved to configService)
         ReflectionTestUtils.setField(credibilityService, "minClassificationsForConsensus", 3);
         ReflectionTestUtils.setField(credibilityService, "defaultScore", 50.0);
-        ReflectionTestUtils.setField(credibilityService, "maliciousThreshold", 15.0);
-        ReflectionTestUtils.setField(credibilityService, "maliciousMinSamples", 20);
+
+        // maliciousThreshold and maliciousMinSamples are now served by MaliciousLabelingConfigService
+        lenient().when(maliciousLabelingConfigService.getMaliciousLabelingConfig())
+                .thenReturn(MaliciousLabelingConfigResponse.builder()
+                        .maliciousThreshold(15.0)
+                        .maliciousMinSamples(20)
+                        .autoBanEnabled(true)
+                        .minResponseTimeMs(300L).researcherMinResponseTimeMs(150L)
+                        .suspiciousCountForStrike(3).slidingWindowMinutes(10)
+                        .strikesForWarning1(5).strikesForWarning2(10)
+                        .strikesForBan(15).warningCooldownMinutes(30)
+                        .build());
 
         image = new Image();
         image.setId(1L);
