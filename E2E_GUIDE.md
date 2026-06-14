@@ -56,3 +56,33 @@ The E2E profile isolates its network interactions and persists state securely.
 * **Database (PostgreSQL)**: Connects to `jdbc:postgresql://localhost:5432/swipelab_e2e`. Make sure your local Postgres instance has the `swipelab_e2e` database created.
 * **SMTP (Mail)**: Configured to use a local SMTP stub (like MailHog) on port `1025`. This ensures emails aren't accidentally sent out during testing.
 * **Mock API Endpoints**: The `MockStardbiController` simulates the external StarDBI API on `/stardbi/**` endpoints, enabling local full-stack integration without network dependencies.
+
+## 🧪 Running E2E Tests
+
+Our automated E2E tests use **Playwright** and execute against the frontend while interacting with the `e2e` backend profile.
+
+### Prerequisites
+1. Ensure your PostgreSQL database has the `swipelab_e2e` database created.
+2. Start the backend with the `e2e` profile (see [How to Run the E2E Profile](#-how-to-run-the-e2e-profile)).
+
+### Running the Tests
+Open a new terminal, navigate to the `frontend` directory, and run the tests:
+
+```bash
+cd frontend
+
+# Run all Playwright tests
+npx playwright test
+
+# Run a specific test file (e.g., StarDBI login)
+npx playwright test tests/e2e/researcher/stardbi-login.spec.ts
+
+# Run tests with a visible browser (headed mode)
+npx playwright test --headed
+```
+
+### Viewing the Report
+If any tests fail or if you want to see a detailed breakdown, you can view the HTML report:
+```bash
+npx playwright show-report
+```

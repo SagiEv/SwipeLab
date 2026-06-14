@@ -43,6 +43,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -135,7 +136,19 @@ public class E2eDataSeeder implements CommandLineRunner {
                     .score(85L)
                     .build();
 
-            userRepository.saveAll(List.of(admin, user, reviewer));
+            User swipeLabTestUser = User.builder()
+                    .username("swipe_lab_test_user")
+                    .email("swipe_lab_test_user@stardbi.external")
+                    .passwordHash(passwordEncoder.encode("password"))
+                    .emailVerified(true)
+                    .provider(AuthProvider.STARDBI)
+                    .providerId("1")
+                    .role(UserRole.RESEARCHER)
+                    .displayName("Mock Researcher")
+                    .active(true)
+                    .build();
+
+            userRepository.saveAll(List.of(admin, user, reviewer, swipeLabTestUser));
             log.info("Seeded E2E Users. Login with e2e_user/password or admin_e2e/superpassword123.");
         }
     }
@@ -181,6 +194,7 @@ public class E2eDataSeeder implements CommandLineRunner {
                     .isPublic(false)
                     .deadline(LocalDateTime.now().plusDays(30))
                     .targetSpeciesIds(speciesIds)
+                    .sharedWithResearchers(new ArrayList<>(List.of("swipe_lab_test_user")))
                     .build();
 
             taskRepository.save(task);

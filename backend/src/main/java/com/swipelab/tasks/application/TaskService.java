@@ -352,6 +352,7 @@ public class TaskService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public TaskResponse getTaskById(Long id) {
         return mapToResponse(getTask(id));
     }

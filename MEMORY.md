@@ -28,8 +28,8 @@ Architecture: Modular Hexagonal/DDD.
 * Frontend/Backend: Aligned frontend with the live credibility system — added `credibilityScore` field to `UserProfileResponse` DTO and `AuthMapper`, fixed `UsersManagementScreen` to read `credibilityScore` (0–100) instead of gamification `score`, removed `* 100` scale errors in `AnalyticsScreen` top-performers and task quality displays, adapted `ConfidenceTrendChart` to handle 0–100 input scale, updated mock data and `analyticsTypes.ts` comments.
 * Frontend/Backend: Fixed immediate logout bug for Researchers (Issue #225) by correcting the Stardbi token refresh flow. Updated `apiFetch` to use `backendUrl` for the refresh request (fixing React Native relative URL crashes) and fixed backend `StardbiAuthProvider` to properly pad incoming Base64Url JWT payloads before decoding, allowing newly refreshed tokens to be cached and validated.
 * Backend/Testing: Configured E2E testing environment to use dynamic local test crops (`e2e-crops`) inside MockStardbiClient by generating globally unique mock `external_box_id`s on the fly, preventing database constraint conflicts during manual UI task creation.
-
 * Backend: Fixed task image count display in `TasksManagementScreen` (Issue #222). Replaced hardcoded zeros in `TaskMapper` by injecting `ImageRepository` and `ClassificationRepository` into `TaskService` to query real task image totals and distinct classified image counts.
+* Testing: Created `tests/e2e/researcher/dashboard.spec.ts` to verify the researcher View Dashboard flow, checking the task list, progress bars, and task details screen assertions.
 
 ## Current Focus (Active GitHub Issues)
 * Issue #201: Refactor Backend roles to include Researchers and Super Admin.
