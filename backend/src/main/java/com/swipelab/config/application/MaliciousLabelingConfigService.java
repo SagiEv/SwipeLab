@@ -256,10 +256,14 @@ public class MaliciousLabelingConfigService {
                 .build();
     }
 
-    /** Persists a single key's new value and appends an audit record. */
     private void updateKey(String key, String previousValue, String newValue, String changedBy) {
         SystemConfiguration entry = configRepository.findByConfigKey(key)
-                .orElseThrow(() -> new ResourceNotFoundException("Config key not found: " + key));
+                .orElseGet(() -> {
+                    SystemConfiguration newEntry = new SystemConfiguration();
+                    newEntry.setConfigKey(key);
+                    newEntry.setDescription("Auto-created config key");
+                    return newEntry;
+                });
 
         entry.setConfigValue(newValue);
         entry.setUpdatedBy(changedBy);

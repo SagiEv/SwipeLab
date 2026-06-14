@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@org.springframework.core.annotation.Order(100)
 public class SuperAdminRoleInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;

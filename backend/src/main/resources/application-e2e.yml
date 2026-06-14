@@ -39,6 +39,10 @@ spring:
 # Auto-verify emails so registration flows don't block on SMTP
 app:
   auto-verify-emails: true
+  security:
+    super-admin:
+      username: admin_e2e
+      password: superpassword123
 
 # Disable scheduled StarDBI sync — data is seeded explicitly by E2eDataSeeder
 stardbi:
