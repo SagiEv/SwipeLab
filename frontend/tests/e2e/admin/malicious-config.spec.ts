@@ -13,10 +13,21 @@ test.describe('[E2E] A4 Malicious Labeling Config', () => {
 
         // Login as Superadmin (using regular login for superadmin, or researcher login?)
         // The E2E seeder says: admin_e2e / superpassword123 / RESEARCHER
+        page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+        page.on('response', async response => {
+            if (response.status() === 500) {
+                const body = await response.text();
+                console.log('500 ERROR BODY:', body);
+            }
+        });
+        
         await expect(page.locator('text=Welcome to SwipeLab')).toBeVisible({ timeout: 15000 });
         await page.locator('input[placeholder="Enter your username"]').fill(ADMIN_USER);
         await page.locator('input[placeholder="Enter your password"]').fill(PASSWORD);
         await page.locator('text=Login').first().click();
+
+        // Check for error text if it appears
+        page.locator('.error').textContent().then(text => console.log('ERROR ON PAGE:', text)).catch(() => {});
 
         await expect(page.locator('text=Welcome to SwipeLab')).not.toBeVisible({ timeout: 15000 });
 
@@ -43,8 +54,13 @@ test.describe('[E2E] A4 Malicious Labeling Config', () => {
         const thresholdInput = page.getByText('Malicious Threshold').locator('../..').locator('input');
         await expect(thresholdInput).toBeVisible();
 
+        // Ensure we enter a completely different value from current so Save button enables
+        const newValue = (Math.floor(Math.random() * 50) + 10) + '.5';
+        console.log('Using new threshold value:', newValue);
+
         // Fill a new value
-        await thresholdInput.fill('20.5');
+        await thresholdInput.click();
+        await thresholdInput.fill(newValue); // Playwright fill works on RN Web directly
 
         // Save
         const saveButton = page.locator('text=Save Changes');
@@ -56,8 +72,8 @@ test.describe('[E2E] A4 Malicious Labeling Config', () => {
 
         // Verify audit log has new entry
         await expect(page.locator('text=credibility.malicious_threshold')).toBeVisible();
-        await expect(page.locator('text=admin_e2e')).first().toBeVisible();
-        await expect(page.locator('text=20.5')).first().toBeVisible();
+        await expect(page.locator('text=admin_e2e').first()).toBeVisible();
+        await expect(page.locator(`text=${newValue}`).first()).toBeVisible();
     });
 
     test('toggles auto-ban and updates', async ({ page }) => {
