@@ -23,23 +23,67 @@ export default function LoginScreen() {
   const [showRegister, setShowRegister] = useState(false);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: "<YOUR_GOOGLE_CLIENT_ID>",
+    clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+    scopes: ["openid", "profile", "email"],
   });
 
   useEffect(() => {
     if (response?.type === "success") {
-      const { authentication } = response;
-      const token = "mock-jwt-token";
-      const role = "RESEARCHER";
+      const { authentication, params } = response as any;
+      // Prefer id_token (JWT) — backends can verify it locally.
+      // Fall back to access_token (opaque), which the backend validates via Google userinfo API.
+      const credential =
+        authentication?.idToken ??
+        params?.id_token ??
+        authentication?.accessToken ??
+        params?.access_token;
 
-      // Needs async wrapper
       (async () => {
         setLoading(true);
-        await setAuth(token, role);
-        // Preload cache
-        await preloadAfterLogin(role);
-        setLoading(false);
+        setError("");
+        
+        try {
+          const res = await apiFetch(API_ENDPOINTS.AUTH.LOGIN + '/google', {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              credential,
+            }),
+          });
+
+          if (!res.ok) {
+            try {
+              const errorData = await res.json();
+              setError(errorData.message || "Google login failed");
+            } catch {
+              setError(`Google login failed: ${res.status}`);
+            }
+            return;
+          }
+
+          const data = await res.json();
+          const role = data.user.role;
+          const isSuperAdmin = data.user.isSuperAdmin;
+
+          // Store auth data in Zustand
+          await setAuth(data.accessToken, role, data.refreshToken);
+          useAuthStore.getState().setIsSuperAdmin(isSuperAdmin);
+
+          // Preload data
+          await preloadAfterLogin(role);
+        } catch (e) {
+          setError("Something went wrong with Google Login. Please try again.");
+        } finally {
+          setLoading(false);
+        }
       })();
+    } else if (response?.type === "error") {
+      setError(`Google Login Error: ${response.error?.message}`);
     }
   }, [response]);
 
