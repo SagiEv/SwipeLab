@@ -3,6 +3,8 @@ package com.swipelab.classification.domain;
 import com.swipelab.auth.application.SecurityAuthorizationService;
 import com.swipelab.classification.infrastructure.SuspiciousActivityRepository;
 import com.swipelab.classification.dto.api.ClassificationWarningDto;
+import com.swipelab.config.application.MaliciousLabelingConfigService;
+import com.swipelab.config.application.dto.MaliciousLabelingConfigResponse;
 import com.swipelab.model.enums.UserRole;
 import com.swipelab.users.domain.User;
 import com.swipelab.users.events.UserBannedBySystemEvent;
@@ -10,7 +12,6 @@ import com.swipelab.users.events.UserWarnedEvent;
 import com.swipelab.users.infrastructure.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -45,31 +46,8 @@ public class FraudDetectionService {
     private final UserRepository userRepository;
     private final SecurityAuthorizationService securityAuthorizationService;
 
-    // ── Thresholds (bound from application.yml) ───────────────────────────────
-
-    @Value("${app.fraud-detection.min-response-time-ms:300}")
-    private long minResponseTimeMs;
-
-    @Value("${app.fraud-detection.researcher-min-response-time-ms:150}")
-    private long researcherMinResponseTimeMs;
-
-    @Value("${app.fraud-detection.suspicious-count-for-strike:3}")
-    private int suspiciousCountForStrike;
-
-    @Value("${app.fraud-detection.sliding-window-minutes:10}")
-    private int slidingWindowMinutes;
-
-    @Value("${app.fraud-detection.strikes-for-warning-1:5}")
-    private int strikesForWarning1;
-
-    @Value("${app.fraud-detection.strikes-for-warning-2:10}")
-    private int strikesForWarning2;
-
-    @Value("${app.fraud-detection.strikes-for-ban:15}")
-    private int strikesForBan;
-
-    @Value("${app.fraud-detection.warning-cooldown-minutes:30}")
-    private int warningCooldownMinutes;
+    // Provides all threshold parameters from the DB; cached and evicted on superadmin update.
+    private final MaliciousLabelingConfigService maliciousLabelingConfigService;
 
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -91,10 +69,12 @@ public class FraudDetectionService {
             return new FraudAnalysisResult(false, null);
         }
 
+        MaliciousLabelingConfigResponse cfg = maliciousLabelingConfigService.getMaliciousLabelingConfig();
+
         // Pick the response-time threshold based on role.
         // Researchers are domain experts and legitimately swipe faster.
         boolean isResearcher = UserRole.RESEARCHER.name().equalsIgnoreCase(userRole);
-        long threshold = isResearcher ? researcherMinResponseTimeMs : minResponseTimeMs;
+        long threshold = isResearcher ? cfg.getResearcherMinResponseTimeMs() : cfg.getMinResponseTimeMs();
 
         if (responseTimeMs >= threshold) {
             return new FraudAnalysisResult(false, null); // Response time is within acceptable range — nothing to do.
@@ -109,18 +89,18 @@ public class FraudDetectionService {
                 WarningLevel.STRIKE);
 
         // Count raw suspicious events for this user within the sliding window.
-        LocalDateTime windowStart = LocalDateTime.now().minusMinutes(slidingWindowMinutes);
+        LocalDateTime windowStart = LocalDateTime.now().minusMinutes(cfg.getSlidingWindowMinutes());
         long recentCount = suspiciousActivityRepository
                 .countByUsernameAndSeverityAndCreatedAtAfter(username, WarningLevel.STRIKE, windowStart);
 
-        if (recentCount < suspiciousCountForStrike) {
+        if (recentCount < cfg.getSuspiciousCountForStrike()) {
             log.debug("User {} has {} suspicious events in window (need {}); silent accumulation",
-                    username, recentCount, suspiciousCountForStrike);
+                    username, recentCount, cfg.getSuspiciousCountForStrike());
             return new FraudAnalysisResult(false, null);
         }
 
         // Window threshold crossed — escalate to a formal STRIKE.
-        return escalate(username, taskId, responseTimeMs, threshold);
+        return escalate(username, taskId, responseTimeMs, threshold, cfg);
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────
@@ -129,7 +109,8 @@ public class FraudDetectionService {
      * Increments the user's cumulative strike count and determines which
      * event (if any) to publish on the escalation ladder.
      */
-    private FraudAnalysisResult escalate(String username, Long taskId, long responseTimeMs, long threshold) {
+    private FraudAnalysisResult escalate(String username, Long taskId, long responseTimeMs,
+                                         long threshold, MaliciousLabelingConfigResponse cfg) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException(
                         "User not found during fraud escalation: " + username));
@@ -144,14 +125,24 @@ public class FraudDetectionService {
                 "Accumulated %d strikes — latest fast response: %dms (threshold %dms)",
                 newStrikeCount, responseTimeMs, threshold);
 
-        if (newStrikeCount >= strikesForBan) {
-            publishBan(username, reason, newStrikeCount);
-            return new FraudAnalysisResult(true, null);
-        } else if (newStrikeCount >= strikesForWarning2 && (user.getWarningCount() == null || user.getWarningCount() < 2)) {
-            ClassificationWarningDto warning = publishWarning(user, username, WarningLevel.WARNING_2, reason, newStrikeCount);
+        if (newStrikeCount >= cfg.getStrikesForBan()) {
+            if (cfg.isAutoBanEnabled()) {
+                publishBan(username, reason, newStrikeCount);
+                return new FraudAnalysisResult(true, null);
+            } else {
+                log.warn("Auto-ban disabled: user {} reached {} strikes but ban is suppressed by config",
+                        username, newStrikeCount);
+                return new FraudAnalysisResult(false, null);
+            }
+        } else if (newStrikeCount >= cfg.getStrikesForWarning2()
+                && (user.getWarningCount() == null || user.getWarningCount() < 2)) {
+            ClassificationWarningDto warning = publishWarning(
+                    user, username, WarningLevel.WARNING_2, reason, newStrikeCount, cfg);
             return new FraudAnalysisResult(false, warning);
-        } else if (newStrikeCount >= strikesForWarning1 && (user.getWarningCount() == null || user.getWarningCount() < 1)) {
-            ClassificationWarningDto warning = publishWarning(user, username, WarningLevel.WARNING_1, reason, newStrikeCount);
+        } else if (newStrikeCount >= cfg.getStrikesForWarning1()
+                && (user.getWarningCount() == null || user.getWarningCount() < 1)) {
+            ClassificationWarningDto warning = publishWarning(
+                    user, username, WarningLevel.WARNING_1, reason, newStrikeCount, cfg);
             return new FraudAnalysisResult(false, warning);
         } else {
             log.debug("Strike #{} for user {} — below warning threshold, silent", newStrikeCount, username);
@@ -160,17 +151,18 @@ public class FraudDetectionService {
     }
 
     private ClassificationWarningDto publishWarning(User user, String username, WarningLevel level,
-                                String reason, int strikeCount) {
+                                String reason, int strikeCount,
+                                MaliciousLabelingConfigResponse cfg) {
         // Respect the cooldown window to avoid spamming warnings in a single bad session.
         if (user.getLastWarningAt() != null) {
-            LocalDateTime cooldownEnd = user.getLastWarningAt().plusMinutes(warningCooldownMinutes);
+            LocalDateTime cooldownEnd = user.getLastWarningAt().plusMinutes(cfg.getWarningCooldownMinutes());
             if (LocalDateTime.now().isBefore(cooldownEnd)) {
                 log.debug("Warning suppressed for {} — within cooldown until {}", username, cooldownEnd);
                 return null;
             }
         }
 
-        int strikesUntilBan = Math.max(0, strikesForBan - strikeCount);
+        int strikesUntilBan = Math.max(0, cfg.getStrikesForBan() - strikeCount);
 
         log.warn("Issuing {} to user {} (strikes={}, strikesUntilBan={})",
                 level, username, strikeCount, strikesUntilBan);
