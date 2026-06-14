@@ -32,6 +32,10 @@ export const QUERY_KEYS = {
   
   // Swipe State
   swipeBatch: (taskId: string | number) => ['classifications', 'batch', taskId],
+
+  // Superadmin: malicious-labeling config
+  maliciousLabelingConfig: ['admin', 'malicious-labeling-config'],
+  maliciousLabelingAuditLog: ['admin', 'malicious-labeling-config', 'audit-log'],
 };
 
 const fetchJson = async (endpoint: string) => {
@@ -215,6 +219,48 @@ export const useAdminUsers = () => {
     queryKey: QUERY_KEYS.allUsers,
     queryFn: () => fetchJson(API_ENDPOINTS.USERS.GET_ALL),
     staleTime: 2 * 60 * 1000,
+  });
+};
+
+/** Fetches the current malicious-labeling + fraud-detection config (superadmin only). */
+export const useMaliciousLabelingConfig = () => {
+  return useQuery({
+    queryKey: QUERY_KEYS.maliciousLabelingConfig,
+    queryFn: () => fetchJson(API_ENDPOINTS.ADMIN.MALICIOUS_LABELING_CONFIG),
+    staleTime: 60 * 1000,
+  });
+};
+
+/** Mutation: partial or full update of malicious-labeling config. Invalidates config cache on success. */
+export const useUpdateMaliciousLabelingConfig = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: Record<string, unknown>) => {
+      const res = await apiFetch(API_ENDPOINTS.ADMIN.MALICIOUS_LABELING_CONFIG, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message ?? 'Failed to update config');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.maliciousLabelingConfig });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.maliciousLabelingAuditLog });
+    },
+  });
+};
+
+/** Fetches paginated audit log for malicious-labeling config changes (superadmin only). */
+export const useMaliciousLabelingAuditLog = (page = 0, size = 20) => {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.maliciousLabelingAuditLog, page, size],
+    queryFn: () =>
+      fetchJson(`${API_ENDPOINTS.ADMIN.MALICIOUS_LABELING_AUDIT}?page=${page}&size=${size}`),
+    staleTime: 30 * 1000,
   });
 };
 

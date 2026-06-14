@@ -8,6 +8,7 @@ import { useThemeStore } from '../../stores/themeStore';
 
 export default function SettingsScreen() {
   const { logout } = useAuthStore();
+  const isSuperAdmin = useAuthStore((state) => state.isSuperAdmin);
   const { theme, toggleTheme } = useThemeStore();
   const [notifications, setNotifications] = useState(true);
   const navigation = useNavigation<any>();
@@ -96,6 +97,24 @@ export default function SettingsScreen() {
               />
             </View>
           </View>
+
+          {/* Administration Section — superadmin only */}
+          {isSuperAdmin && (
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Administration</Text>
+
+              <TouchableOpacity
+                style={[styles.settingRow, dynamicStyles.settingRow]}
+                onPress={() => navigation.navigate('MaliciousLabelingConfig')}
+              >
+                <View style={styles.settingLeft}>
+                  <Ionicons name="shield-outline" size={24} color={dynamicStyles.iconColor} />
+                  <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>Malicious Labeling Config</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={dynamicStyles.chevronColor} />
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Support Section */}
           <View style={styles.section}>

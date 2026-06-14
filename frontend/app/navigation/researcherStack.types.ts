@@ -11,6 +11,7 @@ export type researcherStackParamList = {
   Analytics: undefined;
   UsersManagement: undefined;
   AddUser: undefined;
+  MaliciousLabelingConfig: undefined;
   Taxonomy: undefined;
   SpeciesReferenceImages: { speciesId: string, speciesLabel: string };
   UserSettings: undefined;

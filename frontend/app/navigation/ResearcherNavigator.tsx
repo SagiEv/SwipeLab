@@ -23,6 +23,7 @@ import TaxonomyScreen from "../screens/researcher/TaxonomyScreen";
 import SettingsScreen from "../screens/shared/SettingsScreen";
 import ProfileScreen from "../screens/shared/ProfileScreen";
 import SpeciesReferenceImagesScreen from "../screens/researcher/SpeciesReferenceImagesScreen";
+import MaliciousLabelingConfigScreen from "../screens/researcher/MaliciousLabelingConfigScreen";
 
 import { researcherStackParamList } from "./researcherStack.types";
 
@@ -118,6 +119,12 @@ export default function ResearcherNavigator() {
                   name="AddUser"
                   component={AddUserScreen}
                   options={{ title: "Add User" }}
+                />
+
+                <Stack.Screen
+                  name="MaliciousLabelingConfig"
+                  component={MaliciousLabelingConfigScreen}
+                  options={{ title: "Malicious Labeling Config" }}
                 />
               </>
             )}
