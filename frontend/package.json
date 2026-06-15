@@ -11,6 +11,8 @@
     "lint": "expo lint",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "test:e2e:stories": "playwright test --config=playwright.e2e.config.ts",
+    "test:e2e:stories:watch": "cross-env PWSLOWMO=800 playwright test --config=playwright.e2e.config.ts --headed --workers=1",
     "start:e2e": "cross-env EXPO_PUBLIC_API_URL=http://localhost:8080 EXPO_PUBLIC_GOOGLE_CLIENT_ID=mock expo start"
   },
   "dependencies": {
