@@ -1,8 +1,32 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 
 const BASE_URL = 'http://localhost:8081';
 const STARDBI_USER = 'swipe_lab_test_user';
 const STARDBI_PASS = 'password';
+
+// R8 archives the task it operates on, and archiving is a ONE-WAY transition in the
+// backend (no ARCHIVED -> ACTIVE — see Task.activate()). So this spec must NOT touch
+// "E2E Identification Task" (id 1), which the user specs (U4 swipe, U9 references) rely
+// on staying Active in the same shared-backend run. It targets a dedicated, disposable
+// seeded task instead (see E2eDataSeeder#seedTasksAndImages).
+const ARCHIVE_TASK = 'E2E Archive Target';
+
+/** Log in as the StarDBI researcher and wait for the dashboard. */
+async function loginAsResearcher(page: Page): Promise<void> {
+    await test.step('Login as researcher', async () => {
+        await page.goto(BASE_URL);
+        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(1500);
+
+        await expect(page.locator('text=Welcome to SwipeLab')).toBeVisible({ timeout: 15000 });
+        await page.locator('input[placeholder="Enter your username"]').fill(STARDBI_USER);
+        await page.locator('input[placeholder="Enter your password"]').fill(STARDBI_PASS);
+        await page.keyboard.press('Escape');
+        await page.waitForTimeout(500);
+        await page.locator('text=Login as Researcher').click();
+        await expect(page.locator('text=Welcome to SwipeLab')).not.toBeVisible({ timeout: 15000 });
+    });
+}
 
 test.describe('[E2E] R8 Pause / Archive Task', () => {
     test.beforeEach(async ({ page }) => {
@@ -10,19 +34,7 @@ test.describe('[E2E] R8 Pause / Archive Task', () => {
         page.on('console', msg => console.log(`[Browser] ${msg.type()}: ${msg.text()}`));
         page.on('pageerror', error => console.log(`[Browser Error]: ${error.message}`));
         
-        await test.step('Login as researcher', async () => {
-            await page.goto(BASE_URL);
-            await page.waitForLoadState('networkidle');
-            await page.waitForTimeout(1500);
-            
-            await expect(page.locator('text=Welcome to SwipeLab')).toBeVisible({ timeout: 15000 });
-            await page.locator('input[placeholder="Enter your username"]').fill(STARDBI_USER);
-            await page.locator('input[placeholder="Enter your password"]').fill(STARDBI_PASS);
-            await page.keyboard.press('Escape');
-            await page.waitForTimeout(500);
-            await page.locator('text=Login as Researcher').click();
-            await expect(page.locator('text=Welcome to SwipeLab')).not.toBeVisible({ timeout: 15000 });
-        });
+        await loginAsResearcher(page);
     });
 
     test('should successfully pause and archive an active task', async ({ page }) => {
@@ -39,8 +51,8 @@ test.describe('[E2E] R8 Pause / Archive Task', () => {
         });
 
         await test.step('Ensure task is active', async () => {
-            // Search for the pre-seeded task
-            await page.getByPlaceholder('Search tasks…').fill('E2E Identification Task');
+            // Search for the pre-seeded, disposable archive-target task
+            await page.getByPlaceholder('Search tasks…').fill(ARCHIVE_TASK);
             await expect(page.locator('text=Progress:').first()).toBeVisible({ timeout: 15000 });
 
             // In the list view, the TaskCard has a Pause/Resume button. 
@@ -59,7 +71,7 @@ test.describe('[E2E] R8 Pause / Archive Task', () => {
 
         await test.step('Select a task', async () => {
             // Click the task card to open details
-            await page.getByText('E2E Identification Task').first().click();
+            await page.getByText(ARCHIVE_TASK).first().click();
 
             // Wait for task details to load
             await expect(page.locator('text=Back to Tasks')).toBeVisible({ timeout: 15000 });
