@@ -272,8 +272,41 @@ public class E2eDataSeeder implements CommandLineRunner {
                     .build();
 
             e2eImages.add(img3);
+
+            // A dedicated, disposable task that the R8 "pause/archive" e2e spec targets.
+            // R8 archives whatever task it operates on, and archiving is a ONE-WAY
+            // transition in the domain (no ARCHIVED -> ACTIVE). Giving R8 its own task
+            // keeps it from archiving "E2E Identification Task" (id 1), which the user
+            // specs (U4 swipe, U9 references) rely on staying Active in the same run.
+            // Shared with the StarDBI researcher so R8 (logged in as swipe_lab_test_user)
+            // can see and manage it.
+            Task archiveTask = Task.builder()
+                    .title("E2E Archive Target")
+                    .name("e2e_archive_target")
+                    .sourceSystem("STARDBI")
+                    .description("Disposable task used by the R8 pause/archive e2e spec")
+                    .querySpecies("Mammals")
+                    .question("Is this a Cat?")
+                    .createdBy(admin.getUsername())
+                    .status(TaskStatus.ACTIVE)
+                    .minClassificationsPerImage(3)
+                    .consensusThreshold(80.0)
+                    .isPublic(false)
+                    .deadline(LocalDateTime.now().plusDays(30))
+                    .targetSpeciesIds(speciesIds)
+                    .sharedWithResearchers(new ArrayList<>(List.of("swipe_lab_test_user")))
+                    .build();
+
+            taskRepository.save(archiveTask);
+
+            e2eImages.add(Image.builder()
+                    .srcPath("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=")
+                    .taskId(archiveTask.getId())
+                    .priority(1)
+                    .build());
+
             imageRepository.saveAll(e2eImages);
-            log.info("Seeded Tasks and Images (including public explore task).");
+            log.info("Seeded Tasks and Images (including public explore task and R8 archive target).");
         }
     }
     
