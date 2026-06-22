@@ -1,11 +1,16 @@
 package com.swipelab.users.infrastructure;
 
+import com.swipelab.classification.domain.Classification;
+import com.swipelab.classification.domain.CredibilityRecord;
+import com.swipelab.classification.infrastructure.ClassificationRepository;
+import com.swipelab.classification.infrastructure.CredibilityRepository;
 import com.swipelab.model.enums.UserStatus;
 import com.swipelab.users.domain.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -15,8 +20,11 @@ import java.util.List;
 public class DataMigrationRunner implements CommandLineRunner {
 
     private final UserRepository userRepository;
+    private final CredibilityRepository credibilityRepository;
+    private final ClassificationRepository classificationRepository;
 
     @Override
+    @Transactional
     public void run(String... args) throws Exception {
         log.info("Running User Status data migration...");
         List<User> users = userRepository.findAll();
@@ -46,5 +54,30 @@ public class DataMigrationRunner implements CommandLineRunner {
              }
         }
         log.info("Data migration completed. Updated {} users.", updated);
+
+        log.info("Running Gold Image Classification backfill migration...");
+        List<CredibilityRecord> records = credibilityRepository.findAll();
+        int backfilled = 0;
+        for (CredibilityRecord record : records) {
+            boolean exists = classificationRepository.existsByUsernameAndImageId(record.getUsername(), record.getGoldImage().getImage().getId());
+            if (!exists) {
+                // Determine user role (fallback to USER if not found)
+                String role = userRepository.findByUsername(record.getUsername())
+                        .map(u -> u.getRole().name())
+                        .orElse("USER");
+
+                Classification classification = Classification.builder()
+                        .username(record.getUsername())
+                        .userRole(role)
+                        .taskId(record.getTaskId())
+                        .image(record.getGoldImage().getImage())
+                        .querySpecies(record.getQuerySpecies())
+                        .userResponse(record.getUserResponse())
+                        .build();
+                classificationRepository.save(classification);
+                backfilled++;
+            }
+        }
+        log.info("Gold Image Classification backfill completed. Inserted {} missing classifications.", backfilled);
     }
 }
