@@ -135,11 +135,15 @@ public class GlobalExceptionHandler {
         public ResponseEntity<ErrorResponse> handleGlobalException(
                         Exception ex, HttpServletRequest request) {
 
+                // MED-02: Log the full exception server-side so it's not lost
+                log.error("Unhandled exception occurred during request to {}: ", request.getRequestURI(), ex);
+
+                // Return a generic message to the client to prevent information disclosure
                 ErrorResponse errorResponse = ErrorResponse.builder()
                                 .timestamp(LocalDateTime.now())
                                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                                 .error("Internal Server Error")
-                                .message(ex.getMessage())
+                                .message("An unexpected internal server error occurred")
                                 .path(request.getRequestURI())
                                 .build();
 

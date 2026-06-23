@@ -33,7 +33,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (StringUtils.hasText(jwt)) {
                 if (tokenProvider.isTokenValid(jwt)) {
                     String username = tokenProvider.extractUsername(jwt);
-                    logger.info("VALID Token for user: " + username);
+                    // MED-03: Downgrade valid token log to debug to prevent log bloat
+                    logger.debug("VALID Token for user: " + username);
 
                     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
@@ -44,7 +45,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } else {
-                    logger.debug("INVALID or EXPIRED JWT Token (may be an external stardbi token): " + jwt);
+                    // MED-03: Remove the plaintext token from the log message
+                    logger.debug("INVALID or EXPIRED JWT Token encountered");
                 }
             } else {
                 logger.debug("No JWT Token found in the request headers");

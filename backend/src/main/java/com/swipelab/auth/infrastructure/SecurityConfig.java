@@ -51,6 +51,9 @@ public class SecurityConfig {
         @Autowired
         private RateLimitingFilter rateLimitingFilter;
 
+        @Autowired
+        private org.springframework.core.env.Environment env;
+
         @Value("${cors.allowed-origins}")
         private String allowedOrigins;
 
@@ -70,8 +73,8 @@ public class SecurityConfig {
                                                 }))
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                                .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers(
+                                .authorizeHttpRequests(auth -> {
+                                        auth.requestMatchers(
                                                                 "/",
                                                                 "/error",
                                                                 "/favicon.ico",
@@ -89,16 +92,24 @@ public class SecurityConfig {
                                                                 // System and Swagger
                                                                 "/oauth2/**",
                                                                 "/login/**",
-                                                                "/v3/api-docs/**",
-                                                                "/swagger-ui/**",
-                                                                "/swagger-ui.html",
                                                                 "/stardbi/**", // Mock stardbi (usually for dev only)
                                                                 "/api/admin/gold-images/*/image",
-                                                                "/api/v1/images/*/content")
-                                                .permitAll()
-                                                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**")
-                                                .permitAll()
-                                                .anyRequest().authenticated())
+                                                                "/api/v1/images/*/content"
+                                                ).permitAll();
+
+                                        // MED-01: Expose Swagger UI only in non-prod environments
+                                        if (!Arrays.asList(env.getActiveProfiles()).contains("prod")) {
+                                                auth.requestMatchers(
+                                                        "/v3/api-docs/**",
+                                                        "/swagger-ui/**",
+                                                        "/swagger-ui.html"
+                                                ).permitAll();
+                                        }
+
+                                        auth.requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**")
+                                                        .permitAll()
+                                                        .anyRequest().authenticated();
+                                })
                                 .oauth2Login(oauth2 -> oauth2
                                                 .userInfoEndpoint(userInfo -> userInfo
                                                                 .userService(customOAuth2UserService))
