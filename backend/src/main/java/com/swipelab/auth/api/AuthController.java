@@ -264,12 +264,14 @@ public class AuthController {
     }
 
     /**
-     * Send an invitation email to a new admin or researcher
+     * Send an invitation email to a new admin or researcher.
+     * Restricted to the Super Admin — uses the same SpEL bean check
+     * as all other privileged endpoints in this application.
      *
      * Endpoint: POST /api/v1/auth/invitation/admin
      */
     @PostMapping("/invitation/admin")
-    // @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    @org.springframework.security.access.prepost.PreAuthorize("@securityAuthorizationService.isSuperAdmin(authentication.name)")
     public ResponseEntity<Map<String, String>> inviteAdmin(
             @Valid @RequestBody InviteAdminRequest request) {
 
