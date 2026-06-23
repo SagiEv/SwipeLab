@@ -120,13 +120,13 @@ class InviteAdminSecurityTest {
 
     @Test
     @WithAnonymousUser
-    @DisplayName("anonymous caller is rejected with 403")
+    @DisplayName("anonymous caller is rejected with 401")
     void anonymousCaller_isRejected() throws Exception {
         mockMvc.perform(post(ENDPOINT)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validBody())
                         .with(csrf()))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(authenticationService, never()).inviteAdmin(any());
     }

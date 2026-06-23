@@ -75,17 +75,24 @@ public class SecurityConfig {
                                                                 "/",
                                                                 "/error",
                                                                 "/favicon.ico",
-                                                                "/api/v1/auth/**",
-                                                                "/auth/**",
+                                                                // Auth endpoints (strictly matched)
+                                                                "/api/v1/auth/login",
+                                                                "/api/v1/auth/register",
+                                                                "/api/v1/auth/refresh",
+                                                                "/api/v1/auth/password/forgot",
+                                                                "/api/v1/auth/password/reset",
+                                                                "/api/v1/auth/email/verify",
+                                                                "/api/v1/auth/email/resend",
+                                                                "/api/v1/auth/login/google",
+                                                                "/api/v1/auth/external/stardbi/loginExternal",
+                                                                "/api/v1/auth/verify-email", // HTML view endpoint
+                                                                // System and Swagger
                                                                 "/oauth2/**",
                                                                 "/login/**",
                                                                 "/v3/api-docs/**",
                                                                 "/swagger-ui/**",
-                                                                "/swipelab/**",
-                                                                "/swipe_lab/**",
-                                                                "/api/v1/system/**",
                                                                 "/swagger-ui.html",
-                                                                "/stardbi/**",
+                                                                "/stardbi/**", // Mock stardbi (usually for dev only)
                                                                 "/api/admin/gold-images/*/image",
                                                                 "/api/v1/images/*/content")
                                                 .permitAll()
