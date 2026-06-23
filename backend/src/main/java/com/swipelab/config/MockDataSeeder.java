@@ -220,8 +220,7 @@ public class MockDataSeeder implements CommandLineRunner {
                     .currentStreak(5)
                     .longestStreak(12)
                     .score(4500L)
-                    // Real badge titles (see BadgeService) so the Profile screen renders their icons.
-                    .badge("First Swipe,10 Swipes,100 Swipes,3 Day Streak,7 Day Streak,1000 Points")
+                    .badge("Eagle Eye, Quick Swiper")
                     .rank("EXPERT")
                     .build();
             
@@ -232,7 +231,7 @@ public class MockDataSeeder implements CommandLineRunner {
                     .currentStreak(1)
                     .longestStreak(3)
                     .score(250L)
-                    .badge("First Swipe,10 Swipes")
+                    .badge("Novice")
                     .rank("BEGINNER")
                     .build();
                     
