@@ -5,6 +5,7 @@ import com.swipelab.auth.application.SecurityAuthorizationService;
 import com.swipelab.dto.request.UpdateProfileRequest;
 import com.swipelab.dto.response.UserProfileResponse;
 import com.swipelab.exception.ResourceNotFoundException;
+import com.swipelab.gamification.infrastructure.GamificationRepository;
 import com.swipelab.users.domain.User;
 import com.swipelab.users.infrastructure.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -46,6 +47,9 @@ class UserServiceTest {
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
+    @Mock
+    private GamificationRepository gamificationRepository;
+
     @InjectMocks
     private UserService userService;
 
@@ -68,6 +72,10 @@ class UserServiceTest {
         profileResponse = UserProfileResponse.builder()
                 .username("testuser")
                 .build();
+
+        // Profile reads (getUserProfile / getCurrentUserProfile) hydrate the current streak
+        // from the Gamification entity; default to an empty lookup (streak resolves to 0).
+        when(gamificationRepository.findById(anyString())).thenReturn(Optional.empty());
     }
 
     @Test

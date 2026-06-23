@@ -17,6 +17,7 @@ import { Colors } from '../../../constants/theme';
 import { useThemeStore } from '../../stores/themeStore';
 import { API_ENDPOINTS } from '../../api/apiEndpoints';
 import { useProfile, useMyBadges } from "../../api/queries";
+import { getBadgeIcon } from "../../constants/badgeIcons";
 
 export default function ProfileScreen() {
     const navigation = useNavigation<any>();
@@ -149,10 +150,12 @@ export default function ProfileScreen() {
                     <View style={styles.badgesContainer}>
                         {myBadges?.map((badge: any, index: number) => (
                             <View key={index} style={[styles.badge, { backgroundColor: themeColors.background, borderColor: themeColors.border, alignItems: 'center' }]}>
-                                {badge.iconUrl && (
-                                    <Image source={{ uri: badge.iconUrl }} style={{ width: 40, height: 40, marginBottom: 5, resizeMode: 'contain' }} />
+                                {badge.iconUrl && typeof badge.iconUrl === 'string' && badge.iconUrl.startsWith('http') ? (
+                                    <Image source={{ uri: badge.iconUrl }} style={styles.badgeImage} />
+                                ) : (
+                                    <Image source={getBadgeIcon(badge.title)} style={styles.badgeImage} />
                                 )}
-                                <Text style={[styles.badgeText, { fontSize: 14 }]}>{badge.title}</Text>
+                                <Text style={[styles.badgeText, { fontSize: 14, color: themeColors.text, textAlign: 'center' }]}>{badge.title}</Text>
                             </View>
                         ))}
                     </View>
@@ -350,6 +353,13 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         borderWidth: 1,
         borderColor: "#E0E0E0",
+        minWidth: 90,
+    },
+    badgeImage: {
+        width: 56,
+        height: 56,
+        marginBottom: 6,
+        resizeMode: "contain",
     },
     badgeText: {
         fontSize: 20,

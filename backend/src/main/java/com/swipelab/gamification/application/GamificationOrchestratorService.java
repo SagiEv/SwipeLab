@@ -2,6 +2,8 @@ package com.swipelab.gamification.application;
 
 import com.swipelab.classification.domain.Classification.UserResponse;
 import com.swipelab.classification.events.ClassificationSubmittedEvent;
+import com.swipelab.gamification.challenge.ChallengeEngine;
+import com.swipelab.gamification.challenge.MetricType;
 import com.swipelab.gamification.domain.BadgeService;
 import com.swipelab.gamification.domain.Gamification;
 import com.swipelab.gamification.domain.PointsService;
@@ -29,6 +31,7 @@ public class GamificationOrchestratorService {
     private final RankService rankService;
     private final GamificationRepository gamificationRepository;
     private final UserRepository userRepository;
+    private final ChallengeEngine challengeEngine;
 
     @Async
     @EventListener
@@ -57,6 +60,16 @@ public class GamificationOrchestratorService {
         if (event.getUserResponse() == UserResponse.YES) {
             updateYesTagCountAndRank(username);
         }
+
+        // 5. Feed the challenge engine the absolute streak & points so the streak/points
+        //    badges can be awarded (LATEST metrics). CLASSIFICATION challenges are driven
+        //    separately by ChallengeEventListener, so they are not reported here.
+        gamificationRepository.findById(username).ifPresent(g -> {
+            int currentStreak = g.getCurrentStreak() != null ? g.getCurrentStreak() : 0;
+            long score = g.getScore() != null ? g.getScore() : 0L;
+            challengeEngine.processAction(username, MetricType.STREAK, currentStreak, null);
+            challengeEngine.processAction(username, MetricType.XP_GAINED, (int) Math.min(score, Integer.MAX_VALUE), null);
+        });
     }
 
     private void updateYesTagCountAndRank(String username) {
