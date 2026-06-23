@@ -6,15 +6,18 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface ChallengeDefinitionRepository extends JpaRepository<ChallengeDefinition, UUID> {
-    
+
     @Query("SELECT c FROM ChallengeDefinition c WHERE c.active = true " +
            "AND (c.availableFrom IS NULL OR c.availableFrom <= :now) " +
            "AND (c.availableUntil IS NULL OR c.availableUntil >= :now)")
     List<ChallengeDefinition> findActiveChallenges(LocalDateTime now);
-    
+
     List<ChallengeDefinition> findByActiveTrueAndMetricType(MetricType metricType);
+
+    Optional<ChallengeDefinition> findByBadgeId(UUID badgeId);
 }

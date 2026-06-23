@@ -2,6 +2,8 @@ package com.swipelab.gamification.application;
 
 import com.swipelab.classification.domain.Classification.UserResponse;
 import com.swipelab.classification.events.ClassificationSubmittedEvent;
+import com.swipelab.gamification.challenge.ChallengeEngine;
+import com.swipelab.gamification.challenge.MetricType;
 import com.swipelab.gamification.domain.BadgeService;
 import com.swipelab.gamification.domain.Gamification;
 import com.swipelab.gamification.domain.PointsService;
@@ -36,6 +38,7 @@ class GamificationOrchestratorServiceTest {
     @Mock private RankService rankService;
     @Mock private GamificationRepository gamificationRepository;
     @Mock private UserRepository userRepository;
+    @Mock private ChallengeEngine challengeEngine;
 
     @InjectMocks
     private GamificationOrchestratorService gamificationOrchestratorService;
@@ -69,6 +72,33 @@ class GamificationOrchestratorServiceTest {
         verify(pointsService, times(1)).calculateAndAddPoints("testuser", 10);
         verify(pointsService, times(1)).calculateAndAddPoints("testuser", 50);
         verify(badgeService, times(1)).checkForBadges("testuser", 10);
+    }
+
+    @Test
+    void onClassificationSubmitted_ShouldFeedStreakAndPointsToChallengeEngine() {
+        ClassificationSubmittedEvent event = ClassificationSubmittedEvent.builder()
+                .username("carol")
+                .isCorrect(false)
+                .isGoldStandard(false)
+                .userResponse(UserResponse.NO)
+                .submittedAt(LocalDateTime.now())
+                .build();
+
+        User user = new User();
+        user.setUsername("carol");
+        user.setTotalClassifications(5);
+
+        Gamification gamification = Gamification.builder()
+                .username("carol").yesTagCount(0).score(1200L).currentStreak(4).build();
+
+        when(userRepository.findByUsername("carol")).thenReturn(Optional.of(user));
+        when(gamificationRepository.findById("carol")).thenReturn(Optional.of(gamification));
+
+        gamificationOrchestratorService.onClassificationSubmitted(event);
+
+        // The absolute streak and points are reported to the engine (LATEST metrics).
+        verify(challengeEngine, times(1)).processAction("carol", MetricType.STREAK, 4, null);
+        verify(challengeEngine, times(1)).processAction("carol", MetricType.XP_GAINED, 1200, null);
     }
 
     @Test

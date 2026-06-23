@@ -50,9 +50,13 @@ public class ChallengeEngine {
 
             if (!userChallenge.isCompleted()) {
                 // Determine new progress
-                if (definition.getAggregationType() == AggregationType.COUNT || 
+                if (definition.getAggregationType() == AggregationType.COUNT ||
                     definition.getAggregationType() == AggregationType.SUM) {
                     userChallenge.setCurrentProgress(userChallenge.getCurrentProgress() + amount);
+                } else if (definition.getAggregationType() == AggregationType.LATEST) {
+                    // Absolute metrics (e.g. current streak length, total points): each report
+                    // carries the full current value, so set progress to it rather than accumulate.
+                    userChallenge.setCurrentProgress(amount);
                 }
                 // Distinct Count would involve saving the DistinctValue to UserChallengeDistinct
                 // We're skipping distinct logic complexity for MVP unless requested, defaulting to count.

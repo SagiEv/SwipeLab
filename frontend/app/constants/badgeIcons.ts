@@ -4,9 +4,9 @@ import { ImageSourcePropType } from "react-native";
  * Lab-themed mascot icons for profile badges.
  *
  * React Native's `require` needs static string literals, so every icon is
- * registered here by the badge's title (as seeded in the backend, see
- * V6__add_gamification_updates.sql). Crop each mascot into its own square,
- * transparent PNG and drop it in `assets/images/badges/` using these names.
+ * registered here by the badge's title (the BadgeDefinition titles seeded in
+ * ChallengeDataSeeder). Each mascot is a square transparent PNG in
+ * `assets/images/badges/`.
  */
 const BADGE_ICONS: Record<string, ImageSourcePropType> = {
     "First Swipe": require("../../assets/images/badges/badge_first_swipe.png"),

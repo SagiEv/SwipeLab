@@ -11,6 +11,12 @@ import com.swipelab.classification.infrastructure.LabelRepository;
 import com.swipelab.classification.infrastructure.ClassificationRepository;
 import com.swipelab.classification.infrastructure.GoldImageRepository;
 import com.swipelab.classification.infrastructure.CredibilityRepository;
+import com.swipelab.gamification.badge.BadgeAward;
+import com.swipelab.gamification.badge.BadgeAwardRepository;
+import com.swipelab.gamification.badge.BadgeDefinition;
+import com.swipelab.gamification.badge.BadgeDefinitionRepository;
+import com.swipelab.gamification.challenge.ChallengeDefinition;
+import com.swipelab.gamification.challenge.ChallengeDefinitionRepository;
 import com.swipelab.gamification.domain.Gamification;
 import com.swipelab.gamification.infrastructure.GamificationRepository;
 import com.swipelab.model.enums.UserRole;
@@ -71,6 +77,10 @@ public class E2eDataSeeder implements CommandLineRunner {
     private final TaskDailyStatsRepository taskDailyStatsRepository;
     private final ClassificationFactRepository classificationFactRepository;
 
+    private final BadgeDefinitionRepository badgeDefinitionRepository;
+    private final BadgeAwardRepository badgeAwardRepository;
+    private final ChallengeDefinitionRepository challengeDefinitionRepository;
+
     @Override
     @Transactional
     public void run(String... args) {
@@ -79,8 +89,9 @@ public class E2eDataSeeder implements CommandLineRunner {
         seedUsers();
         seedLabels();
         seedTasksAndImages();
-        
+
         seedGamification();
+        seedBadgeAwards();
         seedRecipientsAndAssignTasks();
         seedGoldImagesAndClassifications();
         seedAnalytics();
@@ -329,7 +340,45 @@ public class E2eDataSeeder implements CommandLineRunner {
             log.info("Seeded Gamification Leaderboard Data.");
         }
     }
-    
+
+    /**
+     * Awards all 6 badges to e2e_user so the Profile screen's Badges section is populated for
+     * e2e tests. Badges are normally earned live via the ChallengeEngine; here we insert the
+     * BadgeAward rows directly. Badge definitions are seeded first by ChallengeDataSeeder (Order 0).
+     */
+    private void seedBadgeAwards() {
+        if (badgeAwardRepository.count() > 0) {
+            return;
+        }
+        String[] badgeCodes = {
+                "FIRST_SWIPE", "SWIPES_10", "SWIPES_100", "STREAK_3", "STREAK_7", "POINTS_1000"
+        };
+        LocalDateTime now = LocalDateTime.now();
+        List<BadgeAward> awards = new ArrayList<>();
+        for (String code : badgeCodes) {
+            BadgeDefinition def = badgeDefinitionRepository.findByCode(code).orElse(null);
+            if (def == null) {
+                continue;
+            }
+            ChallengeDefinition challenge = challengeDefinitionRepository.findByBadgeId(def.getId()).orElse(null);
+            if (challenge == null) {
+                continue;
+            }
+            awards.add(BadgeAward.builder()
+                    .username("e2e_user")
+                    .badgeId(def.getId())
+                    .challengeDefinitionId(challenge.getId())
+                    .windowStart(now.minusDays(1))
+                    .windowEnd(now.plusYears(1))
+                    .awardedAt(now)
+                    .build());
+        }
+        if (!awards.isEmpty()) {
+            badgeAwardRepository.saveAll(awards);
+            log.info("Awarded {} badges to e2e_user.", awards.size());
+        }
+    }
+
     private void seedRecipientsAndAssignTasks() {
         if (recipientGroupRepository.count() == 0) {
             RecipientUser mockUserRef = RecipientUser.builder()
