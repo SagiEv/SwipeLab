@@ -150,6 +150,13 @@
 			<artifactId>caffeine</artifactId>
 		</dependency>
 
+		<!-- Rate Limiting: Bucket4j token-bucket algorithm (uses Caffeine as the store) -->
+		<dependency>
+			<groupId>com.bucket4j</groupId>
+			<artifactId>bucket4j-core</artifactId>
+			<version>8.10.1</version>
+		</dependency>
+
 		<!-- Awaitility: polling helper used in integration tests -->
 		<dependency>
 			<groupId>org.awaitility</groupId>

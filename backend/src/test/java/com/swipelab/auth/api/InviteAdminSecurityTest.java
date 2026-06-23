@@ -12,6 +12,7 @@ import com.swipelab.auth.infrastructure.CustomOAuth2UserService;
 import com.swipelab.auth.infrastructure.JwtAuthenticationFilter;
 import com.swipelab.auth.infrastructure.OAuth2AuthenticationFailureHandler;
 import com.swipelab.auth.infrastructure.OAuth2AuthenticationSuccessHandler;
+import com.swipelab.auth.infrastructure.RateLimitingFilter;
 import com.swipelab.dto.request.InviteAdminRequest;
 import com.swipelab.users.application.UserService;
 import org.junit.jupiter.api.DisplayName;
@@ -83,6 +84,7 @@ class InviteAdminSecurityTest {
     @MockBean private JwtAuthenticationFilter            jwtAuthenticationFilter;
     @MockBean private ExternalAuthFilter                 externalAuthFilter;
     @MockBean private BannedUserFilter                   bannedUserFilter;
+    @MockBean private RateLimitingFilter                 rateLimitingFilter;
     @MockBean private OAuth2AuthenticationSuccessHandler oAuth2SuccessHandler;
     @MockBean private OAuth2AuthenticationFailureHandler oAuth2FailureHandler;
     @MockBean private CustomOAuth2UserService            customOAuth2UserService;
@@ -103,6 +105,7 @@ class InviteAdminSecurityTest {
         doAnswer(proceed).when(jwtAuthenticationFilter).doFilter(any(), any(), any());
         doAnswer(proceed).when(externalAuthFilter).doFilter(any(), any(), any());
         doAnswer(proceed).when(bannedUserFilter).doFilter(any(), any(), any());
+        doAnswer(proceed).when(rateLimitingFilter).doFilter(any(), any(), any());
     }
 
     // ── Helper ────────────────────────────────────────────────────────────────

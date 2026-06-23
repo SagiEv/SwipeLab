@@ -3,6 +3,7 @@ package com.swipelab.auth.infrastructure;
 import com.swipelab.auth.infrastructure.CustomOAuth2UserService;
 import com.swipelab.auth.infrastructure.JwtAuthenticationFilter;
 import com.swipelab.auth.infrastructure.BannedUserFilter;
+import com.swipelab.auth.infrastructure.RateLimitingFilter;
 import com.swipelab.auth.external.ExternalAuthFilter;
 import com.swipelab.auth.infrastructure.OAuth2AuthenticationFailureHandler;
 import com.swipelab.auth.infrastructure.OAuth2AuthenticationSuccessHandler;
@@ -46,6 +47,9 @@ public class SecurityConfig {
 
         @Autowired
         private BannedUserFilter bannedUserFilter;
+
+        @Autowired
+        private RateLimitingFilter rateLimitingFilter;
 
         @Value("${cors.allowed-origins}")
         private String allowedOrigins;
@@ -97,7 +101,10 @@ public class SecurityConfig {
                                                                 .baseUri("/oauth2/callback/**"))
                                                 .successHandler(oAuth2AuthenticationSuccessHandler)
                                                 .failureHandler(oAuth2AuthenticationFailureHandler))
+                                // JWT filter must be added first so it can be used as an anchor
                                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                                // Rate limiting runs first — reject abusive IPs before any token work
+                                .addFilterBefore(rateLimitingFilter, JwtAuthenticationFilter.class)
                                 .addFilterAfter(externalAuthFilter, JwtAuthenticationFilter.class)
                                 // Ban check runs last — after both auth filters have set the SecurityContext
                                 .addFilterAfter(bannedUserFilter, ExternalAuthFilter.class);
