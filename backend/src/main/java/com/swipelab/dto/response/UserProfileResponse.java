@@ -24,6 +24,7 @@ public class UserProfileResponse {
     private Long score;
     private List<String> badges;
     private String rank;
+    private int currentStreak;
     @JsonProperty("isSuperAdmin")
     private boolean isSuperAdmin;
     private boolean active;

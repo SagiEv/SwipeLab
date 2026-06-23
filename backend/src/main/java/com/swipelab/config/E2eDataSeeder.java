@@ -319,7 +319,9 @@ public class E2eDataSeeder implements CommandLineRunner {
                     .currentStreak(5)
                     .longestStreak(12)
                     .score(4500L)
-                    .badge("Eagle Eye, Quick Swiper")
+                    // Real badge titles (see BadgeService) so the Profile screen renders their
+                    // icons. Matches this user's stats: 100+ swipes, 7-day streak, 1000+ points.
+                    .badge("First Swipe,10 Swipes,100 Swipes,3 Day Streak,7 Day Streak,1000 Points")
                     .rank("EXPERT")
                     .build();
             
@@ -330,7 +332,7 @@ public class E2eDataSeeder implements CommandLineRunner {
                     .currentStreak(1)
                     .longestStreak(3)
                     .score(250L)
-                    .badge("Novice")
+                    .badge("First Swipe,10 Swipes")
                     .rank("BEGINNER")
                     .build();
                     

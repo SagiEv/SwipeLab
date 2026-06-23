@@ -49,3 +49,6 @@ app-example
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Local-only, throwaway e2e specs (visual previews — never committed)
+*.local.spec.ts

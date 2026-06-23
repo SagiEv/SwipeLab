@@ -5,6 +5,8 @@ import com.swipelab.auth.application.SecurityAuthorizationService;
 import com.swipelab.dto.request.UpdateProfileRequest;
 import com.swipelab.dto.response.UserProfileResponse;
 import com.swipelab.exception.ResourceNotFoundException;
+import com.swipelab.gamification.domain.Gamification;
+import com.swipelab.gamification.infrastructure.GamificationRepository;
 import com.swipelab.users.domain.User;
 import com.swipelab.users.events.UserStatusChangedEvent;
 import com.swipelab.users.infrastructure.UserRepository;
@@ -26,16 +28,30 @@ public class UserService {
     private final AuthMapper authMapper;
     private final SecurityAuthorizationService securityAuthorizationService;
     private final ApplicationEventPublisher eventPublisher;
+    private final GamificationRepository gamificationRepository;
 
     public UserProfileResponse getUserProfile(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
-        return authMapper.toUserProfileResponse(user);
+        return withCurrentStreak(authMapper.toUserProfileResponse(user), user.getUsername());
     }
 
     public UserProfileResponse getCurrentUserProfile() {
         User user = getCurrentUser();
-        return authMapper.toUserProfileResponse(user);
+        return withCurrentStreak(authMapper.toUserProfileResponse(user), user.getUsername());
+    }
+
+    /**
+     * The current streak lives on the {@link Gamification} entity (not denormalized onto
+     * {@link User}), so hydrate it onto the profile response here. Defaults to 0 when the
+     * user has no gamification row yet.
+     */
+    private UserProfileResponse withCurrentStreak(UserProfileResponse response, String username) {
+        Integer streak = gamificationRepository.findById(username)
+                .map(Gamification::getCurrentStreak)
+                .orElse(0);
+        response.setCurrentStreak(streak != null ? streak : 0);
+        return response;
     }
 
     @Transactional

@@ -41,7 +41,7 @@ export default function UserTopBar({
   const displayUsername = stats?.displayName || stats?.username || propUsername || "Player";
   const displayScore = propScore !== undefined ? propScore : (stats?.score || 0);
   const displayRank = propRank || (stats?.rank ? `${stats.rank}` : `#${stats?.rankGlobal || '--'}`);
-  const displayStreak = propStreak !== undefined ? propStreak : (stats?.currentStreakDays || 0);
+  const displayStreak = propStreak !== undefined ? propStreak : (stats?.currentStreak || 0);
   const handleLogout = onLogout || logout;
   const formattedScore = typeof displayScore === 'number' ? displayScore.toLocaleString() : displayScore;
 
