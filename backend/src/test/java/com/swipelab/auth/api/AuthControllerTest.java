@@ -72,12 +72,18 @@ class AuthControllerTest {
 
     @BeforeEach
     void setUp() {
+        SecurityContextHolder.clearContext();
         mockMvc = MockMvcBuilders.standaloneSetup(authController)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .build();
         objectMapper = new ObjectMapper();
         // Inject @Value field that cannot be set by @InjectMocks alone
         ReflectionTestUtils.setField(authController, "frontendUrl", "http://localhost:3000");
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test
