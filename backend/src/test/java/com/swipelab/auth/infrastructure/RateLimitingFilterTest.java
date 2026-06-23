@@ -53,11 +53,11 @@ class RateLimitingFilterTest {
     // ── Happy flow ────────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("first 5 login requests from same IP are allowed (within limit)")
-    void loginEndpoint_allowsFirst5RequestsFromSameIp() throws Exception {
+    @DisplayName("first 20 login requests from same IP are allowed (within limit)")
+    void loginEndpoint_allowsFirst20RequestsFromSameIp() throws Exception {
         MockHttpServletRequest req = request("/api/v1/auth/login", "10.0.0.1");
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 20; i++) {
             // MockFilterChain.getResponse() returns 200 by default
             MockHttpServletResponse res = new MockHttpServletResponse();
             MockFilterChain chain = new MockFilterChain();
@@ -70,17 +70,17 @@ class RateLimitingFilterTest {
     // ── Edge cases ────────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("6th login request from same IP is rejected with 429")
-    void loginEndpoint_rejects6thRequestWithTooManyRequests() throws Exception {
+    @DisplayName("21st login request from same IP is rejected with 429")
+    void loginEndpoint_rejects21stRequestWithTooManyRequests() throws Exception {
         MockHttpServletRequest req = request("/api/v1/auth/login", "10.0.0.2");
 
-        // Exhaust the 5-per-minute bucket
-        for (int i = 0; i < 5; i++) {
+        // Exhaust the 20-per-minute bucket
+        for (int i = 0; i < 20; i++) {
             MockHttpServletResponse res = new MockHttpServletResponse();
             filter.doFilterInternal(req, res, new MockFilterChain());
         }
 
-        // 6th attempt must be rate-limited
+        // 21st attempt must be rate-limited
         MockHttpServletResponse res = new MockHttpServletResponse();
         MockFilterChain chain = new MockFilterChain();
         filter.doFilterInternal(req, res, chain);
@@ -96,7 +96,7 @@ class RateLimitingFilterTest {
     void nonRateLimitedUri_isAlwaysForwarded() throws Exception {
         MockHttpServletRequest req = request("/api/v1/images/42/content", "10.0.0.3");
 
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 30; i++) {
             MockHttpServletResponse res = new MockHttpServletResponse();
             MockFilterChain chain = new MockFilterChain();
             filter.doFilterInternal(req, res, chain);
@@ -109,7 +109,7 @@ class RateLimitingFilterTest {
     void differentIps_haveIndependentBuckets() throws Exception {
         // Exhaust IP-A's bucket
         MockHttpServletRequest reqA = request("/api/v1/auth/login", "10.0.0.4");
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 20; i++) {
             filter.doFilterInternal(reqA, new MockHttpServletResponse(), new MockFilterChain());
         }
 
@@ -131,7 +131,7 @@ class RateLimitingFilterTest {
 
         // Should use 203.0.113.5 as the key, not 127.0.0.1.
         // Exhaust the forwarded IP's bucket.
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 20; i++) {
             filter.doFilterInternal(req, new MockHttpServletResponse(), new MockFilterChain());
         }
 

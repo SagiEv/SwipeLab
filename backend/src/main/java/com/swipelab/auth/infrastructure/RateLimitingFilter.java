@@ -46,19 +46,19 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     /** Maps a URI suffix to a bandwidth limit definition. */
     private static final Map<String, Bandwidth> LIMITS = Map.of(
             "/api/v1/auth/login",
-            Bandwidth.classic(5, Refill.intervally(5, Duration.ofMinutes(1))),
+            Bandwidth.classic(20, Refill.intervally(20, Duration.ofMinutes(1))),
 
             "/api/v1/auth/register",
-            Bandwidth.classic(3, Refill.intervally(3, Duration.ofMinutes(15))),
+            Bandwidth.classic(10, Refill.intervally(10, Duration.ofMinutes(15))),
 
             "/api/v1/auth/password/forgot",
-            Bandwidth.classic(3, Refill.intervally(3, Duration.ofHours(1))),
+            Bandwidth.classic(10, Refill.intervally(10, Duration.ofHours(1))),
 
             "/api/v1/auth/email/resend",
-            Bandwidth.classic(3, Refill.intervally(3, Duration.ofHours(1))),
+            Bandwidth.classic(10, Refill.intervally(10, Duration.ofHours(1))),
 
             "/api/v1/auth/invitation/admin",
-            Bandwidth.classic(5, Refill.intervally(5, Duration.ofHours(1)))
+            Bandwidth.classic(10, Refill.intervally(10, Duration.ofHours(1)))
     );
 
     /**
