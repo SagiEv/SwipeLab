@@ -25,8 +25,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.thymeleaf.context.IContext;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.security.Principal;
 import java.util.Collections;
@@ -34,6 +37,7 @@ import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -58,6 +62,9 @@ class AuthControllerTest {
     @Mock
     private JwtService jwtService;
 
+    @Mock
+    private SpringTemplateEngine templateEngine;
+
     @InjectMocks
     private AuthController authController;
 
@@ -69,6 +76,8 @@ class AuthControllerTest {
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .build();
         objectMapper = new ObjectMapper();
+        // Inject @Value field that cannot be set by @InjectMocks alone
+        ReflectionTestUtils.setField(authController, "frontendUrl", "http://localhost:3000");
     }
 
     @Test
@@ -296,5 +305,45 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
+    }
+
+    // ── HIGH-02: verifyEmailLink XSS fix tests ────────────────────────────────
+
+    @Test
+    void verifyEmailLink_ShouldRenderSuccessTemplate_WhenTokenIsValid() throws Exception {
+        doNothing().when(authenticationService).verifyEmail("valid-token");
+        when(templateEngine.process(eq("auth/email-verify-success"), any(IContext.class)))
+                .thenReturn("<html><body>Email Verified Successfully!</body></html>");
+
+        mockMvc.perform(get("/api/v1/auth/verify-email")
+                        .param("token", "valid-token"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(org.springframework.http.MediaType.TEXT_HTML))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Email Verified Successfully!")));
+
+        verify(authenticationService, times(1)).verifyEmail("valid-token");
+        verify(templateEngine, times(1)).process(eq("auth/email-verify-success"), any(IContext.class));
+    }
+
+    @Test
+    void verifyEmailLink_ShouldRenderFailureTemplate_AndNeverLeakExceptionMessage() throws Exception {
+        String rawExceptionMessage = "<script>alert('XSS')</script>";
+        doThrow(new RuntimeException(rawExceptionMessage))
+                .when(authenticationService).verifyEmail("bad-token");
+        when(templateEngine.process(eq("auth/email-verify-failure"), any(IContext.class)))
+                .thenReturn("<html><body>The verification link is invalid or has expired.</body></html>");
+
+        String responseBody = mockMvc.perform(get("/api/v1/auth/verify-email")
+                        .param("token", "bad-token"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(org.springframework.http.MediaType.TEXT_HTML))
+                .andReturn().getResponse().getContentAsString();
+
+        // The raw exception message must NEVER appear in the response
+        org.assertj.core.api.Assertions.assertThat(responseBody)
+                .doesNotContain(rawExceptionMessage)
+                .contains("invalid or has expired");
+
+        verify(templateEngine, times(1)).process(eq("auth/email-verify-failure"), any(IContext.class));
     }
 }
