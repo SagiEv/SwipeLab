@@ -198,11 +198,16 @@ public class AnalyticsService {
         List<ClassificationFact> facts = classificationFactRepository.findByTaskId(taskId);
         int totalClassifications = facts.size();
 
+        int totalImages = (int) imageRepository.countByTaskId(taskId);
+        double percentComplete = totalImages > 0
+                ? (double) completedImages / totalImages * 100
+                : 0.0;
+
         TaskAnalyticsResponse.Progress progress = TaskAnalyticsResponse.Progress.builder()
                 .imagesClassified(completedImages.intValue())
-                .totalImages(1000)
+                .totalImages(totalImages)
                 .completedImages(completedImages.intValue())
-                .percentComplete(0.0)
+                .percentComplete(percentComplete)
                 .build();
 
         List<TaskSpeciesStats> speciesStats = taskSpeciesStatsRepository.findByTaskId(taskId);

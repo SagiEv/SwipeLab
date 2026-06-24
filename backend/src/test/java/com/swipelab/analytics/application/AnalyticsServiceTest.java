@@ -2,6 +2,7 @@ package com.swipelab.analytics.application;
 
 import com.swipelab.analytics.domain.UserDailyStats;
 import com.swipelab.analytics.dto.PlatformOverviewResponse;
+import com.swipelab.analytics.dto.TaskAnalyticsResponse;
 import com.swipelab.analytics.dto.UserProgressResponse;
 import com.swipelab.analytics.infrastructure.*;
 import com.swipelab.classification.domain.Classification.UserResponse;
@@ -226,5 +227,40 @@ class AnalyticsServiceTest {
         assertEquals(1000L, stats.getTotalSwipes());
         assertEquals(5L, stats.getActiveTasks());
         assertEquals(300L, stats.getTotalImages());
+    }
+
+    // ─── getTaskAnalytics ─────────────────────────────────────────────────────
+
+    @Test
+    void getTaskAnalytics_happyFlow_computesProgressFromImageCounts() {
+        // 200 total crops in the task, 50 of them classified → 25 % complete
+        when(classificationFactRepository.countCompletedImages(1L)).thenReturn(50L);
+        when(classificationFactRepository.findByTaskId(1L)).thenReturn(Collections.emptyList());
+        when(taskSpeciesStatsRepository.findByTaskId(1L)).thenReturn(Collections.emptyList());
+        when(imageRepository.countByTaskId(1L)).thenReturn(200L);
+
+        TaskAnalyticsResponse response = analyticsService.getTaskAnalytics(1L);
+
+        TaskAnalyticsResponse.Progress progress = response.getProgress();
+        assertEquals(200, progress.getTotalImages());
+        assertEquals(50, progress.getImagesClassified());
+        assertEquals(50, progress.getCompletedImages());
+        assertEquals(25.0, progress.getPercentComplete(), 0.001);
+    }
+
+    @Test
+    void getTaskAnalytics_edgeCase_noImages_returnsZeroPercent() {
+        // No crops imported yet → avoid division by zero, report 0 %
+        when(classificationFactRepository.countCompletedImages(2L)).thenReturn(0L);
+        when(classificationFactRepository.findByTaskId(2L)).thenReturn(Collections.emptyList());
+        when(taskSpeciesStatsRepository.findByTaskId(2L)).thenReturn(Collections.emptyList());
+        when(imageRepository.countByTaskId(2L)).thenReturn(0L);
+
+        TaskAnalyticsResponse response = analyticsService.getTaskAnalytics(2L);
+
+        TaskAnalyticsResponse.Progress progress = response.getProgress();
+        assertEquals(0, progress.getTotalImages());
+        assertEquals(0, progress.getImagesClassified());
+        assertEquals(0.0, progress.getPercentComplete(), 0.001);
     }
 }
