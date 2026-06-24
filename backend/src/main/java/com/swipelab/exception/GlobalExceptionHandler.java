@@ -8,11 +8,13 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -135,11 +137,15 @@ public class GlobalExceptionHandler {
         public ResponseEntity<ErrorResponse> handleGlobalException(
                         Exception ex, HttpServletRequest request) {
 
+                // MED-02: Log the full exception server-side so it's not lost
+                log.error("Unhandled exception occurred during request to {}: ", request.getRequestURI(), ex);
+
+                // Return a generic message to the client to prevent information disclosure
                 ErrorResponse errorResponse = ErrorResponse.builder()
                                 .timestamp(LocalDateTime.now())
                                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                                 .error("Internal Server Error")
-                                .message(ex.getMessage())
+                                .message("An unexpected internal server error occurred")
                                 .path(request.getRequestURI())
                                 .build();
 

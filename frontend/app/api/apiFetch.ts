@@ -126,7 +126,6 @@ export async function apiFetch(
 
   const fullUrl = backendUrl + input;
   console.log("[apiFetch] Full exact URL being fetch'ed:", fullUrl);
-  console.log("[apiFetch] Header Token Present:", token ? "YES (length " + token.length + ")" : "NO (null/undefined)");
 
   const response = await fetch(fullUrl, {
     ...init,

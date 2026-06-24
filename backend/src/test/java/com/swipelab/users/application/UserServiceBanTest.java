@@ -75,6 +75,11 @@ class UserServiceBanTest {
         SecurityContextHolder.setContext(ctx);
     }
 
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
     // ── Happy flow ────────────────────────────────────────────────────────────
 
     @Test

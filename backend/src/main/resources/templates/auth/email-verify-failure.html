@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Verification Failed — SwipeLab</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 60px auto; background: #fff; padding: 40px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center; }
+        h2 { color: #E11D48; font-size: 24px; margin-bottom: 12px; }
+        p  { font-size: 16px; color: #555; margin: 8px 0; }
+        .error-msg { color: #777; font-size: 14px; margin-top: 12px; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Verification Failed &#10006;</h2>
+        <!--
+            th:text auto-escapes all HTML special characters, eliminating XSS.
+            errorMessage contains only the sanitized error type (not the raw exception).
+        -->
+        <p class="error-msg" th:text="${errorMessage}">Verification link is invalid or has expired.</p>
+        <p>Please try registering again or contact support.</p>
+    </div>
+</body>
+</html>

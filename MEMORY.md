@@ -30,7 +30,7 @@ Architecture: Modular Hexagonal/DDD.
 * Backend/Testing: Configured E2E testing environment to use dynamic local test crops (`e2e-crops`) inside MockStardbiClient by generating globally unique mock `external_box_id`s on the fly, preventing database constraint conflicts during manual UI task creation.
 * Backend: Fixed task image count display in `TasksManagementScreen` (Issue #222). Replaced hardcoded zeros in `TaskMapper` by injecting `ImageRepository` and `ClassificationRepository` into `TaskService` to query real task image totals and distinct classified image counts.
 * Testing: Created `tests/e2e/researcher/dashboard.spec.ts` to verify the researcher View Dashboard flow, checking the task list, progress bars, and task details screen assertions.
-
+* Security: Remediated Medium severity security findings (secured Swagger UI in production, sanitized global exception handler, downgraded JWT logging, and unified login error messages).
 ## Current Focus (Active GitHub Issues)
 * Issue #201: Refactor Backend roles to include Researchers and Super Admin.
 * Issue #226: [Frontend] fix recipients list not deleting users.

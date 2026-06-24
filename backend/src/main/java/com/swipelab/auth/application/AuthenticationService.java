@@ -168,7 +168,7 @@ public class AuthenticationService {
     public AuthResponse login(LoginRequest request) {
         String normalizedUsername = request.getUsername().toLowerCase().trim();
         User user = userRepository.findByUsername(normalizedUsername)
-                .orElseThrow(() -> new UnauthorizedException("User not exists"));
+                .orElseThrow(() -> new UnauthorizedException("Invalid username or password"));
 
         // Account state checks
         if (!Boolean.TRUE.equals(user.getActive()) ||
@@ -184,7 +184,7 @@ public class AuthenticationService {
         // Password validation
         if (user.getPasswordHash() == null ||
                 !passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new UnauthorizedException("Wrong password");
+            throw new UnauthorizedException("Invalid username or password");
         }
 
         // Generate tokens — set lastLogin first so generateRefreshToken saves both in one UPDATE

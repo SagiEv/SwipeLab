@@ -3,6 +3,7 @@ package com.swipelab.auth.infrastructure;
 import com.swipelab.auth.infrastructure.CustomOAuth2UserService;
 import com.swipelab.auth.infrastructure.JwtAuthenticationFilter;
 import com.swipelab.auth.infrastructure.BannedUserFilter;
+import com.swipelab.auth.infrastructure.RateLimitingFilter;
 import com.swipelab.auth.external.ExternalAuthFilter;
 import com.swipelab.auth.infrastructure.OAuth2AuthenticationFailureHandler;
 import com.swipelab.auth.infrastructure.OAuth2AuthenticationSuccessHandler;
@@ -47,6 +48,12 @@ public class SecurityConfig {
         @Autowired
         private BannedUserFilter bannedUserFilter;
 
+        @Autowired
+        private RateLimitingFilter rateLimitingFilter;
+
+        @Autowired
+        private org.springframework.core.env.Environment env;
+
         @Value("${cors.allowed-origins}")
         private String allowedOrigins;
 
@@ -66,28 +73,43 @@ public class SecurityConfig {
                                                 }))
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                                .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers(
+                                .authorizeHttpRequests(auth -> {
+                                        auth.requestMatchers(
                                                                 "/",
                                                                 "/error",
                                                                 "/favicon.ico",
-                                                                "/api/v1/auth/**",
-                                                                "/auth/**",
+                                                                // Auth endpoints (strictly matched)
+                                                                "/api/v1/auth/login",
+                                                                "/api/v1/auth/register",
+                                                                "/api/v1/auth/refresh",
+                                                                "/api/v1/auth/password/forgot",
+                                                                "/api/v1/auth/password/reset",
+                                                                "/api/v1/auth/email/verify",
+                                                                "/api/v1/auth/email/resend",
+                                                                "/api/v1/auth/login/google",
+                                                                "/api/v1/auth/external/stardbi/loginExternal",
+                                                                "/api/v1/auth/verify-email", // HTML view endpoint
+                                                                // System and Swagger
                                                                 "/oauth2/**",
                                                                 "/login/**",
-                                                                "/v3/api-docs/**",
-                                                                "/swagger-ui/**",
-                                                                "/swipelab/**",
-                                                                "/swipe_lab/**",
-                                                                "/api/v1/system/**",
-                                                                "/swagger-ui.html",
-                                                                "/stardbi/**",
+                                                                "/stardbi/**", // Mock stardbi (usually for dev only)
                                                                 "/api/admin/gold-images/*/image",
-                                                                "/api/v1/images/*/content")
-                                                .permitAll()
-                                                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**")
-                                                .permitAll()
-                                                .anyRequest().authenticated())
+                                                                "/api/v1/images/*/content"
+                                                ).permitAll();
+
+                                        // MED-01: Expose Swagger UI only in non-prod environments
+                                        if (!Arrays.asList(env.getActiveProfiles()).contains("prod")) {
+                                                auth.requestMatchers(
+                                                        "/v3/api-docs/**",
+                                                        "/swagger-ui/**",
+                                                        "/swagger-ui.html"
+                                                ).permitAll();
+                                        }
+
+                                        auth.requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**")
+                                                        .permitAll()
+                                                        .anyRequest().authenticated();
+                                })
                                 .oauth2Login(oauth2 -> oauth2
                                                 .userInfoEndpoint(userInfo -> userInfo
                                                                 .userService(customOAuth2UserService))
@@ -97,7 +119,10 @@ public class SecurityConfig {
                                                                 .baseUri("/oauth2/callback/**"))
                                                 .successHandler(oAuth2AuthenticationSuccessHandler)
                                                 .failureHandler(oAuth2AuthenticationFailureHandler))
+                                // JWT filter must be added first so it can be used as an anchor
                                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                                // Rate limiting runs first — reject abusive IPs before any token work
+                                .addFilterBefore(rateLimitingFilter, JwtAuthenticationFilter.class)
                                 .addFilterAfter(externalAuthFilter, JwtAuthenticationFilter.class)
                                 // Ban check runs last — after both auth filters have set the SecurityContext
                                 .addFilterAfter(bannedUserFilter, ExternalAuthFilter.class);

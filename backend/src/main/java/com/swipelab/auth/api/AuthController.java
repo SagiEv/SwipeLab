@@ -16,6 +16,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Value;
 import com.swipelab.users.domain.User;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.security.Principal;
 import java.util.HashMap;
@@ -27,11 +29,11 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthenticationService authenticationService;
-
     private final UserService userService;
     private final com.swipelab.auth.application.OAuth2Service oAuth2Service;
     private final com.swipelab.auth.domain.AuthMapper authMapper;
     private final com.swipelab.auth.application.JwtService jwtService;
+    private final SpringTemplateEngine templateEngine;
 
     /**
      * Register a new user
@@ -61,28 +63,30 @@ public class AuthController {
     private String frontendUrl;
 
     /**
-     * Verify user email with token via browser GET (Link clicked in email)
+     * Verify user email with token via browser GET (link clicked in email).
+     *
+     * Security: previously used raw string concatenation of frontendUrl and e.getMessage()
+     * into HTML, creating a Reflected XSS vector. Now uses Thymeleaf templates where all
+     * dynamic values are rendered via th:text (auto-escaped) or safe data attributes.
+     * The raw exception message is never forwarded to the client.
      */
     @GetMapping(value = "/verify-email", produces = org.springframework.http.MediaType.TEXT_HTML_VALUE)
     public String verifyEmailLink(@RequestParam String token) {
+        Context ctx = new Context();
         try {
             authenticationService.verifyEmail(token);
-            return "<html><head><meta http-equiv=\"refresh\" content=\"5;url=" + frontendUrl + "\" /></head>" +
-                   "<body style='font-family:sans-serif; text-align:center; padding-top: 50px; background-color: #f4f6f9;'>" +
-                   "<div style='max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>" +
-                   "<h2 style='color: #4B7BE5;'>Email Verified Successfully! <br>&#10004;</h2>" +
-                   "<p style='font-size: 16px; color: #333;'>Your account is now fully active.</p>" +
-                   "<p style='font-size: 16px; color: #666;'>You will be redirected back to the app to log in shortly.</p>" +
-                   "<p style='font-size: 14px; color: #999; margin-top: 20px;'>Redirecting in <span id='countdown'>5</span> seconds...</p>" +
-                   "<script>var time=5; setInterval(function(){ if(time>0){time--; document.getElementById('countdown').innerText=time;} if(time===0){time--; window.location.href='" + frontendUrl + "';} }, 1000);</script>" +
-                   "</div></body></html>";
+            // frontendUrl is a server-side config value, not user input.
+            // Rendered into a data attribute via th:data-url so the redirect
+            // JS never uses string concatenation into the page source.
+            ctx.setVariable("frontendUrl", frontendUrl);
+            return templateEngine.process("auth/email-verify-success", ctx);
         } catch (Exception e) {
-            return "<html><body style='font-family:sans-serif; text-align:center; padding-top: 50px; background-color: #f4f6f9;'>" +
-                   "<div style='max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>" +
-                   "<h2 style='color: #E11D48;'>Verification Failed &#10006;</h2>" +
-                   "<p style='font-size: 16px; color: #333;'>" + e.getMessage() + "</p>" +
-                   "<p style='font-size: 16px; color: #666;'>Please try registering again or contact support.</p>" +
-                   "</div></body></html>";
+            // Log the full exception server-side; only a generic category
+            // is surfaced to the client — never the raw exception message.
+            org.slf4j.LoggerFactory.getLogger(getClass())
+                    .warn("Email verification failed for token [{}]: {}", token, e.getMessage());
+            ctx.setVariable("errorMessage", "The verification link is invalid or has expired.");
+            return templateEngine.process("auth/email-verify-failure", ctx);
         }
     }
 
@@ -264,12 +268,14 @@ public class AuthController {
     }
 
     /**
-     * Send an invitation email to a new admin or researcher
+     * Send an invitation email to a new admin or researcher.
+     * Restricted to the Super Admin — uses the same SpEL bean check
+     * as all other privileged endpoints in this application.
      *
      * Endpoint: POST /api/v1/auth/invitation/admin
      */
     @PostMapping("/invitation/admin")
-    // @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    @org.springframework.security.access.prepost.PreAuthorize("@securityAuthorizationService.isSuperAdmin(authentication.name)")
     public ResponseEntity<Map<String, String>> inviteAdmin(
             @Valid @RequestBody InviteAdminRequest request) {
 
