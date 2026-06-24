@@ -4,6 +4,7 @@ import com.swipelab.tasks.application.port.out.TargetSpeciesProvider;
 import com.swipelab.dto.request.CreateTaskRequest;
 import com.swipelab.dto.request.UpdateTaskRequest;
 import com.swipelab.dto.response.TaskResponse;
+import com.swipelab.dto.response.TaskProgressResponse;
 import com.swipelab.dto.response.TargetSpeciesResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -80,6 +81,37 @@ class TaskMapperTest {
         assertEquals(1, response.getTargetSpecies().size());
         assertEquals("Dog", response.getTargetSpecies().get(0).getName());
         assertFalse(response.isAssignedToUser());
+    }
+
+    @Test
+    void toResponse_ShouldUseProvidedProgress_NotEmpty() {
+        // Regression guard: the 3-arg overload must surface the computed progress it is
+        // handed, not hardcode an empty (0/0) one. The researcher TaskCard / TaskDetails
+        // screens read this endpoint, so dropping the progress shows "0 of 0" forever.
+        Task task = new Task();
+        task.setId(7L);
+        task.setStatus(TaskStatus.ACTIVE);
+
+        TaskProgressResponse progress = new TaskProgressResponse(9, 1);
+
+        TaskResponse response = taskMapper.toResponse(task, false, progress);
+
+        assertNotNull(response.getProgress());
+        assertEquals(9, response.getProgress().getTotalImages());
+        assertEquals(1, response.getProgress().getImagesClassified());
+    }
+
+    @Test
+    void toResponse_ShouldFallBackToEmptyProgress_WhenNull() {
+        Task task = new Task();
+        task.setId(8L);
+        task.setStatus(TaskStatus.ACTIVE);
+
+        TaskResponse response = taskMapper.toResponse(task, false, null);
+
+        assertNotNull(response.getProgress());
+        assertEquals(0, response.getProgress().getTotalImages());
+        assertEquals(0, response.getProgress().getImagesClassified());
     }
 
     @Test
